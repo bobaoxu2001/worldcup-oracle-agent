@@ -36,6 +36,11 @@ export function ChampionBoard({ c }: { c: ChampionAnswer }) {
           </div>
         ))}
       </div>
+
+      <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground/80">
+        Knockout route follows the official 2026 Round of 32 bracket, including FIFA best-third
+        placement rules — not a generic performance seed.
+      </p>
     </div>
   );
 }

@@ -26,6 +26,14 @@ import {
   getGroup,
   type SeedGroup,
 } from "@/lib/seed/world-cup-2026-groups";
+import {
+  BRACKET_2026,
+  REACH_BUCKET,
+  assignThirdPlaceSlots,
+  resolvePosition,
+  type GroupLetter,
+  type RankedTeam,
+} from "./bracket-2026";
 import type {
   MatchPrediction,
   ModelFactor,
@@ -248,18 +256,105 @@ interface Standing {
   gd: number;
 }
 
-function rankStandings(rows: Standing[]): Standing[] {
+interface GroupMatch {
+  a: string;
+  b: string;
+  ga: number;
+  gb: number;
+}
+
+/**
+ * Rank teams across DIFFERENT groups (used to pick the 8 best third-placed
+ * teams). FIFA order: points → goal difference → goals scored → … → fair play
+ * → drawing of lots. Head-to-head cannot apply across groups. Since a forward
+ * Monte Carlo simulation has no fair-play/disciplinary data, we approximate the
+ * final tiebreakers with team strength (Elo) and then a deterministic key, and
+ * document that approximation in the README.
+ */
+function rankAcrossGroups(rows: Standing[]): Standing[] {
   return [...rows].sort(
     (x, y) =>
       y.points - x.points ||
       y.gd - x.gd ||
       y.gf - x.gf ||
-      getRating(y.slug) - getRating(x.slug)
+      getRating(y.slug) - getRating(x.slug) ||
+      (x.slug < y.slug ? -1 : 1)
   );
 }
 
-/** Simulate one group's 6 matches once → ranked standings. */
-function simulateGroupOnce(group: SeedGroup, rng: () => number): Standing[] {
+/**
+ * Rank teams WITHIN a single group with the official FIFA tiebreakers:
+ *   1) points · 2) goal difference · 3) goals scored
+ *   4) head-to-head among the still-tied teams: H2H points → H2H GD → H2H GF
+ *   5) fair-play / drawing of lots  ← approximated by Elo + deterministic key
+ *      (no disciplinary data exists in a forward simulation; documented).
+ */
+function rankWithinGroup(
+  table: Record<string, Standing>,
+  matches: GroupMatch[]
+): Standing[] {
+  const slugs = Object.keys(table);
+  const samePGGF = (a: string, b: string) =>
+    table[a].points === table[b].points &&
+    table[a].gd === table[b].gd &&
+    table[a].gf === table[b].gf;
+
+  // Mini-table among a tied subset (head-to-head results only).
+  const headToHead = (subset: string[]) => {
+    const mt: Record<string, { p: number; gd: number; gf: number }> = {};
+    for (const s of subset) mt[s] = { p: 0, gd: 0, gf: 0 };
+    const inSet = new Set(subset);
+    for (const m of matches) {
+      if (!inSet.has(m.a) || !inSet.has(m.b)) continue;
+      mt[m.a].gf += m.ga;
+      mt[m.a].gd += m.ga - m.gb;
+      mt[m.b].gf += m.gb;
+      mt[m.b].gd += m.gb - m.ga;
+      if (m.ga > m.gb) mt[m.a].p += 3;
+      else if (m.gb > m.ga) mt[m.b].p += 3;
+      else {
+        mt[m.a].p += 1;
+        mt[m.b].p += 1;
+      }
+    }
+    return mt;
+  };
+
+  const base = slugs.sort(
+    (x, y) =>
+      table[y].points - table[x].points ||
+      table[y].gd - table[x].gd ||
+      table[y].gf - table[x].gf
+  );
+
+  const out: string[] = [];
+  let i = 0;
+  while (i < base.length) {
+    let j = i + 1;
+    while (j < base.length && samePGGF(base[i], base[j])) j++;
+    const tied = base.slice(i, j);
+    if (tied.length > 1) {
+      const mt = headToHead(tied);
+      tied.sort(
+        (x, y) =>
+          mt[y].p - mt[x].p ||
+          mt[y].gd - mt[x].gd ||
+          mt[y].gf - mt[x].gf ||
+          getRating(y) - getRating(x) || // fair-play/lots approximation
+          (x < y ? -1 : 1)
+      );
+    }
+    out.push(...tied);
+    i = j;
+  }
+  return out.map((slug) => table[slug]);
+}
+
+/** Play one group's 6 matches once, keeping per-match results for tiebreakers. */
+function playGroupOnce(
+  group: SeedGroup,
+  rng: () => number
+): { table: Record<string, Standing>; matches: GroupMatch[] } {
   const table: Record<string, Standing> = {};
   for (const slug of group.teams)
     table[slug] = { slug, points: 0, gf: 0, ga: 0, gd: 0 };
@@ -272,6 +367,7 @@ function simulateGroupOnce(group: SeedGroup, rng: () => number): Standing[] {
     [3, 0],
     [1, 2],
   ];
+  const matches: GroupMatch[] = [];
   for (const [i, j] of pairs) {
     const A = group.teams[i];
     const B = group.teams[j];
@@ -282,6 +378,7 @@ function simulateGroupOnce(group: SeedGroup, rng: () => number): Standing[] {
       true,
       rng
     );
+    matches.push({ a: A, b: B, ga: goalsA, gb: goalsB });
     table[A].gf += goalsA;
     table[A].ga += goalsB;
     table[B].gf += goalsB;
@@ -294,7 +391,13 @@ function simulateGroupOnce(group: SeedGroup, rng: () => number): Standing[] {
     }
   }
   for (const s of Object.values(table)) s.gd = s.gf - s.ga;
-  return rankStandings(Object.values(table));
+  return { table, matches };
+}
+
+/** Simulate one group's 6 matches once → standings ranked with full tiebreakers. */
+function simulateGroupOnce(group: SeedGroup, rng: () => number): Standing[] {
+  const { table, matches } = playGroupOnce(group, rng);
+  return rankWithinGroup(table, matches);
 }
 
 /** Probabilistic group standings (win-group / advance / expected points). */
@@ -328,21 +431,6 @@ export function simulateGroup(groupName: string, sims = 20000): GroupSimRow[] {
     .sort((a, b) => b.advance - a.advance || b.winGroup - a.winGroup);
 }
 
-// Standard single-elimination bracket seed order (1 vs n, etc.).
-function bracketSeedOrder(n: number): number[] {
-  let seeds = [1, 2];
-  while (seeds.length < n) {
-    const sum = seeds.length * 2 + 1;
-    const next: number[] = [];
-    for (const s of seeds) {
-      next.push(s);
-      next.push(sum - s);
-    }
-    seeds = next;
-  }
-  return seeds;
-}
-
 export const STAGE_KEYS = [
   "roundOf32",
   "roundOf16",
@@ -360,7 +448,15 @@ export interface TournamentResult {
 
 let _tournamentCache: TournamentResult | null = null;
 
-/** Full 48-team Monte Carlo: groups → best-3rd selection → R32 → final. */
+/**
+ * Full 48-team Monte Carlo following the OFFICIAL 2026 format:
+ *
+ *   1. Simulate all 12 groups (A–L), ranking each with FIFA tiebreakers.
+ *   2. Qualify 12 winners + 12 runners-up + the 8 best third-placed teams = 32.
+ *   3. Route the 32 into the OFFICIAL Round-of-32 bracket (matches 73–88),
+ *      including FIFA Annex C best-third placement — NOT a generic seed order.
+ *   4. Play the fixed knockout tree (R16 89–96 → QF → SF → Final 104).
+ */
 export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
   if (_tournamentCache && _tournamentCache.sims === sims)
     return _tournamentCache;
@@ -370,48 +466,50 @@ export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
   for (const t of GROUPS.flatMap((g) => g.teams))
     reach[t] = [0, 0, 0, 0, 0, 0];
 
-  const seedOrder = bracketSeedOrder(32);
-
   for (let s = 0; s < sims; s++) {
-    const firsts: Standing[] = [];
-    const seconds: Standing[] = [];
-    const thirds: Standing[] = [];
+    // 1+2. Group stage → winners / runners-up / thirds (tagged by group letter).
+    const groupResults: Record<GroupLetter, RankedTeam[]> = {} as Record<
+      GroupLetter,
+      RankedTeam[]
+    >;
+    const thirds: { letter: GroupLetter; standing: Standing }[] = [];
 
     for (const group of GROUPS) {
       const ranked = simulateGroupOnce(group, rng);
-      firsts.push(ranked[0]);
-      seconds.push(ranked[1]);
-      thirds.push(ranked[2]);
+      const letter = group.name as GroupLetter;
+      groupResults[letter] = ranked;
+      thirds.push({ letter, standing: ranked[2] });
     }
 
-    const bestThirds = rankStandings(thirds).slice(0, 8);
-    const qualifiers = [...firsts, ...seconds, ...bestThirds];
+    // 8 best third-placed teams (ranked across groups) → their group letters.
+    const bestThirdGroups = rankAcrossGroups(thirds.map((t) => t.standing))
+      .slice(0, 8)
+      .map((st) => thirds.find((t) => t.standing.slug === st.slug)!.letter);
 
-    for (const q of qualifiers) reach[q.slug][0]++;
+    // 3. Official Annex C assignment of thirds to R32 slots.
+    const thirdAssignment = assignThirdPlaceSlots(bestThirdGroups);
 
-    const seeded = rankStandings(qualifiers);
-    const bySeed = seedOrder.map((seedNo) => seeded[seedNo - 1]);
-
-    let alive = bySeed;
-    let stage = 1;
-    while (alive.length > 1) {
-      const next: Standing[] = [];
-      for (let i = 0; i < alive.length; i += 2) {
-        const A = alive[i];
-        const B = alive[i + 1];
-        const { goalsA, goalsB } = sampleMatch(
-          getRating(A.slug),
-          getRating(B.slug),
-          homeBonus(A.slug, B.slug),
-          false,
-          rng
-        );
-        const winner = goalsA >= goalsB ? A : B;
-        reach[winner.slug][stage]++;
-        next.push(winner);
+    // 4. Play the official bracket in match-number order.
+    const winners: Record<number, string> = {};
+    const ctx = { groupResults, thirdAssignment, winners };
+    for (const m of BRACKET_2026) {
+      const home = resolvePosition(m.home, ctx);
+      const away = resolvePosition(m.away, ctx);
+      if (m.round === "R32") {
+        // Both participants reached the Round of 32 (bucket 0).
+        reach[home][0]++;
+        reach[away][0]++;
       }
-      alive = next;
-      stage++;
+      const { goalsA, goalsB } = sampleMatch(
+        getRating(home),
+        getRating(away),
+        homeBonus(home, away),
+        false, // knockout — no draws
+        rng
+      );
+      const winner = goalsA >= goalsB ? home : away;
+      winners[m.no] = winner;
+      reach[winner][REACH_BUCKET[m.round]]++;
     }
   }
 

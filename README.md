@@ -85,6 +85,65 @@ The statistical core is a TypeScript port of a calibrated World Cup model:
 
 ---
 
+## 🏆 2026 World Cup format accuracy
+
+The tournament simulation follows the **official FIFA 2026 format and bracket routing** — not a generic seeded bracket.
+
+**Format**
+- **48 teams**, **12 groups of 4** (A–L).
+- Qualification to the Round of 32: **12 group winners + 12 runners-up + the 8 best third-placed teams** = **32 teams**. This is explicit in `simulateTournament()` and enforced by the validation suite.
+
+**Group ranking (FIFA tiebreakers)** — `lib/prediction-engine/engine.ts`
+1. points → 2. goal difference → 3. goals scored
+4. **head-to-head** among still-tied teams (H2H points → H2H GD → H2H GF), computed from the simulated group matches
+5. fair play / drawing of lots → **approximated** by team rating (Elo) then a deterministic key, because a forward Monte Carlo simulation has no disciplinary/fair-play data. *(Documented approximation.)*
+
+The 8 best third-placed teams are ranked across groups by points → GD → GF → (fair-play/lots ≈ Elo).
+
+**Official Round of 32 routing** — `lib/prediction-engine/bracket-2026.ts`
+
+Every slot is fixed in advance (no performance seeding):
+
+```
+M73 2A v 2B      M74 1E v 3rd      M75 1F v 2C      M76 1C v 2F
+M77 1I v 3rd     M78 2E v 2I       M79 1A v 3rd     M80 1L v 3rd
+M81 1D v 3rd     M82 1G v 3rd      M83 2K v 2L      M84 1H v 2J
+M85 1B v 3rd     M86 1J v 2H       M87 1K v 3rd     M88 2D v 2G
+```
+
+Round of 16 → Final follow the fixed match-number tree (89–96 → 97–100 → 101–102 → 104).
+
+**Third-place assignment (FIFA Annex C)**
+
+Which third-placed team fills each "3rd" slot depends on *which 8 of the 12 groups* produced the best thirds. Each slot only accepts thirds from an allowed set of groups:
+
+| Slot | 1st-seed | Allowed third-placed groups |
+|------|----------|-----------------------------|
+| M74 | 1E | A, B, C, D, F |
+| M77 | 1I | C, D, F, G, H |
+| M79 | 1A | C, E, F, H, I |
+| M80 | 1L | E, H, I, J, K |
+| M81 | 1D | B, E, F, I, J |
+| M82 | 1G | A, E, H, I, J |
+| M85 | 1B | E, F, G, I, J |
+| M87 | 1K | D, E, I, J, L |
+
+`assignThirdPlaceSlots()` resolves the 8 qualifying groups to these slots with a **deterministic bipartite matching** that honours the allowed sets — guaranteeing a rules-valid assignment for **all C(12,8) = 495 combinations** (verified by the test suite). An optional `EXACT_ANNEX_C` table can pin FIFA's exact published slot for any combination; the matcher is the safe, fully-covering fallback.
+
+**Validate it**
+
+```bash
+npm run validate:bracket
+```
+
+Confirms: official R32 spec (no generic seeding) · 12 winners + 12 runners-up + 8 thirds placed correctly · all 495 Annex C combinations resolve to allowed slots · every R32 has exactly 32 distinct teams · champion Monte Carlo runs with a monotonic reach funnel.
+
+**Current limitations**
+- Fair-play / drawing-of-lots tiebreakers are approximated (Elo + deterministic key) — no disciplinary data exists in a forward simulation.
+- `EXACT_ANNEX_C` overrides are not yet populated; for the rare combinations with more than one valid matching, the computed slot may differ from FIFA's published row (still always rules-valid). Marked with a `TODO(annex-c)`.
+
+---
+
 ## 📰 Daily news intelligence
 
 This is what makes the agent feel *current*. Instead of reasoning only over static team strength, it pulls recent team news and folds it into the prediction.

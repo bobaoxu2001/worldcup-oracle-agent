@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:bracket": "tsx scripts/validate-bracket.ts"
   },
   "dependencies": {
     "@radix-ui/react-progress": "^1.1.1",
