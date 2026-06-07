@@ -48,6 +48,29 @@ const ALIASES: Record<string, string> = {
   "les bleus": "france",
   "die mannschaft": "germany",
   "la roja": "spain",
+  // ── Spanish / Portuguese names (accents are stripped by norm) ──────────────
+  alemania: "germany", // es
+  alemanha: "germany", // pt
+  espana: "spain", // es (España)
+  espanha: "spain", // pt
+  brasil: "brazil",
+  francia: "france", // es
+  franca: "france", // pt (França)
+  inglaterra: "england",
+  "paises bajos": "netherlands", // es
+  "paises baixos": "netherlands", // pt
+  holanda: "netherlands",
+  japon: "japan", // es (Japón)
+  japao: "japan", // pt (Japão)
+  "estados unidos": "usa",
+  belgica: "belgium",
+  croacia: "croatia", // es/pt
+  marruecos: "morocco", // es
+  marrocos: "morocco", // pt
+  "corea del sur": "south-korea", // es
+  "coreia do sul": "south-korea", // pt
+  "arabia saudita": "saudi-arabia",
+  uruguai: "uruguay", // pt
 };
 
 /** Star player → national team slug, for scenario detection ("what if X is out"). */
@@ -77,6 +100,54 @@ export const PLAYER_TO_TEAM: Record<string, string> = {
   "lamine yamal": "spain",
   musiala: "germany",
   kvaratskhelia: "georgia",
+};
+
+/**
+ * Chinese / Japanese team names → slug. Matched by substring on the raw query
+ * because `norm()` strips non-Latin characters. Enables Global Voice Mode in
+ * 中文 / 日本語 (voice or typed). Latin-script names (es/pt) go through ALIASES.
+ */
+export const CJK_ALIASES: Record<string, string> = {
+  // Chinese (Simplified)
+  阿根廷: "argentina",
+  德国: "germany",
+  巴西: "brazil",
+  法国: "france",
+  葡萄牙: "portugal",
+  西班牙: "spain",
+  英格兰: "england",
+  美国: "usa",
+  墨西哥: "mexico",
+  荷兰: "netherlands",
+  比利时: "belgium",
+  克罗地亚: "croatia",
+  摩洛哥: "morocco",
+  韩国: "south-korea",
+  乌拉圭: "uruguay",
+  哥伦比亚: "colombia",
+  沙特阿拉伯: "saudi-arabia",
+  加拿大: "canada",
+  瑞士: "switzerland",
+  日本: "japan", // also valid Japanese (kanji)
+  // Japanese (Katakana)
+  アルゼンチン: "argentina",
+  ドイツ: "germany",
+  ブラジル: "brazil",
+  フランス: "france",
+  ポルトガル: "portugal",
+  スペイン: "spain",
+  イングランド: "england",
+  アメリカ: "usa",
+  メキシコ: "mexico",
+  オランダ: "netherlands",
+  ベルギー: "belgium",
+  クロアチア: "croatia",
+  モロッコ: "morocco",
+  韓国: "south-korea",
+  ウルグアイ: "uruguay",
+  コロンビア: "colombia",
+  カナダ: "canada",
+  スイス: "switzerland",
 };
 
 function norm(s: string): string {
@@ -124,6 +195,20 @@ export function resolveTeams(query: string): TeamRef[] {
       if (!seen.has(slug)) {
         seen.add(slug);
         found.push({ slug, at: m.index });
+      }
+    }
+  }
+
+  // CJK names (Chinese / Japanese) — substring match on the raw query, since
+  // norm() strips non-Latin characters. Enables non-English voice/text input.
+  const raw = query.toLowerCase();
+  for (const key of Object.keys(CJK_ALIASES).sort((a, b) => b.length - a.length)) {
+    const at = raw.indexOf(key);
+    if (at >= 0) {
+      const slug = CJK_ALIASES[key];
+      if (!seen.has(slug)) {
+        seen.add(slug);
+        found.push({ slug, at });
       }
     }
   }

@@ -34,6 +34,7 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 - **Explains** the result in plain English, plus a fan insight and an optional TikTok-style script.
 - **Remembers** every session in MongoDB and answers **follow-ups** ("What if Germany's injured defender returns?").
 - **Agent Memory Center** (`/memory`) makes the memory layer visible: backend status, recent sessions, stored news signals, last refresh.
+- **Global Voice Mode:** fans can ask predictions by voice and hear responses in **English, Chinese, Spanish, Portuguese, or Japanese** — native browser speech APIs, no extra key, with deterministic localized summaries (numbers never change) and optional Gemini-translated prose.
 
 ---
 
@@ -116,9 +117,10 @@ Gemini plugs into one seam — `lib/llm/gemini.ts` (`gemini-2.0-flash` via REST)
    - **Latest News Impact**: show the **base → adjusted** table (Germany −3 pts from a high-impact defender injury) and the "Impact:" explanation.
    - Point at **"Saved to agent memory · MongoDB / In-memory."**
 3. **Click the follow-up** *"What if Germany's injured defender returns?"* — the agent re-analyses and Germany's odds recover. "It remembered the matchup and the news."
-4. **Open `/memory` (Agent Memory Center).** Show the memory backend, recent sessions, stored `team_news` signals, last news update, and "Why MongoDB matters."
-5. **Open `/news` (Daily Team News).** Switch teams, show impact/category/source badges, hit **Refresh news now**.
-6. Close: "Statistical rigor + daily news intelligence + agent memory — that's WorldCup Oracle Agent."
+4. **Global Voice Mode (optional, ~10s):** switch the language to **Español**, ask the same question by voice, and play the spoken answer — the result reads back in Spanish.
+5. **Open `/memory` (Agent Memory Center).** Show the memory backend, recent sessions, stored `team_news` signals, last news update, and "Why MongoDB matters."
+6. **Open `/news` (Daily Team News).** Switch teams, show impact/category/source badges, hit **Refresh news now**.
+7. Close: "Statistical rigor + daily news intelligence + agent memory + global voice — that's WorldCup Oracle Agent."
 
 ---
 

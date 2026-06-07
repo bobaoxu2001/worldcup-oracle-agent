@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/agent/predict
- * Body: { query: string, isFollowUp?: boolean, contextTeams?: string[] }
+ * Body: { query: string, isFollowUp?: boolean, contextTeams?: string[], language?: string }
  * Runs the full agent pipeline and returns an AgentResponse.
  */
 export async function POST(req: Request) {
@@ -15,6 +15,7 @@ export async function POST(req: Request) {
       query?: string;
       isFollowUp?: boolean;
       contextTeams?: string[];
+      language?: string;
     };
     const query = (body.query ?? "").trim();
     if (!query) {
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
       query,
       isFollowUp: Boolean(body.isFollowUp),
       contextTeams: Array.isArray(body.contextTeams) ? body.contextTeams.slice(0, 2) : undefined,
+      language: typeof body.language === "string" ? body.language : undefined,
     });
 
     return NextResponse.json(response);

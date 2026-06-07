@@ -141,6 +141,12 @@ export interface AgentResponse {
   llmEnhanced: boolean;
   persisted: "mongodb" | "memory" | "none";
   createdAt: string;
+  /** Global Voice Mode: the language the answer was localized to (BCP-47). */
+  language?: string;
+  /** In-language one-line result summary (deterministic, used for TTS/headline). */
+  localizedSummary?: string;
+  /** How the narrative was localized: none (English) · gemini · template. */
+  localizationMethod?: "none" | "gemini" | "template";
 }
 
 /** Internal: raw model bundle before narrative generation. */

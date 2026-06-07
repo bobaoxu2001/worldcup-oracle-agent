@@ -302,6 +302,43 @@ The UI badges each answer as **`Gemini-enhanced`** or **`Deterministic engine`**
 
 ---
 
+## 🗣️ Global Voice Mode
+
+Football is global — so the agent speaks five languages and listens too. A compact
+**Global Voice Mode** bar lets fans pick a language, **ask by voice**, and **hear the
+answer read aloud** in their language.
+
+**Supported languages:** English (`en-US`) · 中文 (`zh-CN`) · Español (`es-ES`) ·
+Português (`pt-BR`) · 日本語 (`ja-JP`).
+
+The selected language drives the suggested prompts, the spoken/typed input language,
+the response language, and the text-to-speech voice.
+
+- **Voice input** uses the browser's native **Web Speech API**
+  (`SpeechRecognition` / `webkitSpeechRecognition`) — no dependency, no API key. The mic
+  button shows `Listening…`, and degrades gracefully with clear messages for
+  *not supported* / *permission denied*. If unavailable, text input works exactly as before.
+- **Voice output** uses the browser's native **`speechSynthesis`** — a per-answer
+  **Listen / Stop** button. Audio never autoplays; the user clicks to play. The button hides
+  if the browser can't speak.
+- **Response language** — the numbers are always produced by the deterministic engine and
+  **never change during translation**. A deterministic, in-language **result summary**
+  (built from the structured numbers) is always shown and spoken. When `GOOGLE_API_KEY` is
+  set, **Gemini** additionally rewrites the full explanation in the chosen language with
+  strict "keep every number exact" instructions; without it, the localized summary + localized
+  UI labels carry the language (English detail remains) — **no extra API key is required for
+  basic voice mode**.
+- **Multilingual team resolution** — localized team aliases (Spanish/Portuguese + Chinese/
+  Japanese) let free voice/typed questions like *"阿根廷对德国"* or *"Argentina vs Alemania"*
+  resolve correctly. Suggested prompts submit an English canonical query under the hood, so the
+  flagship demo is rock-solid in every language.
+
+**Browser support:** voice **input** is best in Chrome/Edge (and Chromium); Safari support is
+partial; Firefox lacks `SpeechRecognition` (the mic button simply hides). Voice **output**
+works in all modern browsers. Everything falls back to text gracefully.
+
+---
+
 ## Run it locally
 
 ```bash

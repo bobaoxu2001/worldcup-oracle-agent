@@ -1,7 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Sparkles, Loader2, Cpu, Lightbulb, Film, RefreshCw, Database } from "lucide-react";
+import {
+  Send,
+  Sparkles,
+  Loader2,
+  Cpu,
+  Lightbulb,
+  Film,
+  RefreshCw,
+  Database,
+  Mic,
+  Volume2,
+  Square,
+  Globe,
+} from "lucide-react";
 import { ReasoningTimeline } from "./reasoning-timeline";
 import { PredictionCard } from "./prediction-card";
 import { SimulationCenter } from "./simulation-center";
@@ -13,15 +26,24 @@ import { DataTransparency } from "./data-transparency";
 import { cn } from "@/lib/utils";
 import type { AgentResponse, ReasoningStep } from "@/lib/agent/types";
 import type { StoredPrediction, PersistMode } from "@/lib/db/mongodb";
+import { LANGUAGES, DEFAULT_LANG, isLangCode, type LangCode } from "@/lib/i18n/languages";
+import { SUGGESTED_PROMPTS, t } from "@/lib/i18n/prompts";
 
-const SUGGESTED = [
-  "Who will win Argentina vs Germany based on the latest team news?",
-  "Predict France vs Portugal and include news impact",
-  "Show me the latest Argentina news before predicting",
-  "What changed in Brazil's squad this week?",
-  "Which team has the best chance to win the 2026 World Cup?",
-  "Give me a TikTok-style match preview for England vs Germany",
-];
+// Minimal local typings for the Web Speech API (not in every TS lib version).
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+}
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onstart: (() => void) | null;
+  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
 
 const THINKING_STEPS = [
   "Understanding your question",
@@ -50,12 +72,42 @@ export function AgentChat({
   const [input, setInput] = useState("");
   const [recent, setRecent] = useState(initialRecent);
   const [busy, setBusy] = useState(false);
+  const [lang, setLang] = useState<LangCode>(DEFAULT_LANG);
+  const [listening, setListening] = useState(false);
+  const [voiceMsg, setVoiceMsg] = useState<string | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const nextId = useRef(1);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [turns]);
+
+  // Restore the chosen language; detect speech-recognition support (client only).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("wcoa-lang");
+      if (saved && isLangCode(saved)) setLang(saved);
+    } catch {
+      /* ignore */
+    }
+    const w = window as unknown as {
+      SpeechRecognition?: unknown;
+      webkitSpeechRecognition?: unknown;
+    };
+    setSpeechSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition));
+  }, []);
+
+  const changeLang = useCallback((code: LangCode) => {
+    setLang(code);
+    setVoiceMsg(null);
+    try {
+      localStorage.setItem("wcoa-lang", code);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const refreshRecent = useCallback(async () => {
     try {
@@ -102,7 +154,7 @@ export function AgentChat({
         const res = await fetch("/api/agent/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, isFollowUp, contextTeams }),
+          body: JSON.stringify({ query, isFollowUp, contextTeams, language: lang }),
         });
         const data = (await res.json()) as AgentResponse & { error?: string };
 
@@ -136,8 +188,59 @@ export function AgentChat({
         setBusy(false);
       }
     },
-    [busy, lastContextTeams, refreshRecent]
+    [busy, lang, lastContextTeams, refreshRecent]
   );
+
+  // ── Voice input (Web Speech API · native, no dependency) ──────────────────
+  const startVoice = useCallback(() => {
+    if (busy) return;
+    const w = window as unknown as {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    };
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) {
+      setVoiceMsg(t(lang, "voiceUnsupported"));
+      return;
+    }
+    try {
+      const rec = new SR();
+      rec.lang = lang;
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onstart = () => {
+        setListening(true);
+        setVoiceMsg(t(lang, "listening"));
+      };
+      rec.onresult = (e: SpeechRecognitionEventLike) => {
+        const transcript = e.results?.[0]?.[0]?.transcript ?? "";
+        setVoiceMsg(null);
+        if (transcript.trim()) {
+          setInput(transcript);
+          submit(transcript);
+        }
+      };
+      rec.onerror = (e: { error?: string }) => {
+        setListening(false);
+        setVoiceMsg(
+          e.error === "not-allowed" || e.error === "service-not-allowed"
+            ? t(lang, "micDenied")
+            : t(lang, "voiceError")
+        );
+      };
+      rec.onend = () => setListening(false);
+      recognitionRef.current = rec;
+      rec.start();
+    } catch {
+      setListening(false);
+      setVoiceMsg(t(lang, "voiceError"));
+    }
+  }, [busy, lang, submit]);
+
+  const stopVoice = useCallback(() => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }, []);
 
   const hasPrediction = turns.some((t) => t.response?.prediction);
 
@@ -194,49 +297,92 @@ export function AgentChat({
           </div>
         ))}
 
-        {/* suggested prompts */}
+        {/* suggested prompts (localized display, English canonical query) */}
         {(!hasPrediction || turns.length === 0) && (
           <div className="flex flex-wrap gap-2">
-            {SUGGESTED.map((s) => (
+            {SUGGESTED_PROMPTS[lang].map((s) => (
               <button
-                key={s}
-                onClick={() => submit(s)}
+                key={s.display}
+                onClick={() => submit(s.query)}
                 disabled={busy}
                 className="rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-neon/30 hover:text-foreground disabled:opacity-50"
               >
-                {s}
+                {s.display}
               </button>
             ))}
           </div>
         )}
 
-        {/* input bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit(input);
-          }}
-          className="sticky bottom-4 z-30"
-        >
-          <div className="glass flex items-center gap-2 rounded-2xl p-2 shadow-glow">
-            <Sparkles className="ml-2 h-4 w-4 shrink-0 text-neon" />
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask: Who will win Argentina vs Portugal?"
-              className="flex-1 bg-transparent px-1 py-2 text-sm outline-none placeholder:text-muted-foreground/70"
-              disabled={busy}
-            />
-            <button
-              type="submit"
-              disabled={busy || !input.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-neon to-electric text-background transition hover:opacity-90 disabled:opacity-40"
-              aria-label="Send"
-            >
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </button>
+        {/* input + Global Voice Mode controls */}
+        <div className="sticky bottom-4 z-30 space-y-2">
+          {/* Global Voice Mode bar */}
+          <div className="glass flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl px-3 py-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-neon">
+              <Globe className="h-3.5 w-3.5" /> Global Voice Mode
+            </span>
+            <label className="inline-flex items-center gap-1.5">
+              <span className="sr-only">{t(lang, "language")}</span>
+              <select
+                value={lang}
+                onChange={(e) => changeLang(e.target.value as LangCode)}
+                className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-medium text-foreground outline-none transition hover:border-neon/30"
+                aria-label={t(lang, "language")}
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code} className="bg-background text-foreground">
+                    {l.flag} {l.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="text-muted-foreground">
+              {voiceMsg ?? t(lang, "voiceHelper")}
+            </span>
           </div>
-        </form>
+
+          {/* input row */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit(input);
+            }}
+          >
+            <div className="glass flex items-center gap-2 rounded-2xl p-2 shadow-glow">
+              <Sparkles className="ml-2 h-4 w-4 shrink-0 text-neon" />
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={t(lang, "placeholder")}
+                className="flex-1 bg-transparent px-1 py-2 text-sm outline-none placeholder:text-muted-foreground/70"
+                disabled={busy}
+              />
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={listening ? stopVoice : startVoice}
+                  disabled={busy}
+                  aria-label={listening ? "Stop voice input" : "Start voice input"}
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-xl border transition disabled:opacity-40",
+                    listening
+                      ? "border-red-500/40 bg-red-500/15 text-red-300 animate-pulse"
+                      : "border-white/10 bg-white/[0.04] text-muted-foreground hover:border-neon/30 hover:text-foreground"
+                  )}
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={busy || !input.trim()}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-neon to-electric text-background transition hover:opacity-90 disabled:opacity-40"
+                aria-label="Send"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            </div>
+          </form>
+        </div>
 
         <div ref={bottomRef} />
       </div>
@@ -287,6 +433,8 @@ function AgentAnswer({
   busy: boolean;
 }) {
   const { prediction, simulation, champions, newsImpact, teamNews } = response;
+  const answerLang: LangCode = isLangCode(response.language) ? response.language : "en-US";
+  const speakText = response.localizedSummary || plainText(response.explanation);
   return (
     <div className="space-y-4">
       <ReasoningTimeline steps={response.reasoningSteps} />
@@ -309,7 +457,9 @@ function AgentAnswer({
       <div className="glass rounded-2xl p-5">
         <div className="mb-2 flex items-center gap-2">
           <Lightbulb className="h-4 w-4 text-neon" />
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-neon">Why?</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-neon">
+            {t(answerLang, "why")}
+          </span>
           <span
             className={cn(
               "chip text-[10px]",
@@ -319,7 +469,18 @@ function AgentAnswer({
             <Cpu className="h-3 w-3" />
             {response.llmEnhanced ? "Gemini-enhanced" : "Deterministic engine"}
           </span>
+          <span className="ml-auto">
+            <SpeakButton text={speakText} lang={answerLang} listenLabel={t(answerLang, "listen")} stopLabel={t(answerLang, "stop")} />
+          </span>
         </div>
+
+        {/* localized result headline (in the selected language; also spoken) */}
+        {response.localizedSummary && (
+          <p className="mb-3 rounded-xl border border-neon/20 bg-neon/[0.05] px-4 py-2.5 text-sm font-semibold">
+            {response.localizedSummary}
+          </p>
+        )}
+
         <div className="space-y-2 text-sm leading-relaxed text-foreground/90">
           {response.explanation.split("\n").map((line, i) =>
             line.trim() ? (
@@ -330,7 +491,9 @@ function AgentAnswer({
 
         {/* fan insight */}
         <div className="mt-4 rounded-xl border border-electric/20 bg-electric/[0.05] px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-electric">Fan insight</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-electric">
+            {t(answerLang, "fanInsight")}
+          </p>
           <p className="mt-1 text-sm">{response.fanInsight}</p>
         </div>
 
@@ -351,7 +514,7 @@ function AgentAnswer({
       {isLatest && (prediction || teamNews) && (
         <div className="glass rounded-2xl p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Ask a follow-up
+            {t(answerLang, "followUp")}
           </p>
           <div className="flex flex-wrap gap-2">
             {(prediction
@@ -403,6 +566,78 @@ function PipelineCard() {
       </ol>
     </div>
   );
+}
+
+/** Text-to-speech toggle for an answer (browser SpeechSynthesis; never autoplay). */
+function SpeakButton({
+  text,
+  lang,
+  listenLabel,
+  stopLabel,
+}: {
+  text: string;
+  lang: LangCode;
+  listenLabel: string;
+  stopLabel: string;
+}) {
+  const [supported, setSupported] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+
+  useEffect(() => {
+    setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
+    return () => {
+      try {
+        window.speechSynthesis?.cancel();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, []);
+
+  if (!supported || !text) return null;
+
+  const toggle = () => {
+    const synth = window.speechSynthesis;
+    if (speaking) {
+      synth.cancel();
+      setSpeaking(false);
+      return;
+    }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.onend = () => setSpeaking(false);
+    u.onerror = () => setSpeaking(false);
+    setSpeaking(true);
+    synth.speak(u);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-medium transition",
+        speaking
+          ? "border-neon/40 bg-neon/10 text-neon"
+          : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-neon/30 hover:text-foreground"
+      )}
+      aria-label={speaking ? stopLabel : listenLabel}
+    >
+      {speaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+      {speaking ? stopLabel : listenLabel}
+    </button>
+  );
+}
+
+/** Strip light markdown/bullets so text-to-speech reads cleanly. */
+function plainText(s: string): string {
+  return s
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/[#*_`>]/g, "")
+    .replace(/^[•\-]\s?/gm, "")
+    .replace(/\n+/g, ". ")
+    .trim();
 }
 
 /** Memory-saved indicator — makes the MongoDB memory layer visible in the flow. */

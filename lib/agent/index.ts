@@ -34,6 +34,12 @@ import { geminiConfigured } from "@/lib/llm/gemini";
 import { resolveNews, resolveTeamNews } from "./newsResolver";
 import { activeNewsProviderName } from "@/lib/news/newsIngestor";
 import {
+  localizeText,
+  buildMatchSummary,
+  buildChampionSummary,
+} from "@/lib/i18n/responseLocalizer";
+import { isLangCode, type LangCode } from "@/lib/i18n/languages";
+import {
   analyzeNewsImpact,
   buildNewsNarrative,
   buildTeamNewsDigest,
@@ -55,6 +61,8 @@ export interface AgentInput {
   contextTeams?: string[];
   /** Disable persistence (e.g. internal preview). */
   persist?: boolean;
+  /** Global Voice Mode: language to localize the answer to (BCP-47). */
+  language?: string;
 }
 
 function step(
@@ -90,12 +98,32 @@ function toPredictionResult(b: PredictionBundle): PredictionResult {
   };
 }
 
+/**
+ * Finalize the narrative for the chosen language.
+ * - English: the existing Gemini polish (English path is byte-identical to before).
+ * - Other language: Gemini-translate preserving numbers, or keep English on
+ *   fallback (the in-language result summary carries the localized headline).
+ */
+async function finalizeNarrative(
+  english: string,
+  context: string,
+  lang: LangCode
+): Promise<{ text: string; enhanced: boolean; method: "none" | "gemini" | "template" }> {
+  if (lang === "en-US") {
+    const r = await polishWithGemini(english, context);
+    return { text: r.text, enhanced: r.enhanced, method: r.enhanced ? "gemini" : "none" };
+  }
+  const r = await localizeText(english, lang);
+  return { text: r.text, enhanced: r.method === "gemini", method: r.method };
+}
+
 export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const { query } = input;
   const persist = input.persist ?? true;
   const hasContextMatchup = input.contextTeams?.length === 2;
   const plan = planQuery(query, input.isFollowUp, hasContextMatchup);
   const createdAt = new Date();
+  const lang: LangCode = isLangCode(input.language) ? input.language : "en-US";
 
   // ---- TEAM NEWS DIGEST -------------------------------------------------
   if (plan.intent === "team-news" && plan.teamSlugs.length >= 1) {
@@ -118,15 +146,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     ];
 
     const digest = buildTeamNewsDigest(view, source);
-    const { text, enhanced } = await polishWithGemini(
+    const { text, enhanced, method } = await finalizeNarrative(
       digest,
-      `Latest team-news digest for ${team.name}. Keep facts and any 'demo data' caveat intact.`
+      `Latest team-news digest for ${team.name}. Keep facts and any 'demo data' caveat intact.`,
+      lang
     );
 
     const topNeg = view.items.find((i) => i.direction === "negative");
-    const fanInsight = topNeg
+    const fanInsightEn = topNeg
       ? `📰 ${team.flag} ${team.name}: ${topNeg.impactLevel}-impact ${topNeg.category} update is the one to watch before kickoff.`
       : `📰 ${team.flag} ${team.name} look settled — no major negative news in the latest signals.`;
+    const fanInsight = lang === "en-US" ? fanInsightEn : (await localizeText(fanInsightEn, lang)).text;
 
     const persisted = persist
       ? await savePrediction({
@@ -154,6 +184,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       llmEnhanced: enhanced,
       persisted,
       createdAt: createdAt.toISOString(),
+      language: lang,
+      localizationMethod: method,
     };
   }
 
@@ -196,14 +228,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
         )}% of simulations (Elo ${focus.elo}).\n\n` + explanation;
     }
 
-    const fanInsight = `🏆 ${answer.contenders[0].flag} ${answer.contenders[0].name} lead the title race at ${(
+    const fanInsightEn = `🏆 ${answer.contenders[0].flag} ${answer.contenders[0].name} lead the title race at ${(
       answer.contenders[0].champion * 100
     ).toFixed(1)}% — but 10k sims say it's wide open.`;
 
-    const { text, enhanced } = await polishWithGemini(
+    const { text, enhanced, method } = await finalizeNarrative(
       explanation,
-      "Tournament title odds from a 10,000-run Monte Carlo simulation of the 2026 World Cup."
+      "Tournament title odds from a 10,000-run Monte Carlo simulation of the 2026 World Cup.",
+      lang
     );
+    const fanInsight = lang === "en-US" ? fanInsightEn : (await localizeText(fanInsightEn, lang)).text;
+    const localizedSummary = lang === "en-US" ? undefined : buildChampionSummary(answer, lang);
 
     const persisted = persist
       ? await savePrediction({
@@ -236,6 +271,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       llmEnhanced: enhanced,
       persisted,
       createdAt: createdAt.toISOString(),
+      language: lang,
+      localizedSummary,
+      localizationMethod: method,
     };
   }
 
@@ -258,17 +296,21 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           : "Could not confidently identify two teams."
       ),
     ];
-    const explanation =
+    const explanationEn =
       "I couldn't pin down a matchup. Try naming two teams, e.g. **\"Who will win Argentina vs Portugal?\"**, or ask **\"Which team has the best chance to win the 2026 World Cup?\"**";
+    const fanEn = "Give me two teams and I'll run 10,000 simulations. ⚽";
+    const explanation = lang === "en-US" ? explanationEn : (await localizeText(explanationEn, lang)).text;
+    const fanInsight = lang === "en-US" ? fanEn : (await localizeText(fanEn, lang)).text;
     return {
       intent: "unknown",
       query,
       reasoningSteps: steps,
       explanation,
-      fanInsight: "Give me two teams and I'll run 10,000 simulations. ⚽",
+      fanInsight,
       llmEnhanced: false,
       persisted: "none",
       createdAt: createdAt.toISOString(),
+      language: lang,
     };
   }
 
@@ -387,16 +429,20 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     explanation = `**What changed:** ${scenario.description}\n\n${explanation}`;
   }
   explanation = `${explanation}\n\n${buildNewsNarrative(newsImpact)}`;
-  const fanInsight = buildFanInsight(bundle);
+  let fanInsight = buildFanInsight(bundle);
   const tiktokScript =
     plan.intent === "tiktok-preview" ? buildTiktokScript(bundle) : undefined;
 
-  const { text, enhanced } = await polishWithGemini(
+  const { text, enhanced, method } = await finalizeNarrative(
     explanation,
     `News-aware match prediction: ${teamA.name} vs ${teamB.name}.${
       scenario ? " This is a what-if scenario re-analysis." : ""
-    } A capped news-signal layer adjusted the probabilities; keep all numbers and the 'demo data' caveat intact.`
+    } A capped news-signal layer adjusted the probabilities; keep all numbers and the 'demo data' caveat intact.`,
+    lang
   );
+  // In-language deterministic headline (also used for text-to-speech).
+  const localizedSummary = lang === "en-US" ? undefined : buildMatchSummary(result, lang);
+  if (lang !== "en-US") fanInsight = (await localizeText(fanInsight, lang)).text;
 
   const followUpContext = [scenario?.label, newsImpact.adjustment.applied ? newsImpact.note : ""]
     .filter(Boolean)
@@ -442,6 +488,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     llmEnhanced: enhanced,
     persisted,
     createdAt: createdAt.toISOString(),
+    language: lang,
+    localizedSummary,
+    localizationMethod: method,
   };
 }
 
