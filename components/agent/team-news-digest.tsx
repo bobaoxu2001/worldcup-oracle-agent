@@ -6,10 +6,13 @@ import type { TeamNewsView } from "@/lib/agent/types";
 export function TeamNewsDigest({
   view,
   source,
+  provider,
 }: {
   view: TeamNewsView;
   source?: "api" | "demo";
+  provider?: string | null;
 }) {
+  const live = source === "api";
   return (
     <div className="glass rounded-2xl p-5">
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -18,7 +21,7 @@ export function TeamNewsDigest({
           {view.team.flag} {view.team.name} — latest news
         </span>
         <span className="chip text-[10px]">
-          {source === "demo" ? "Demo news data" : "Live news"}
+          {live ? `Live news${provider ? ` · ${provider}` : ""}` : "Demo · Sample news signals"}
         </span>
       </div>
 

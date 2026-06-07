@@ -1,11 +1,19 @@
-import { Newspaper, ArrowRight } from "lucide-react";
+import { Newspaper, ArrowRight, Radio } from "lucide-react";
 import { NewsItemCard } from "@/components/news/news-item-card";
 import { cn } from "@/lib/utils";
-import type { NewsImpactReport, TeamNewsView } from "@/lib/agent/types";
+import type { NewsImpactReport, NewsItemView, TeamNewsView } from "@/lib/agent/types";
 
 /** "Latest News Impact" — recent news for both teams + how it moved the line. */
-export function NewsImpact({ report }: { report: NewsImpactReport }) {
+export function NewsImpact({
+  report,
+  provider,
+}: {
+  report: NewsImpactReport;
+  provider?: string | null;
+}) {
   const { adjustment: adj } = report;
+  const live = report.source === "api";
+
   return (
     <div className="glass rounded-2xl p-5">
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -13,28 +21,40 @@ export function NewsImpact({ report }: { report: NewsImpactReport }) {
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-neon">
           Latest news impact
         </span>
-        <span className="chip text-[10px]">
-          {report.source === "demo" ? "Demo news data" : "Live news"}
+        <span
+          className={cn(
+            "chip text-[10px]",
+            live ? "border-neon/30 text-neon" : "border-amber-400/30 text-amber-300"
+          )}
+        >
+          <Radio className="h-3 w-3" />
+          {live ? `Live news${provider ? ` · ${provider}` : ""}` : "Demo · Sample news signals"}
         </span>
       </div>
 
-      {/* base → adjusted, if news moved anything */}
-      {adj.applied ? (
-        <div className="mb-4 rounded-xl border border-electric/20 bg-electric/[0.05] p-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-electric">
-            Prediction impact (news signal layer)
-          </p>
-          <div className="grid grid-cols-3 gap-2 text-center text-sm">
-            <ShiftCell label={report.teamA.team.name} delta={adj.deltaPts.teamAWin} value={adj.adjusted.teamAWin} />
-            <ShiftCell label="Draw" delta={adj.deltaPts.draw} value={adj.adjusted.draw} />
-            <ShiftCell label={report.teamB.team.name} delta={adj.deltaPts.teamBWin} value={adj.adjusted.teamBWin} />
-          </div>
+      {/* base vs adjusted probabilities */}
+      <div className="mb-4 overflow-hidden rounded-xl border border-electric/20 bg-electric/[0.04]">
+        <div className="border-b border-white/[0.06] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-electric">
+          Base vs news-adjusted probabilities
         </div>
-      ) : (
-        <p className="mb-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">
-          {report.note}
-        </p>
-      )}
+        <div className="px-3 py-3">
+          <ProbTable
+            teamA={report.teamA.team.name}
+            teamB={report.teamB.team.name}
+            base={adj.base}
+            adjusted={adj.adjusted}
+            delta={adj.deltaPts}
+            applied={adj.applied}
+          />
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-foreground/90">
+            <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+            <span>
+              <span className="font-semibold">Impact:</span>{" "}
+              {adj.applied ? causingSummary(report) : "the latest news is noted but doesn't move the model beyond rounding."}
+            </span>
+          </p>
+        </div>
+      </div>
 
       {/* per-team news columns */}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -49,25 +69,112 @@ export function NewsImpact({ report }: { report: NewsImpactReport }) {
   );
 }
 
-function ShiftCell({ label, delta, value }: { label: string; delta: number; value: number }) {
-  const up = delta > 0;
-  const flat = delta === 0;
+function ProbTable({
+  teamA,
+  teamB,
+  base,
+  adjusted,
+  delta,
+  applied,
+}: {
+  teamA: string;
+  teamB: string;
+  base: { teamAWin: number; draw: number; teamBWin: number };
+  adjusted: { teamAWin: number; draw: number; teamBWin: number };
+  delta: { teamAWin: number; draw: number; teamBWin: number };
+  applied: boolean;
+}) {
+  const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
   return (
-    <div className="rounded-lg bg-white/[0.03] p-2">
-      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="text-base font-bold tabular-nums">{(value * 100).toFixed(0)}%</p>
-      <p
-        className={cn(
-          "text-[11px] font-semibold tabular-nums",
-          flat ? "text-muted-foreground" : up ? "text-neon" : "text-red-400"
-        )}
-      >
-        {flat ? "±0" : `${up ? "+" : ""}${delta}`} pt{Math.abs(delta) === 1 ? "" : "s"}
-      </p>
+    <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-x-3 gap-y-1.5 text-sm">
+      {/* header */}
+      <span />
+      <ColHead>{teamA} win</ColHead>
+      <ColHead>Draw</ColHead>
+      <ColHead>{teamB} win</ColHead>
+
+      {/* base row */}
+      <RowLabel>Base model</RowLabel>
+      <Cell>{pct(base.teamAWin)}</Cell>
+      <Cell>{pct(base.draw)}</Cell>
+      <Cell>{pct(base.teamBWin)}</Cell>
+
+      {/* adjusted row */}
+      <RowLabel highlight>News-adjusted</RowLabel>
+      <Cell highlight>{pct(adjusted.teamAWin)}</Cell>
+      <Cell highlight>{pct(adjusted.draw)}</Cell>
+      <Cell highlight>{pct(adjusted.teamBWin)}</Cell>
+
+      {/* delta row */}
+      <RowLabel>Δ news</RowLabel>
+      <DeltaCell d={applied ? delta.teamAWin : 0} />
+      <DeltaCell d={applied ? delta.draw : 0} />
+      <DeltaCell d={applied ? delta.teamBWin : 0} />
     </div>
   );
+}
+
+function ColHead({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+function RowLabel({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "whitespace-nowrap text-[11px] font-medium uppercase tracking-wide",
+        highlight ? "text-neon" : "text-muted-foreground"
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+function Cell({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "text-center font-bold tabular-nums",
+        highlight ? "text-foreground" : "text-muted-foreground"
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+function DeltaCell({ d }: { d: number }) {
+  const flat = d === 0;
+  return (
+    <span
+      className={cn(
+        "text-center text-xs font-semibold tabular-nums",
+        flat ? "text-muted-foreground" : d > 0 ? "text-neon" : "text-red-400"
+      )}
+    >
+      {flat ? "±0" : `${d > 0 ? "+" : ""}${d}`}
+    </span>
+  );
+}
+
+/** One-line "why the numbers moved", built from the highest-impact news items. */
+function causingSummary(report: NewsImpactReport): string {
+  const causes: string[] = [];
+  for (const tv of [report.teamA, report.teamB]) {
+    const top = tv.items
+      .filter((i) => i.direction !== "neutral" && i.impactLevel !== "low")
+      .sort((a, b) => weight(b) - weight(a))[0];
+    if (top) {
+      const dir = top.direction === "negative" ? "weakened" : "boosted";
+      causes.push(`${tv.team.name} ${dir} by ${top.impactLevel}-impact ${top.category} (${top.title.toLowerCase()})`);
+    }
+  }
+  return causes.length ? `${causes.join("; ")}.` : report.note;
+}
+function weight(i: NewsItemView): number {
+  return i.impactLevel === "high" ? 2 : i.impactLevel === "medium" ? 1 : 0;
 }
 
 function TeamColumn({ view }: { view: TeamNewsView }) {

@@ -8,7 +8,7 @@
  * player). Deterministic and honest about being an estimate.
  */
 
-import { resolvePlayer } from "./matchResolver";
+import { resolvePlayer, resolveTeams } from "./matchResolver";
 import type { TeamRef } from "./types";
 
 export interface ScenarioAdjustment {
@@ -68,6 +68,38 @@ export function resolveScenario(
         }${delta} Elo adjustment to ${target.name} to reflect ${
           negated ? "their absence" : "their availability"
         }, then re-runs the full simulation. This is a transparent estimate, not a precise injury model.`,
+      };
+    }
+  }
+
+  // "What if {team}'s injured {role} returns?" — a positive availability swing
+  // that effectively reverses an earlier injury concern. Detected even when the
+  // sentence also contains "injured" (the return is what matters).
+  const returning = /\b(returns?|is back|comes back|back from|recovered|fit again|available again|cleared to play)\b/.test(
+    q
+  );
+  if (returning) {
+    const named = resolveTeams(query).find(
+      (t) => t.slug === teamA.slug || t.slug === teamB.slug
+    );
+    const target = named
+      ? named.slug === teamA.slug
+        ? teamA
+        : teamB
+      : null;
+    if (target) {
+      const roleMatch = q.match(
+        /\b(goalkeeper|keeper|defender|fullback|full-back|centre-back|center-back|midfielder|winger|forward|striker|captain|star player|key player|player)\b/
+      );
+      const role = roleMatch ? roleMatch[1] : "key player";
+      const delta = 45; // capped positive availability swing
+      const isA = target.slug === teamA.slug;
+      return {
+        affectedSlug: target.slug,
+        eloDeltaA: isA ? delta : 0,
+        eloDeltaB: isA ? 0 : delta,
+        label: `${target.name}'s ${role} returns → ${target.name} Elo +${delta}`,
+        description: `The agent treats ${target.name}'s ${role} returning to fitness as a positive availability swing and applies a capped +${delta} Elo adjustment to ${target.name} before re-simulating — effectively reversing the earlier injury concern. Transparent estimate, not a precise medical model.`,
       };
     }
   }

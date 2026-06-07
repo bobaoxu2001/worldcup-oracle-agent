@@ -38,8 +38,13 @@ export type PersistMode = "mongodb" | "memory";
 const DB_NAME = process.env.MONGODB_DB || "worldcup_oracle";
 const COLLECTION = "predictions";
 
-// ---- In-memory fallback store (survives within a single server process) ----
-const memoryStore: StoredPrediction[] = [];
+// ---- In-memory fallback store ----
+// Hung off globalThis so the SAME store is shared across all route/page bundles
+// in one server process (Next.js bundles each route separately, so a plain
+// module-level array would not be shared between e.g. /api/agent/predict and
+// the /memory page). With MongoDB configured this store is unused.
+const __g = globalThis as unknown as { __wcoaPredMem?: StoredPrediction[] };
+const memoryStore: StoredPrediction[] = (__g.__wcoaPredMem ??= []);
 const MEMORY_LIMIT = 50;
 
 // ---- Mongo connection (lazy, cached, fail-soft) ----
@@ -108,6 +113,27 @@ export async function savePrediction(doc: StoredPrediction): Promise<PersistMode
   memoryStore.unshift(doc);
   if (memoryStore.length > MEMORY_LIMIT) memoryStore.length = MEMORY_LIMIT;
   return "memory";
+}
+
+/** Whether a live MongoDB connection can actually be established right now. */
+export async function mongoConnected(): Promise<boolean> {
+  return (await getMongoDb()) !== null;
+}
+
+/** Count stored prediction sessions (for the Agent Memory Center). */
+export async function countPredictions(): Promise<{
+  total: number;
+  source: PersistMode;
+}> {
+  const col = await getCollection();
+  if (col) {
+    try {
+      return { total: await col.estimatedDocumentCount(), source: "mongodb" };
+    } catch {
+      /* fall through */
+    }
+  }
+  return { total: memoryStore.length, source: "memory" };
 }
 
 /** Fetch recent predictions (newest first). Always returns something. */

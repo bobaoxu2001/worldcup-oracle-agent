@@ -13,11 +13,25 @@ import type { TeamNewsItem } from "./types";
 
 const COLLECTION = "team_news";
 
-// ---- In-memory fallback (per server process) ----
-const memoryStore: TeamNewsItem[] = [];
+// ---- In-memory fallback ----
+// Shared across route/page bundles via globalThis (see mongodb.ts for why).
+const __g = globalThis as unknown as {
+  __wcoaNewsMem?: TeamNewsItem[];
+  __wcoaNewsLast?: Date | null;
+};
+const memoryStore: TeamNewsItem[] = (__g.__wcoaNewsMem ??= []);
 const MEMORY_LIMIT = 500;
 
 let indexesEnsured = false;
+
+function markWrite() {
+  __g.__wcoaNewsLast = new Date();
+}
+
+/** Timestamp of the most recent write (refresh or on-demand seed). */
+export function getLastNewsUpdate(): Date | null {
+  return __g.__wcoaNewsLast ?? null;
+}
 
 async function getCollection(): Promise<Collection<TeamNewsItem> | null> {
   const db = await getMongoDb();
@@ -52,6 +66,7 @@ export async function saveTeamNews(
   team: string,
   items: TeamNewsItem[]
 ): Promise<"mongodb" | "memory"> {
+  markWrite();
   const col = await getCollection();
   if (col) {
     try {
@@ -69,6 +84,28 @@ export async function saveTeamNews(
   memoryStore.push(...items);
   if (memoryStore.length > MEMORY_LIMIT) memoryStore.splice(0, memoryStore.length - MEMORY_LIMIT);
   return "memory";
+}
+
+/** Aggregate stats for the Agent Memory Center. Always succeeds. */
+export async function getNewsStats(): Promise<{
+  source: "mongodb" | "memory";
+  total: number;
+  lastUpdate: string | null;
+}> {
+  const col = await getCollection();
+  if (col) {
+    try {
+      const total = await col.estimatedDocumentCount();
+      return { source: "mongodb", total, lastUpdate: getLastNewsUpdate()?.toISOString() ?? null };
+    } catch (err) {
+      console.warn("[team_news] stats failed — using memory:", (err as Error)?.message);
+    }
+  }
+  return {
+    source: "memory",
+    total: memoryStore.length,
+    lastUpdate: getLastNewsUpdate()?.toISOString() ?? null,
+  };
 }
 
 /** Recent news for a team, newest first. Always returns something usable. */

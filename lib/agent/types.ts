@@ -135,6 +135,8 @@ export interface AgentResponse {
   teamNews?: TeamNewsView;
   /** Whether news shown is from a live API ('api') or curated demo data. */
   newsSource?: NewsSource;
+  /** Active live news provider name (e.g. "GNews"), or null in demo mode. */
+  newsProvider?: string | null;
   /** True when an LLM (Gemini) generated the narrative, false on fallback. */
   llmEnhanced: boolean;
   persisted: "mongodb" | "memory" | "none";

@@ -14,9 +14,20 @@
 
 import { getActiveProvider, newsProviderConfigured } from "./newsProvider";
 import { classifyNews } from "./newsClassifier";
-import { saveTeamNews, getTeamNews } from "./teamNewsStore";
+import { saveTeamNews, getTeamNews, getNewsStats, getLastNewsUpdate } from "./teamNewsStore";
 import { getDemoNews, TRACKED_TEAMS, hasDemoNews } from "./demoNews";
 import type { NewsRefreshSummary, NewsSource, TeamNewsItem } from "./types";
+
+/** Name of the active live news provider, or null in demo mode. */
+export function activeNewsProviderName(): string | null {
+  return getActiveProvider()?.name ?? null;
+}
+
+/** Current news mode for badges: live API vs curated demo signals. */
+export function newsMode(): { mode: NewsSource; provider: string | null } {
+  const provider = getActiveProvider();
+  return provider ? { mode: "api", provider: provider.name } : { mode: "demo", provider: null };
+}
 
 /** Convert raw provider items → classified, stored-ready TeamNewsItems. */
 async function fetchAndClassify(team: string, limit: number): Promise<TeamNewsItem[]> {
@@ -109,4 +120,4 @@ export async function getNewsForTeam(
   return { items: [], source: "demo", storedSource: stored.source };
 }
 
-export { TRACKED_TEAMS, newsProviderConfigured };
+export { TRACKED_TEAMS, newsProviderConfigured, getNewsStats, getLastNewsUpdate };

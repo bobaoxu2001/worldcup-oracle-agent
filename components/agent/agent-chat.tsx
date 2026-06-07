@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Sparkles, Loader2, Cpu, Lightbulb, Film, RefreshCw } from "lucide-react";
+import { Send, Sparkles, Loader2, Cpu, Lightbulb, Film, RefreshCw, Database } from "lucide-react";
 import { ReasoningTimeline } from "./reasoning-timeline";
 import { PredictionCard } from "./prediction-card";
 import { SimulationCenter } from "./simulation-center";
@@ -291,12 +291,16 @@ function AgentAnswer({
       <ReasoningTimeline steps={response.reasoningSteps} />
 
       {prediction && <PredictionCard p={prediction} />}
-      {newsImpact && <NewsImpact report={newsImpact} />}
+      {newsImpact && <NewsImpact report={newsImpact} provider={response.newsProvider} />}
       {prediction && simulation && (
         <SimulationCenter sim={simulation} teamA={prediction.teamA} teamB={prediction.teamB} />
       )}
-      {teamNews && <TeamNewsDigest view={teamNews} source={response.newsSource} />}
+      {teamNews && (
+        <TeamNewsDigest view={teamNews} source={response.newsSource} provider={response.newsProvider} />
+      )}
       {champions && <ChampionBoard c={champions} />}
+
+      {response.persisted !== "none" && <MemoryBadge persisted={response.persisted} />}
 
       {/* Why? explanation */}
       <div className="glass rounded-2xl p-5">
@@ -348,7 +352,7 @@ function AgentAnswer({
           </p>
           <div className="flex flex-wrap gap-2">
             {(prediction
-              ? followUpsFor(prediction.teamA.name, prediction.teamB.name)
+              ? buildMatchFollowUps(response)
               : teamNewsFollowUps(teamNews!.team.name)
             ).map((q) => (
               <button
@@ -398,13 +402,58 @@ function PipelineCard() {
   );
 }
 
-function followUpsFor(a: string, b: string): string[] {
-  return [
-    "Does the latest injury news change the prediction?",
-    "What if Messi was unavailable?",
-    `What changed in ${a}'s squad this week?`,
-    `Give me a TikTok-style preview for ${a} vs ${b}`,
-  ];
+/** Memory-saved indicator — makes the MongoDB memory layer visible in the flow. */
+function MemoryBadge({ persisted }: { persisted: "mongodb" | "memory" }) {
+  const mongo = persisted === "mongodb";
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 text-xs">
+      <Database className={cn("h-3.5 w-3.5", mongo ? "text-neon" : "text-muted-foreground")} />
+      <span className="text-muted-foreground">
+        Saved to agent memory ·{" "}
+        <span className={cn("font-semibold", mongo ? "text-neon" : "text-foreground")}>
+          {mongo ? "MongoDB Atlas" : "In-memory fallback"}
+        </span>
+        {" "}— this session, its probabilities and news context are now recallable.
+      </span>
+    </div>
+  );
+}
+
+/** Context-aware follow-ups: leads with an injury-return what-if when relevant. */
+function buildMatchFollowUps(r: AgentResponse): string[] {
+  const a = r.prediction!.teamA.name;
+  const b = r.prediction!.teamB.name;
+  const list: string[] = [];
+  const injuryReturn = r.newsImpact ? injuryReturnPrompt(r.newsImpact) : null;
+  if (injuryReturn) list.push(injuryReturn);
+  list.push("Does the latest injury news change the prediction?");
+  list.push(`What if ${a} are in great form?`);
+  list.push(`Give me a TikTok-style preview for ${a} vs ${b}`);
+  return Array.from(new Set(list)).slice(0, 4);
+}
+
+/** "What if {Team}'s injured {role} returns?" from the top negative injury item. */
+function injuryReturnPrompt(report: NonNullable<AgentResponse["newsImpact"]>): string | null {
+  type Cand = { team: string; role: string; w: number };
+  let best: Cand | null = null;
+  for (const tv of [report.teamA, report.teamB]) {
+    for (const it of tv.items) {
+      const bad = it.direction === "negative" && (it.category === "injury" || it.category === "suspension");
+      if (!bad || it.impactLevel === "low") continue;
+      const w = it.impactLevel === "high" ? 2 : 1;
+      if (!best || w > best.w) {
+        best = { team: tv.team.name, role: roleFromTitle(it.title), w };
+      }
+    }
+  }
+  return best ? `What if ${best.team}'s injured ${best.role} returns?` : null;
+}
+
+function roleFromTitle(title: string): string {
+  const m = title.match(
+    /\b(goalkeeper|keeper|defender|fullback|full-back|midfielder|winger|forward|striker)\b/i
+  );
+  return m ? m[1].toLowerCase() : "key player";
 }
 
 function teamNewsFollowUps(name: string): string[] {

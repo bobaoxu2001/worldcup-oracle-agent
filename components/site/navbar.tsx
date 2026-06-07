@@ -31,6 +31,12 @@ export function Navbar() {
           >
             Daily News
           </Link>
+          <Link
+            href="/memory"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            Memory
+          </Link>
           <a
             href="https://github.com/bobaoxu2001/worldcup-oracle-agent"
             target="_blank"

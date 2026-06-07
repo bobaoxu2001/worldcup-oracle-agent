@@ -2,7 +2,18 @@
 
 > **A daily news-aware AI agent that analyzes World Cup 2026 matchups, factors in the latest injuries & squad news, runs simulations, explains its predictions, and answers follow-up questions in real time.**
 
-Built for the **Google Cloud Rapid Agent Hackathon** · targets the **MongoDB Partner Track**.
+**🏆 Google Cloud Rapid Agent Hackathon — MongoDB Track**
+&nbsp;·&nbsp; 📜 MIT Licensed &nbsp;·&nbsp; ⚡ Runs with zero config
+
+- **🔗 Live demo:** _<!-- TODO: paste your deployed URL, e.g. https://worldcup-oracle-agent.vercel.app -->_ `https://<your-deployment>.vercel.app`
+- **💻 Source:** https://github.com/bobaoxu2001/worldcup-oracle-agent
+- **🎥 Demo video:** _<!-- TODO: paste your 3-min YouTube/Loom link -->_
+- **📝 Devpost write-up:** see [`DEVPOST.md`](DEVPOST.md)
+
+> **Why the MongoDB Track:** MongoDB is the agent's **memory layer** — two collections,
+> `predictions` (every session's probabilities, simulation & reasoning) and `team_news`
+> (classified daily news signals, indexed by team / impact / category), plus the follow-up
+> context that lets the agent re-analyse "what-if" questions. See the **[Agent Memory Center](#-agent-memory-center-mongodb-track)** and live it at `/memory`.
 
 WorldCup Oracle Agent is **not** a static prediction dashboard. You ask a football question in plain English — *"Who will win Argentina vs Germany based on the latest team news?"* — and watch an agent **plan** the analysis, **resolve** the teams, **pull recent injury & squad news**, **run 10,000 Monte Carlo simulations**, **explain how the latest updates move the line**, **remember** the result, and **answer your follow-ups** (*"Does Germany's injury news change the prediction?"*).
 
@@ -247,6 +258,20 @@ The daily news intelligence layer uses a second collection, **`team_news`**, ind
 
 ---
 
+## 🧠 Agent Memory Center (MongoDB Track)
+
+Visit **`/memory`** for a live view of the agent's MongoDB-backed memory — MongoDB is the agent's **memory layer, not just storage**:
+
+- **Memory backend** — MongoDB Atlas vs in-memory fallback, with live connection status and session count.
+- **Recent prediction sessions** — replayed from the `predictions` collection.
+- **Stored team-news signals** — recent classified items from `team_news`, per team.
+- **News intelligence status** — Live (with provider) vs Demo mode, total stored signals, and **last news update** time. A **"Refresh news now"** button triggers the daily-style refresh on demand.
+- **Why MongoDB matters** — `predictions` + `team_news` + follow-up context, called out explicitly.
+
+Status is also available as JSON at **`GET /api/memory/status`**.
+
+---
+
 ## Google Cloud / Gemini readiness
 
 Gemini plugs into a single seam (`lib/llm/gemini.ts`). When `GOOGLE_API_KEY` is set, the agent asks Gemini to rewrite its deterministic explanation into livelier prose (numbers preserved exactly). When it's **not** set — the default for the demo — the built-in deterministic generator is used and everything works identically. A 6-second timeout means a slow API can never stall the demo.
@@ -326,4 +351,23 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 
 ---
 
-*Predictions are model estimates for entertainment & informational use only.*
+## ✅ Submission checklist
+
+- [x] **Agentic product** — explicit, inspectable pipeline (planner → resolver → news → impact → engine → simulator → explainer → memory) with a visible reasoning timeline.
+- [x] **MongoDB Track** — `predictions` + `team_news` collections (indexed) as the agent's memory layer; live status at `/memory`.
+- [x] **Google Cloud / Gemini-ready** — single Gemini seam (`lib/llm/gemini.ts`); deterministic fallback when no key.
+- [x] **Runs with zero config** — predictions, simulations, news and memory all work with an empty `.env`.
+- [x] **Fail-soft** — missing/invalid MongoDB, Gemini or news keys never break the demo.
+- [x] **Open source** — [MIT `LICENSE`](LICENSE).
+- [x] **Docs** — README + [`DEVPOST.md`](DEVPOST.md) (pitch, build, demo + 3-min video script).
+- [x] **Quality gates** — `npm run typecheck`, `npm run build`, `npm run validate:bracket` all pass.
+- [ ] **Live demo URL** — deploy to Vercel and paste the link at the top of this README.
+- [ ] **Demo video** — record the 3-minute script in `DEVPOST.md` and paste the link.
+
+## 📜 License
+
+This project is open source under the [MIT License](LICENSE) — free to use, modify, and distribute. © 2026 WorldCup Oracle Agent contributors.
+
+---
+
+*Predictions are model estimates for entertainment & informational use only. Not betting or financial advice.*

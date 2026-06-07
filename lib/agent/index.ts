@@ -32,6 +32,7 @@ import {
 import { savePrediction } from "@/lib/db/mongodb";
 import { geminiConfigured } from "@/lib/llm/gemini";
 import { resolveNews, resolveTeamNews } from "./newsResolver";
+import { activeNewsProviderName } from "@/lib/news/newsIngestor";
 import {
   analyzeNewsImpact,
   buildNewsNarrative,
@@ -149,6 +150,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation: text,
       fanInsight,
       newsSource: source,
+      newsProvider: activeNewsProviderName(),
       llmEnhanced: enhanced,
       persisted,
       createdAt: createdAt.toISOString(),
@@ -432,6 +434,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     simulation,
     newsImpact,
     newsSource: news.source,
+    newsProvider: activeNewsProviderName(),
     explanation: text,
     fanInsight,
     tiktokScript,
