@@ -141,10 +141,11 @@ const googleCseProvider: NewsProvider = {
   },
 };
 
+// Priority order (first configured wins): GNews → SerpAPI → NewsAPI → Google CSE.
 const PROVIDERS: { isConfigured: () => boolean; provider: NewsProvider }[] = [
-  { isConfigured: () => !!process.env.NEWS_API_KEY, provider: newsApiProvider },
   { isConfigured: () => !!process.env.GNEWS_API_KEY, provider: gnewsProvider },
   { isConfigured: () => !!process.env.SERPAPI_API_KEY, provider: serpApiProvider },
+  { isConfigured: () => !!process.env.NEWS_API_KEY, provider: newsApiProvider },
   {
     isConfigured: () =>
       !!process.env.GOOGLE_SEARCH_API_KEY && !!process.env.GOOGLE_SEARCH_ENGINE_ID,

@@ -2,13 +2,22 @@
 
 > **A daily news-aware AI agent that analyzes World Cup 2026 matchups, factors in the latest injuries & squad news, runs simulations, explains its predictions, and answers follow-up questions in real time.**
 
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![MongoDB](https://img.shields.io/badge/MongoDB-memory%20layer-47A248?logo=mongodb&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-ready-4285F4?logo=googlegemini&logoColor=white)
+![News-aware](https://img.shields.io/badge/News-aware-39FF88)
+![Monte Carlo](https://img.shields.io/badge/Monte%20Carlo-10%2C000%20runs-2D9BFF)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 **🏆 Google Cloud Rapid Agent Hackathon — MongoDB Track**
 &nbsp;·&nbsp; 📜 MIT Licensed &nbsp;·&nbsp; ⚡ Runs with zero config
 
-- **🔗 Live demo:** _<!-- TODO: paste your deployed URL, e.g. https://worldcup-oracle-agent.vercel.app -->_ `https://<your-deployment>.vercel.app`
-- **💻 Source:** https://github.com/bobaoxu2001/worldcup-oracle-agent
-- **🎥 Demo video:** _<!-- TODO: paste your 3-min YouTube/Loom link -->_
-- **📝 Devpost write-up:** see [`DEVPOST.md`](DEVPOST.md)
+| | |
+|---|---|
+| **🔗 Live demo** | _paste your Vercel URL_ → `https://<your-deployment>.vercel.app` |
+| **📝 Devpost** | _paste your Devpost submission URL_ |
+| **🎥 Demo video** | _paste your 3-min YouTube/Loom link_ |
+| **💻 Source** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
 
 > **Why the MongoDB Track:** MongoDB is the agent's **memory layer** — two collections,
 > `predictions` (every session's probabilities, simulation & reasoning) and `team_news`
@@ -18,6 +27,18 @@
 WorldCup Oracle Agent is **not** a static prediction dashboard. You ask a football question in plain English — *"Who will win Argentina vs Germany based on the latest team news?"* — and watch an agent **plan** the analysis, **resolve** the teams, **pull recent injury & squad news**, **run 10,000 Monte Carlo simulations**, **explain how the latest updates move the line**, **remember** the result, and **answer your follow-ups** (*"Does Germany's injury news change the prediction?"*).
 
 It feels like **a World Cup prediction model + a daily football news intelligence agent** in one.
+
+## 📸 Screenshots
+
+> _Add the four images below before submitting — drop the PNGs into `docs/screenshots/`
+> (filenames already referenced here). Capture them by running `npm run dev` and using the
+> flagship prompt **"Who will win Argentina vs Germany based on the latest team news?"**, then visiting `/memory`._
+
+| Home — agent chat | Agent reasoning timeline |
+|---|---|
+| ![Home](docs/screenshots/home.png) | ![Agent timeline](docs/screenshots/agent-timeline.png) |
+| **Latest News Impact (base vs adjusted)** | **Agent Memory Center (`/memory`)** |
+| ![News impact](docs/screenshots/news-impact.png) | ![Memory Center](docs/screenshots/memory-center.png) |
 
 ---
 
@@ -34,6 +55,7 @@ It feels like **a World Cup prediction model + a daily football news intelligenc
 9. **Explains** the reasoning in plain English — including *how the latest news affects the matchup* — plus a fan insight and optional TikTok-style script.
 10. **Remembers** every interaction in MongoDB (with a zero-config in-memory fallback).
 11. **Answers follow-ups** like *"Does the injury news change the prediction?"* or *"What changed in Brazil's squad this week?"*.
+12. **Shows its work** — a **Data Transparency** card on every result reveals exactly what produced it (Elo · Dixon-Coles · 10k Monte Carlo · live/demo news · MongoDB/in-memory · Gemini/deterministic), reflecting the live runtime state.
 
 ## Why it's an agent (not just an LLM call)
 
@@ -308,6 +330,22 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 
 > Configure **any one** of the news providers to go live — the first one set wins. With none set, the agent runs on clearly-labelled demo signals.
 
+> **No environment variables are required for the demo.** Without keys, the app runs in
+> **deterministic + demo-news + in-memory** fallback mode and every feature still works.
+
+### Deploy to Vercel
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new) (framework auto-detects as Next.js).
+2. **No env vars needed** for a working demo. To enable the live paths, add any of the variables above in **Project → Settings → Environment Variables**:
+   - `MONGODB_URI` (+ optional `MONGODB_DB`) → real agent memory (Atlas)
+   - `GNEWS_API_KEY` (or `SERPAPI_API_KEY` / `NEWS_API_KEY` / `GOOGLE_SEARCH_API_KEY` + `GOOGLE_SEARCH_ENGINE_ID`) → live news
+   - `GOOGLE_API_KEY` → Gemini-enhanced explanations
+   - `NEXT_PUBLIC_APP_URL` → your deployed URL (for metadata/OG)
+3. Deploy. The included [`vercel.json`](vercel.json) registers a **daily cron** that calls `/api/news/refresh` at 06:00 UTC to keep `team_news` fresh.
+4. Paste the resulting URL into the table at the top of this README and into `DEVPOST.md`.
+
+Build is standard `next build` — verified locally green; all external services degrade gracefully, so the first deploy succeeds even with zero env vars.
+
 ### Scripts
 
 ```bash
@@ -324,14 +362,13 @@ npm run typecheck  # tsc --noEmit
 
 Paste any of these into the agent:
 
-- `Who will win Argentina vs Germany based on latest team news?` — the flagship news-aware demo
-- `Show me the latest Argentina news before predicting` — team-news digest
-- `Does Germany's recent injury news change the prediction?` — news-driven re-analysis
-- `What changed in Brazil's squad this week?`
-- `Predict France vs Portugal and include news impact`
-- `Which team has the best chance to win the 2026 World Cup?` — runs the full-tournament Monte Carlo
-- `Give me a TikTok-style match preview for England vs Germany`
-- **Follow-ups:** `What if a key Argentina player is unavailable?` · `Does the latest injury news change the prediction?`
+1. `Who will win Argentina vs Germany based on the latest team news?` — **the flagship** news-aware demo
+2. `Does Germany's injury news change the prediction?` — news-driven re-analysis
+3. `What if Germany's injured defender returns?` — scenario re-analysis (odds recover)
+4. `Show me the latest Argentina team news before predicting` — team-news digest
+5. `Which team has the best chance to win the 2026 World Cup?` — full-tournament Monte Carlo
+
+More to try: `Predict France vs Portugal and include news impact` · `What changed in Brazil's squad this week?` · `Give me a TikTok-style match preview for England vs Germany`
 
 Also visit **`/news`** (Daily Team News) to browse recent injuries / squad / tactics updates per team and trigger a manual refresh.
 

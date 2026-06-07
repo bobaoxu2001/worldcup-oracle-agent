@@ -2,6 +2,12 @@
 
 **Google Cloud Rapid Agent Hackathon · MongoDB Track**
 
+| | |
+|---|---|
+| **🔗 Live demo** | _paste your Vercel URL_ |
+| **💻 GitHub** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
+| **🎥 Demo video** | _paste your 3-min link_ |
+
 ---
 
 ## ⚡ Elevator pitch
@@ -73,6 +79,8 @@ Gemini plugs into one seam — `lib/llm/gemini.ts` (`gemini-2.0-flash` via REST)
 
 - A genuinely **agentic** product: a visible, inspectable pipeline with planning, tool steps, and memory — not a single prompt.
 - **News-aware predictions** with a transparent base-vs-adjusted view.
+- A **Data Transparency card** on every result — judges can see exactly what produced the answer (Elo · Dixon-Coles · 10k Monte Carlo · live/demo news · MongoDB/in-memory · Gemini/deterministic), reflecting the live runtime state. No black-box "AI numbers."
+- **Live or demo news, clearly labelled** — plug in a GNews/SerpAPI/NewsAPI/Google CSE key for live mode; otherwise honest, generic sample signals.
 - **Official, validated** 2026 bracket (all 495 Annex C combinations pass).
 - **MongoDB as a first-class memory layer** with a dedicated Memory Center.
 - **Zero-config** end-to-end: clone, `npm install`, `npm run dev`.
@@ -86,6 +94,16 @@ Gemini plugs into one seam — `lib/llm/gemini.ts` (`gemini-2.0-flash` via REST)
 - **MongoDB Atlas Vector Search** over news + historical matches for "find similar situations."
 - **Multi-turn memory recall** — the agent cites its own past predictions in follow-ups.
 - A user **bracket builder** to simulate custom knockout paths.
+
+---
+
+## 💬 Recommended demo prompts
+
+1. **Who will win Argentina vs Germany based on the latest team news?** _(flagship)_
+2. Does Germany's injury news change the prediction?
+3. What if Germany's injured defender returns?
+4. Show me the latest Argentina team news before predicting.
+5. Which team has the best chance to win the 2026 World Cup?
 
 ---
 

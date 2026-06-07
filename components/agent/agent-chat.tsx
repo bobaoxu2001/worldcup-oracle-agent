@@ -9,12 +9,13 @@ import { ChampionBoard } from "./champion-board";
 import { RecentPredictions } from "./recent-predictions";
 import { NewsImpact } from "./news-impact";
 import { TeamNewsDigest } from "./team-news-digest";
+import { DataTransparency } from "./data-transparency";
 import { cn } from "@/lib/utils";
 import type { AgentResponse, ReasoningStep } from "@/lib/agent/types";
 import type { StoredPrediction, PersistMode } from "@/lib/db/mongodb";
 
 const SUGGESTED = [
-  "Who will win Argentina vs Germany based on latest team news?",
+  "Who will win Argentina vs Germany based on the latest team news?",
   "Predict France vs Portugal and include news impact",
   "Show me the latest Argentina news before predicting",
   "What changed in Brazil's squad this week?",
@@ -299,6 +300,8 @@ function AgentAnswer({
         <TeamNewsDigest view={teamNews} source={response.newsSource} provider={response.newsProvider} />
       )}
       {champions && <ChampionBoard c={champions} />}
+
+      {(prediction || champions) && <DataTransparency response={response} />}
 
       {response.persisted !== "none" && <MemoryBadge persisted={response.persisted} />}
 
