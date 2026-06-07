@@ -19,15 +19,23 @@ export function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-2">
-          <span className="chip hidden sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse-glow" />
-            Live agent
-          </span>
+          <Link
+            href="/"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            Agent
+          </Link>
+          <Link
+            href="/news"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            Daily News
+          </Link>
           <a
             href="https://github.com/bobaoxu2001/worldcup-oracle-agent"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-neon/30 hover:text-foreground"
+            className="hidden rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-neon/30 hover:text-foreground sm:inline-block"
           >
             GitHub
           </a>

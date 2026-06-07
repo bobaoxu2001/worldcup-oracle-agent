@@ -23,8 +23,17 @@ const CHAMPION_RE =
 const TIKTOK_RE = /\b(tiktok|tik tok|reel|short|social|hype|preview)\b/i;
 const SCENARIO_RE =
   /\b(what if|suppose|imagine|without|missing|unavailable|injured|out|suspended|sidelined|if .* (was|were|is|are)\b)/i;
+// News-intelligence intent: user wants the latest team news / what changed.
+const NEWS_RE =
+  /\b(news|latest|updates?|injury report|roster|call[- ]?ups?|squad|what changed|who replaced|team news|this week)\b/i;
+// References to (re)running a prediction — keeps a "does X news change the prediction?" follow-up on the match path.
+const PREDICT_REF = /\b(predict|prediction|who (will )?win|odds|chance|affect|change the)\b/i;
 
-export function planQuery(query: string, isFollowUp = false): Plan {
+export function planQuery(
+  query: string,
+  isFollowUp = false,
+  hasContextMatchup = false
+): Plan {
   const teams = resolveTeams(query);
   const teamSlugs = teams.map((t) => t.slug);
   const player = resolvePlayer(query) ?? undefined;
@@ -34,12 +43,24 @@ export function planQuery(query: string, isFollowUp = false): Plan {
   // A follow-up that names a what-if scenario re-analyses the prior matchup.
   if (isFollowUp && (SCENARIO_RE.test(query) || player)) {
     intent = "scenario";
+  } else if (isFollowUp && hasContextMatchup && PREDICT_REF.test(query) && teamSlugs.length < 2) {
+    // "Does the injury news change the prediction?" → re-run the prior matchup
+    // (runAgent supplies the two teams from context).
+    intent = "match-prediction";
   } else if (TIKTOK_RE.test(query) && teamSlugs.length === 2) {
     intent = "tiktok-preview";
   } else if (SCENARIO_RE.test(query) && (teamSlugs.length === 2 || player)) {
     intent = "scenario";
   } else if (teamSlugs.length === 2) {
     intent = "match-prediction";
+  } else if (
+    NEWS_RE.test(query) &&
+    teamSlugs.length === 1 &&
+    !(isFollowUp && PREDICT_REF.test(query))
+  ) {
+    // One team + a news cue → daily team-news digest. (As a follow-up asking
+    // whether news changes the prediction, we keep it on the match path.)
+    intent = "team-news";
   } else if (CHAMPION_RE.test(query) || /\bworld cup\b/i.test(query)) {
     intent = "champion-odds";
   } else if (teamSlugs.length === 1) {
@@ -79,9 +100,17 @@ function planLabelsFor(intent: AgentIntent): string[] {
     case "match-prediction":
       return [
         "Gather match data & identify the teams",
-        "Analyze team strength (Elo, form, host edge)",
+        "Pull recent team news (injuries, squad, tactics)",
+        "Analyze team strength + news impact",
         "Run 10,000-match Monte Carlo simulation",
-        "Generate the prediction report",
+        "Generate the news-aware prediction report",
+      ];
+    case "team-news":
+      return [
+        "Identify the team",
+        "Pull the latest team news",
+        "Classify each item (category & impact)",
+        "Summarize what it means for the team",
       ];
     default:
       return [

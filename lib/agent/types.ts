@@ -4,6 +4,7 @@
  */
 
 import type { MatchPrediction } from "@/lib/types";
+import type { NewsCategory, NewsDirection, NewsImpact, NewsSource } from "@/lib/news/types";
 
 /** What the planner decided the user is asking for. */
 export type AgentIntent =
@@ -11,6 +12,7 @@ export type AgentIntent =
   | "champion-odds" // "Who will win the 2026 World Cup?"
   | "scenario" // follow-up: "What if Messi was unavailable?"
   | "tiktok-preview" // "Give me a TikTok-style preview..."
+  | "team-news" // "Show me the latest Argentina news"
   | "unknown";
 
 /** A single visible step in the agent's reasoning timeline. */
@@ -72,6 +74,46 @@ export interface ChampionAnswer {
   }[];
 }
 
+/** One news item as rendered in the UI / explanation. */
+export interface NewsItemView {
+  title: string;
+  summary: string;
+  category: NewsCategory;
+  impactLevel: NewsImpact;
+  direction: NewsDirection;
+  sourceName: string;
+  sourceUrl: string;
+  publishedAt: string; // ISO
+  demo: boolean;
+}
+
+/** Per-team news view inside a news-impact report. */
+export interface TeamNewsView {
+  team: TeamRef;
+  items: NewsItemView[];
+  netDirection: NewsDirection | "mixed";
+  /** One-line read of what the news means for this team. */
+  headline: string;
+}
+
+/** How news shifted the headline probabilities (percentage points). */
+export interface NewsAdjustment {
+  applied: boolean; // true if any non-trivial shift happened
+  base: { teamAWin: number; draw: number; teamBWin: number };
+  adjusted: { teamAWin: number; draw: number; teamBWin: number };
+  deltaPts: { teamAWin: number; draw: number; teamBWin: number };
+}
+
+/** The "Latest News Impact" report attached to a matchup prediction. */
+export interface NewsImpactReport {
+  teamA: TeamNewsView;
+  teamB: TeamNewsView;
+  adjustment: NewsAdjustment;
+  note: string; // "Prediction impact: ..."
+  source: NewsSource; // 'api' | 'demo'
+  disclaimer: string;
+}
+
 /** The complete answer the agent returns for one turn. */
 export interface AgentResponse {
   intent: AgentIntent;
@@ -87,6 +129,12 @@ export interface AgentResponse {
   tiktokScript?: string; // optional social preview
   /** Scenario follow-ups note what changed vs the base prediction. */
   scenarioNote?: string;
+  /** Daily news intelligence considered for this matchup (two-team intents). */
+  newsImpact?: NewsImpactReport;
+  /** Single-team news digest (team-news intent). */
+  teamNews?: TeamNewsView;
+  /** Whether news shown is from a live API ('api') or curated demo data. */
+  newsSource?: NewsSource;
   /** True when an LLM (Gemini) generated the narrative, false on fallback. */
   llmEnhanced: boolean;
   persisted: "mongodb" | "memory" | "none";

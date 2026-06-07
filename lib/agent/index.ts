@@ -2,12 +2,14 @@
  * Agent orchestrator — the brain that runs the pipeline:
  *
  *   User Query
- *     → Planner            (classify intent, name the plan)
- *     → Match Resolver     (free text → team slugs)
- *     → Prediction Engine  (Elo + Dixon-Coles closed form)
- *     → Monte Carlo        (10,000 simulated matches)
- *     → Explanation Gen    (plain-English + fan insight + TikTok)
- *     → MongoDB Memory     (persist, with in-memory fallback)
+ *     → Planner                 (classify intent, name the plan)
+ *     → Match Resolver          (free text → team slugs)
+ *     → Daily News Resolver     (recent injuries / squad / tactics news)
+ *     → Injury/Squad Analyzer   (lightweight, capped probability nudge)
+ *     → Prediction Engine       (Elo + Dixon-Coles closed form)
+ *     → Monte Carlo             (10,000 simulated matches)
+ *     → Explanation Gen         (plain-English + fan insight + TikTok)
+ *     → MongoDB Memory          (persist, with in-memory fallback)
  *     → Final Answer
  *
  * Returns a fully-formed AgentResponse the UI renders as a reasoning timeline,
@@ -29,12 +31,20 @@ import {
 } from "./explanationGenerator";
 import { savePrediction } from "@/lib/db/mongodb";
 import { geminiConfigured } from "@/lib/llm/gemini";
+import { resolveNews, resolveTeamNews } from "./newsResolver";
+import {
+  analyzeNewsImpact,
+  buildNewsNarrative,
+  buildTeamNewsDigest,
+  summarizeTeam,
+} from "./impactAnalyzer";
 import type {
   AgentResponse,
   PredictionBundle,
   PredictionResult,
   ReasoningStep,
   ChampionAnswer,
+  NewsImpactReport,
 } from "./types";
 
 export interface AgentInput {
@@ -82,8 +92,68 @@ function toPredictionResult(b: PredictionBundle): PredictionResult {
 export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const { query } = input;
   const persist = input.persist ?? true;
-  const plan = planQuery(query, input.isFollowUp);
+  const hasContextMatchup = input.contextTeams?.length === 2;
+  const plan = planQuery(query, input.isFollowUp, hasContextMatchup);
   const createdAt = new Date();
+
+  // ---- TEAM NEWS DIGEST -------------------------------------------------
+  if (plan.intent === "team-news" && plan.teamSlugs.length >= 1) {
+    const team = teamRef(plan.teamSlugs[0]);
+    const { resolved, source } = await resolveTeamNews(team, 8);
+    const view = summarizeTeam(resolved);
+
+    const steps: ReasoningStep[] = [
+      step("identify", "Identify the team", `Focused on ${team.name} ${team.flag}.`),
+      step(
+        "news",
+        "Pull the latest team news",
+        `Loaded ${resolved.items.length} recent item${resolved.items.length === 1 ? "" : "s"} for ${team.name}.`,
+        source === "demo"
+          ? "Source: curated demo signals (no live news API key configured)."
+          : "Source: live news API."
+      ),
+      step("classify", "Classify each item", "Tagged category, impact level and direction for each item."),
+      step("summary", "Summarize for the team", view.headline),
+    ];
+
+    const digest = buildTeamNewsDigest(view, source);
+    const { text, enhanced } = await polishWithGemini(
+      digest,
+      `Latest team-news digest for ${team.name}. Keep facts and any 'demo data' caveat intact.`
+    );
+
+    const topNeg = view.items.find((i) => i.direction === "negative");
+    const fanInsight = topNeg
+      ? `📰 ${team.flag} ${team.name}: ${topNeg.impactLevel}-impact ${topNeg.category} update is the one to watch before kickoff.`
+      : `📰 ${team.flag} ${team.name} look settled — no major negative news in the latest signals.`;
+
+    const persisted = persist
+      ? await savePrediction({
+          userQuery: query,
+          intent: plan.intent,
+          teams: [team.slug],
+          prediction: null,
+          simulationResult: null,
+          reasoningSteps: steps.map((s) => s.title),
+          explanation: text,
+          followUpContext: `team-news:${team.slug}`,
+          createdAt,
+        })
+      : "none";
+
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: steps,
+      teamNews: view,
+      explanation: text,
+      fanInsight,
+      newsSource: source,
+      llmEnhanced: enhanced,
+      persisted,
+      createdAt: createdAt.toISOString(),
+    };
+  }
 
   // ---- CHAMPION ODDS ----------------------------------------------------
   if (plan.intent === "champion-odds" && plan.teamSlugs.length < 2) {
@@ -221,6 +291,37 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const bundle: PredictionBundle = { prediction, teamA, teamB, simulation };
   const result = toPredictionResult(bundle);
 
+  // ---- Daily News Resolver + Injury / Squad Impact Analyzer -------------
+  // Load recent news for both teams and compute a capped, transparent nudge to
+  // the headline probabilities. News is a lightweight signal layer on top of
+  // the base simulation — never a replacement for it.
+  const news = await resolveNews(teamA, teamB, 4);
+  const newsImpact: NewsImpactReport = analyzeNewsImpact(news, {
+    teamAWin: result.teamAWin,
+    draw: result.draw,
+    teamBWin: result.teamBWin,
+  });
+  if (newsImpact.adjustment.applied) {
+    const adj = newsImpact.adjustment.adjusted;
+    result.teamAWin = adj.teamAWin;
+    result.draw = adj.draw;
+    result.teamBWin = adj.teamBWin;
+    const close = Math.abs(adj.teamAWin - adj.teamBWin) < 0.05;
+    result.favorite = close
+      ? "Too close to call"
+      : adj.teamAWin > adj.teamBWin
+        ? teamA.name
+        : teamB.name;
+  }
+
+  const newsStepDesc = `Pulled ${news.teamA.items.length} ${teamA.name} + ${news.teamB.items.length} ${teamB.name} recent news item${
+    news.teamA.items.length + news.teamB.items.length === 1 ? "" : "s"
+  }.`;
+  const newsSourceNote =
+    news.source === "demo"
+      ? "Source: curated demo signals (no live news API key configured)."
+      : "Source: live news API.";
+
   // Build the visible reasoning timeline.
   const steps: ReasoningStep[] =
     plan.intent === "scenario"
@@ -236,6 +337,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
             "Re-weight team strength",
             `Adjusted ratings: ${teamA.name} ${eloA}, ${teamB.name} ${eloB}.`
           ),
+          step("news", "Re-check daily team news", newsStepDesc, newsSourceNote),
+          step("impact", "Re-check injury / squad impact", newsImpact.note),
           step(
             "sim",
             "Re-run Monte Carlo simulation",
@@ -248,6 +351,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
             "data",
             "Gather match data",
             `Identified ${teamA.name} ${teamA.flag} and ${teamB.name} ${teamB.flag} and loaded their team profiles.`
+          ),
+          step("news", "Resolve daily team news", newsStepDesc, newsSourceNote),
+          step(
+            "impact",
+            "Analyze injury / squad impact",
+            newsImpact.note,
+            `${newsImpact.teamA.headline} ${newsImpact.teamB.headline}`
           ),
           step(
             "analyze",
@@ -265,7 +375,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           step(
             "report",
             "Generate prediction report",
-            "Converted the simulation into a clear, fan-friendly prediction."
+            "Converted the simulation + news signals into a clear, fan-friendly prediction."
           ),
         ];
 
@@ -274,14 +384,21 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   if (scenario) {
     explanation = `**What changed:** ${scenario.description}\n\n${explanation}`;
   }
+  explanation = `${explanation}\n\n${buildNewsNarrative(newsImpact)}`;
   const fanInsight = buildFanInsight(bundle);
   const tiktokScript =
     plan.intent === "tiktok-preview" ? buildTiktokScript(bundle) : undefined;
 
   const { text, enhanced } = await polishWithGemini(
     explanation,
-    `Match prediction: ${teamA.name} vs ${teamB.name}.${scenario ? " This is a what-if scenario re-analysis." : ""}`
+    `News-aware match prediction: ${teamA.name} vs ${teamB.name}.${
+      scenario ? " This is a what-if scenario re-analysis." : ""
+    } A capped news-signal layer adjusted the probabilities; keep all numbers and the 'demo data' caveat intact.`
   );
+
+  const followUpContext = [scenario?.label, newsImpact.adjustment.applied ? newsImpact.note : ""]
+    .filter(Boolean)
+    .join(" · ");
 
   const persisted = persist
     ? await savePrediction({
@@ -302,7 +419,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
         },
         reasoningSteps: steps.map((s) => s.title),
         explanation: text,
-        followUpContext: scenario?.label ?? "",
+        followUpContext,
         createdAt,
       })
     : "none";
@@ -313,6 +430,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     reasoningSteps: steps,
     prediction: result,
     simulation,
+    newsImpact,
+    newsSource: news.source,
     explanation: text,
     fanInsight,
     tiktokScript,

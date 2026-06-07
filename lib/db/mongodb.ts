@@ -9,7 +9,7 @@
  * crashes or blocks on the database — Mongo is an enhancement, not a dependency.
  */
 
-import { MongoClient, type Collection } from "mongodb";
+import { MongoClient, type Collection, type Db } from "mongodb";
 
 export interface StoredPrediction {
   userQuery: string;
@@ -66,6 +66,21 @@ function getClient(): Promise<MongoClient> | null {
 
 export function mongoConfigured(): boolean {
   return Boolean(process.env.MONGODB_URI) && !mongoUnavailable;
+}
+
+/**
+ * Shared DB handle for other collections (e.g. team_news) to reuse the same
+ * pooled, fail-soft connection. Returns null when Mongo is absent/unreachable.
+ */
+export async function getMongoDb(): Promise<Db | null> {
+  const cp = getClient();
+  if (!cp) return null;
+  try {
+    const client = await cp;
+    return client.db(DB_NAME);
+  } catch {
+    return null;
+  }
 }
 
 async function getCollection(): Promise<Collection<StoredPrediction> | null> {

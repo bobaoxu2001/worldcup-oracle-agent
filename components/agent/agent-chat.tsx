@@ -7,23 +7,27 @@ import { PredictionCard } from "./prediction-card";
 import { SimulationCenter } from "./simulation-center";
 import { ChampionBoard } from "./champion-board";
 import { RecentPredictions } from "./recent-predictions";
+import { NewsImpact } from "./news-impact";
+import { TeamNewsDigest } from "./team-news-digest";
 import { cn } from "@/lib/utils";
 import type { AgentResponse, ReasoningStep } from "@/lib/agent/types";
 import type { StoredPrediction, PersistMode } from "@/lib/db/mongodb";
 
 const SUGGESTED = [
-  "Who will win Argentina vs Portugal?",
-  "Predict France vs Brazil",
+  "Who will win Argentina vs Germany based on latest team news?",
+  "Predict France vs Portugal and include news impact",
+  "Show me the latest Argentina news before predicting",
+  "What changed in Brazil's squad this week?",
   "Which team has the best chance to win the 2026 World Cup?",
-  "Simulate USA vs Mexico",
   "Give me a TikTok-style match preview for England vs Germany",
 ];
 
 const THINKING_STEPS = [
   "Understanding your question",
   "Resolving teams & loading data",
+  "Pulling recent team news (injuries, squad)",
   "Running 10,000 Monte Carlo simulations",
-  "Generating the prediction report",
+  "Generating the news-aware report",
 ];
 
 interface Turn {
@@ -281,15 +285,17 @@ function AgentAnswer({
   isLatest: boolean;
   busy: boolean;
 }) {
-  const { prediction, simulation, champions } = response;
+  const { prediction, simulation, champions, newsImpact, teamNews } = response;
   return (
     <div className="space-y-4">
       <ReasoningTimeline steps={response.reasoningSteps} />
 
       {prediction && <PredictionCard p={prediction} />}
+      {newsImpact && <NewsImpact report={newsImpact} />}
       {prediction && simulation && (
         <SimulationCenter sim={simulation} teamA={prediction.teamA} teamB={prediction.teamB} />
       )}
+      {teamNews && <TeamNewsDigest view={teamNews} source={response.newsSource} />}
       {champions && <ChampionBoard c={champions} />}
 
       {/* Why? explanation */}
@@ -334,14 +340,17 @@ function AgentAnswer({
         )}
       </div>
 
-      {/* follow-up affordance (only on the latest turn with a matchup) */}
-      {isLatest && prediction && (
+      {/* follow-up affordance (only on the latest turn) */}
+      {isLatest && (prediction || teamNews) && (
         <div className="glass rounded-2xl p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Ask a follow-up
           </p>
           <div className="flex flex-wrap gap-2">
-            {followUpsFor(prediction.teamA.name, prediction.teamB.name).map((q) => (
+            {(prediction
+              ? followUpsFor(prediction.teamA.name, prediction.teamB.name)
+              : teamNewsFollowUps(teamNews!.team.name)
+            ).map((q) => (
               <button
                 key={q}
                 onClick={() => onFollowUp(q)}
@@ -363,6 +372,8 @@ function PipelineCard() {
     "User Query",
     "Agent Planner",
     "Match Resolver",
+    "Daily News Resolver",
+    "Injury / Squad Analyzer",
     "Prediction Engine",
     "Monte Carlo Simulator",
     "Explanation Generator",
@@ -389,9 +400,18 @@ function PipelineCard() {
 
 function followUpsFor(a: string, b: string): string[] {
   return [
+    "Does the latest injury news change the prediction?",
     "What if Messi was unavailable?",
-    `What if ${a} are in great form?`,
+    `What changed in ${a}'s squad this week?`,
     `Give me a TikTok-style preview for ${a} vs ${b}`,
+  ];
+}
+
+function teamNewsFollowUps(name: string): string[] {
+  const opps = ["France", "Brazil", "Germany", "Spain"].filter((o) => o !== name);
+  return [
+    `Who will win ${name} vs ${opps[0]} based on latest team news?`,
+    `Predict ${name} vs ${opps[1]} and include news impact`,
   ];
 }
 
