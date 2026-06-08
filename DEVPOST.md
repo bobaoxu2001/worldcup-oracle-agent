@@ -4,9 +4,11 @@
 
 | | |
 |---|---|
-| **🔗 Live demo** | _paste your Vercel URL_ |
+| **🔗 Live demo** | **https://worldcup-oracle-agent.vercel.app** |
 | **💻 GitHub** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
 | **🎥 Demo video** | _paste your 3-min link_ |
+
+> The deployed demo **works with zero API keys** — deterministic Elo + Dixon-Coles + Monte Carlo engine, curated demo news, and an in-memory fallback. Add `MONGODB_URI`, a news key (e.g. `GNEWS_API_KEY`), or `GOOGLE_API_KEY` on Vercel to light up live memory, live news, and Gemini-enhanced multilingual prose.
 
 ---
 

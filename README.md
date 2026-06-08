@@ -14,7 +14,7 @@
 
 | | |
 |---|---|
-| **🔗 Live demo** | _paste your Vercel URL_ → `https://<your-deployment>.vercel.app` |
+| **🔗 Live demo** | **https://worldcup-oracle-agent.vercel.app** (runs with zero config) |
 | **📝 Devpost** | _paste your Devpost submission URL_ |
 | **🎥 Demo video** | _paste your 3-min YouTube/Loom link_ |
 | **💻 Source** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
@@ -30,15 +30,15 @@ It feels like **a World Cup prediction model + a daily football news intelligenc
 
 ## 📸 Screenshots
 
-> _Add the four images below before submitting — drop the PNGs into `docs/screenshots/`
-> (filenames already referenced here). Capture them by running `npm run dev` and using the
-> flagship prompt **"Who will win Argentina vs Germany based on the latest team news?"**, then visiting `/memory`._
-
 | Home — agent chat | Agent reasoning timeline |
 |---|---|
 | ![Home](docs/screenshots/home.png) | ![Agent timeline](docs/screenshots/agent-timeline.png) |
-| **Latest News Impact (base vs adjusted)** | **Agent Memory Center (`/memory`)** |
+| **Latest News Impact (base vs adjusted) + Data Transparency** | **Agent Memory Center (`/memory`)** |
 | ![News impact](docs/screenshots/news-impact.png) | ![Memory Center](docs/screenshots/memory-center.png) |
+
+**Global Voice Mode** — ask by voice & get predictions in 5 languages:
+
+![Global Voice Mode](docs/screenshots/global-voice-mode.png)
 
 ---
 
@@ -435,7 +435,7 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 - [x] **Open source** — [MIT `LICENSE`](LICENSE).
 - [x] **Docs** — README + [`DEVPOST.md`](DEVPOST.md) (pitch, build, demo + 3-min video script).
 - [x] **Quality gates** — `npm run typecheck`, `npm run build`, `npm run validate:bracket` all pass.
-- [ ] **Live demo URL** — deploy to Vercel and paste the link at the top of this README.
+- [x] **Live demo URL** — deployed to Vercel: https://worldcup-oracle-agent.vercel.app
 - [ ] **Demo video** — record the 3-minute script in `DEVPOST.md` and paste the link.
 
 ## 📜 License
