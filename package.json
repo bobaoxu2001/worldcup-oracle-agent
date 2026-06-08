@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "validate:bracket": "tsx scripts/validate-bracket.ts"
+    "validate:bracket": "tsx scripts/validate-bracket.ts",
+    "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {
     "@radix-ui/react-progress": "^1.1.1",

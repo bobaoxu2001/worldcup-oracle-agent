@@ -383,6 +383,26 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 
 Build is standard `next build` — verified locally green; all external services degrade gracefully, so the first deploy succeeds even with zero env vars.
 
+#### Enable MongoDB Atlas memory (optional)
+
+To switch the agent's memory from the in-memory fallback to a real **MongoDB Atlas**
+database (the `Memory: MongoDB Atlas` badge):
+
+1. Create an Atlas cluster + a `readWrite` DB user, and under **Network Access** allow
+   `0.0.0.0/0` (Vercel's serverless IPs are dynamic).
+2. Provision collections + indexes (reads `MONGODB_URI` from the env — never hard-coded):
+   ```bash
+   export MONGODB_URI="<your-atlas-srv-uri>"   # keep this out of git
+   export MONGODB_DB="worldcup_oracle"
+   npm run setup:mongo
+   ```
+   This creates the `predictions` (`createdAt`, `teams`, `intent`) and `team_news`
+   (`team+publishedAt`, `category`, `impactLevel`, `demo`) indexes, and seeds demo
+   signals (`demo:true`) only if `team_news` is empty.
+3. Add `MONGODB_URI`, `MONGODB_DB`, and `NEXT_PUBLIC_APP_URL` in **Vercel → Project →
+   Settings → Environment Variables**, then redeploy. The connection string lives only in
+   Vercel env / a gitignored `.env.local` — never in the repo.
+
 ### Scripts
 
 ```bash
