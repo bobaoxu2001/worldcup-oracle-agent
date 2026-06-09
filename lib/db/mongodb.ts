@@ -56,8 +56,10 @@ function getClient(): Promise<MongoClient> | null {
   if (!uri || mongoUnavailable) return null;
   if (!clientPromise) {
     const client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 2500,
-      connectTimeoutMS: 2500,
+      // Serverless cold connects to Atlas (SRV + TLS + topology discovery) need
+      // more headroom than a local box; 2.5s was too tight on Vercel.
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
     });
     clientPromise = client.connect().catch((err) => {
       console.warn("[mongodb] connection failed — using in-memory fallback:", err?.message);
