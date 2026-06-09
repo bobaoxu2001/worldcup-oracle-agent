@@ -19,10 +19,10 @@
 | **🎥 Demo video** | _paste your 3-min YouTube/Loom link_ |
 | **💻 Source** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
 
-> **Why the MongoDB Track:** MongoDB is the agent's **memory layer** — two collections,
-> `predictions` (every session's probabilities, simulation & reasoning) and `team_news`
+> **Why the MongoDB Track:** MongoDB is the agent's **memory layer** — and it's **live in production on MongoDB Atlas**. Two collections:
+> `predictions` (every prediction session's probabilities, simulation & reasoning) and `team_news`
 > (classified daily news signals, indexed by team / impact / category), plus the follow-up
-> context that lets the agent re-analyse "what-if" questions. See the **[Agent Memory Center](#-agent-memory-center-mongodb-track)** and live it at `/memory`.
+> context that lets the agent re-analyse "what-if" questions. The deployed app's **Data Transparency** card shows **`Memory: MongoDB Atlas`**, and **[`/memory`](https://worldcup-oracle-agent.vercel.app/memory)** shows the backend status and recent saved sessions read straight from MongoDB.
 
 WorldCup Oracle Agent is **not** a static prediction dashboard. You ask a football question in plain English — *"Who will win Argentina vs Germany based on the latest team news?"* — and watch an agent **plan** the analysis, **resolve** the teams, **pull recent injury & squad news**, **run 10,000 Monte Carlo simulations**, **explain how the latest updates move the line**, **remember** the result, and **answer your follow-ups** (*"Does Germany's injury news change the prediction?"*).
 
@@ -30,11 +30,15 @@ It feels like **a World Cup prediction model + a daily football news intelligenc
 
 ## 📸 Screenshots
 
+_Captured from the live production deployment running on **MongoDB Atlas**._
+
 | Home — agent chat | Agent reasoning timeline |
 |---|---|
 | ![Home](docs/screenshots/home.png) | ![Agent timeline](docs/screenshots/agent-timeline.png) |
-| **Latest News Impact (base vs adjusted) + Data Transparency** | **Agent Memory Center (`/memory`)** |
+| **Latest News Impact (base vs adjusted)** | **Agent Memory Center (`/memory`) — MongoDB Atlas + saved sessions** |
 | ![News impact](docs/screenshots/news-impact.png) | ![Memory Center](docs/screenshots/memory-center.png) |
+| **Data Transparency — `Memory: MongoDB Atlas`** | **Daily Team News (`/news`) — `team_news` collection** |
+| ![Data Transparency](docs/screenshots/data-transparency.png) | ![News](docs/screenshots/news.png) |
 
 **Global Voice Mode** — ask by voice & get predictions in 5 languages:
 
@@ -280,15 +284,17 @@ The daily news intelligence layer uses a second collection, **`team_news`**, ind
 
 ---
 
-## 🧠 Agent Memory Center (MongoDB Track)
+## 🧠 Agent Memory Center (MongoDB Track) — ✅ live on Atlas
 
-Visit **`/memory`** for a live view of the agent's MongoDB-backed memory — MongoDB is the agent's **memory layer, not just storage**:
+**The production app runs on MongoDB Atlas.** Visit **[`/memory`](https://worldcup-oracle-agent.vercel.app/memory)** for a live view of the agent's MongoDB-backed memory — MongoDB is the agent's **memory layer, not just storage**:
 
-- **Memory backend** — MongoDB Atlas vs in-memory fallback, with live connection status and session count.
-- **Recent prediction sessions** — replayed from the `predictions` collection.
-- **Stored team-news signals** — recent classified items from `team_news`, per team.
+- **Memory backend** — shows **MongoDB Atlas** (connected) with live session count; falls back to in-memory only if the database is ever unreachable.
+- **Recent prediction sessions** — every prediction is saved to the **`predictions`** collection and replayed here.
+- **Stored team-news signals** — classified items from the **`team_news`** collection, per team.
 - **News intelligence status** — Live (with provider) vs Demo mode, total stored signals, and **last news update** time. A **"Refresh news now"** button triggers the daily-style refresh on demand.
 - **Why MongoDB matters** — `predictions` + `team_news` + follow-up context, called out explicitly.
+
+Every prediction result also carries a **Data Transparency** card that displays **`Memory: MongoDB Atlas`** when the session was persisted to the database.
 
 Status is also available as JSON at **`GET /api/memory/status`**.
 
@@ -383,10 +389,10 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 
 Build is standard `next build` — verified locally green; all external services degrade gracefully, so the first deploy succeeds even with zero env vars.
 
-#### Enable MongoDB Atlas memory (optional)
+#### Enable MongoDB Atlas memory (already live in production)
 
-To switch the agent's memory from the in-memory fallback to a real **MongoDB Atlas**
-database (the `Memory: MongoDB Atlas` badge):
+The hosted demo is already connected to **MongoDB Atlas**. To enable it on your own
+fork / self-host (the `Memory: MongoDB Atlas` badge):
 
 1. Create an Atlas cluster + a `readWrite` DB user, and under **Network Access** allow
    `0.0.0.0/0` (Vercel's serverless IPs are dynamic).
@@ -448,7 +454,7 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 ## ✅ Submission checklist
 
 - [x] **Agentic product** — explicit, inspectable pipeline (planner → resolver → news → impact → engine → simulator → explainer → memory) with a visible reasoning timeline.
-- [x] **MongoDB Track** — `predictions` + `team_news` collections (indexed) as the agent's memory layer; live status at `/memory`.
+- [x] **MongoDB Track — live on Atlas** — prediction sessions persist to `predictions`, news to `team_news` (both indexed); `/memory` shows the **MongoDB Atlas** backend + recent saved sessions, and each result's Data Transparency card reads `Memory: MongoDB Atlas`.
 - [x] **Google Cloud / Gemini-ready** — single Gemini seam (`lib/llm/gemini.ts`); deterministic fallback when no key.
 - [x] **Runs with zero config** — predictions, simulations, news and memory all work with an empty `.env`.
 - [x] **Fail-soft** — missing/invalid MongoDB, Gemini or news keys never break the demo.

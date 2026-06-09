@@ -51,15 +51,18 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 
 ---
 
-## 🍃 MongoDB usage (the memory layer)
+## 🍃 MongoDB usage (the memory layer) — ✅ LIVE on MongoDB Atlas
 
-MongoDB is the agent's **memory**, not just a database:
+MongoDB is the agent's **memory**, not just a database — and it's **live in production on MongoDB Atlas** at https://worldcup-oracle-agent.vercel.app:
 
-- **`predictions`** — every session: `userQuery`, `intent`, `teams`, `prediction` (probabilities + confidence), `simulationResult`, `reasoningSteps`, `explanation`, `followUpContext`, `createdAt`.
-- **`team_news`** — classified daily news, **indexed** on `team + publishedAt`, `category`, and `impactLevel`: `title`, `summary`, `category`, `impactLevel`, `direction`, `affectedPlayers`, `sourceName`, `sourceUrl`, `publishedAt`, `demo`.
-- **Follow-up context** — stored alongside predictions so "what-if" questions re-analyse the right matchup and news.
+- **MongoDB Atlas persistent memory is live** — the deployed app connects to Atlas and persists across sessions.
+- **Prediction sessions are saved to the `predictions` collection** — `userQuery`, `intent`, `teams`, `prediction` (probabilities + confidence), `simulationResult`, `reasoningSteps`, `explanation`, `followUpContext`, `createdAt` (indexed on `createdAt`, `teams`, `intent`).
+- **Team news is stored in the `team_news` collection** — classified daily signals, indexed on `team + publishedAt`, `category`, `impactLevel`, `demo`.
+- **Follow-up context** is stored alongside predictions so "what-if" questions re-analyse the right matchup and news.
+- **`/memory` shows the backend status and recent saved sessions** read straight from MongoDB.
+- **The Data Transparency card on every result shows `Memory: MongoDB Atlas`** (i.e. `persisted: mongodb`) so judges can see the session was written to the database.
 
-Surfaced live in the **Agent Memory Center** (`/memory`) and `GET /api/memory/status`. If `MONGODB_URI` is absent or unreachable, a global in-process store transparently takes over (with a 2.5s connection timeout) — the agent never blocks on the DB. The in-memory store is hung off `globalThis` so it's shared across route/page bundles in one process.
+Status is also exposed as JSON at `GET /api/memory/status`. The design stays fail-soft: if the database is ever unreachable, a global in-process store transparently takes over so the agent never blocks — but in production it runs on Atlas.
 
 ---
 
