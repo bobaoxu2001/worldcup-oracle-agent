@@ -8,6 +8,7 @@
  */
 
 import { resolveTeams, resolvePlayer } from "./matchResolver";
+import { looksLikeRulesQuestion } from "./rulesExplain";
 import type { AgentIntent } from "./types";
 
 export interface Plan {
@@ -20,6 +21,9 @@ export interface Plan {
 
 const CHAMPION_RE =
   /\b(win|lift|champion|champions?hip|trophy|whole thing|tournament|world cup)\b.*\b(2026|world cup|it all|tournament)\b|\b(best chance|most likely to win|who will win the 2026)\b/i;
+// Broader tournament-forecast cues (incl. standalone "champion", favorites, 中文).
+const TOURNAMENT_RE =
+  /\b(world cup|champion|champions|championship|trophy|favou?rites?|win it all|go all the way|tournament winner|top \d+)\b|世界杯|夺冠|冠军|总冠军/i;
 const TIKTOK_RE = /\b(tiktok|tik tok|reel|short|social|hype|preview)\b/i;
 const SCENARIO_RE =
   /\b(what if|suppose|imagine|without|missing|unavailable|injured|out|suspended|sidelined|if .* (was|were|is|are)\b)/i;
@@ -61,7 +65,10 @@ export function planQuery(
     // One team + a news cue → daily team-news digest. (As a follow-up asking
     // whether news changes the prediction, we keep it on the match path.)
     intent = "team-news";
-  } else if (CHAMPION_RE.test(query) || /\bworld cup\b/i.test(query)) {
+  } else if (looksLikeRulesQuestion(query) && teamSlugs.length < 2) {
+    // "How do best third-placed teams advance?" / "黄牌怎么影响小组排名？"
+    intent = "rules-explanation";
+  } else if (CHAMPION_RE.test(query) || TOURNAMENT_RE.test(query)) {
     intent = "champion-odds";
   } else if (teamSlugs.length === 1) {
     // One team named, no clear matchup → treat as title-contender question.
@@ -111,6 +118,12 @@ function planLabelsFor(intent: AgentIntent): string[] {
         "Pull the latest team news",
         "Classify each item (category & impact)",
         "Summarize what it means for the team",
+      ];
+    case "rules-explanation":
+      return [
+        "Identify the rules question",
+        "Locate the relevant 2026 World Cup rule",
+        "Explain it in plain language with examples",
       ];
     default:
       return [

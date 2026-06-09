@@ -39,6 +39,8 @@ import {
   buildChampionSummary,
 } from "@/lib/i18n/responseLocalizer";
 import { isLangCode, type LangCode } from "@/lib/i18n/languages";
+import { classifyIntentWithLLM, llmConfigured } from "@/lib/llm/provider";
+import { explainRules } from "./rulesExplain";
 import {
   analyzeNewsImpact,
   buildNewsNarrative,
@@ -124,6 +126,58 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const plan = planQuery(query, input.isFollowUp, hasContextMatchup);
   const createdAt = new Date();
   const lang: LangCode = isLangCode(input.language) ? input.language : "en-US";
+
+  // ---- Optional LLM intent refinement (deterministic stays source of truth) --
+  // Only when the deterministic parser is unsure AND a provider is configured.
+  // The LLM only relabels intent; every number, news item and ruling remains
+  // deterministic. Any failure/missing key falls back to the deterministic guess.
+  if (plan.intent === "unknown" && llmConfigured()) {
+    const llm = await classifyIntentWithLLM(query, plan.intent);
+    if (llm) {
+      if (llm.intentType === "TOURNAMENT_FORECAST") plan.intent = "champion-odds";
+      else if (llm.intentType === "RULES_EXPLANATION") plan.intent = "rules-explanation";
+      else if (llm.intentType === "NEWS_OR_INJURY" && plan.teamSlugs.length >= 1)
+        plan.intent = "team-news";
+      else if (llm.intentType === "MATCH_PREDICTION" && plan.teamSlugs.length === 2)
+        plan.intent = "match-prediction";
+      // TEAM_ANALYSIS / TEAM_COMPARISON / MODEL_EXPLANATION / CLARIFICATION →
+      // stay "unknown" (handled by the helpful fallback) until a later phase.
+    }
+  }
+
+  // ---- RULES EXPLANATION ------------------------------------------------
+  if (plan.intent === "rules-explanation") {
+    const { topic, explanation, fanInsight } = explainRules(query, lang);
+    const steps: ReasoningStep[] = [
+      step("identify", "Identify the rules question", `Detected a rules question (${topic}).`),
+      step("locate", "Locate the 2026 rule", "Matched the relevant 2026 World Cup competition rule."),
+      step("explain", "Explain in plain language", "Summarized the rule with examples."),
+    ];
+    const persisted = persist
+      ? await savePrediction({
+          userQuery: query,
+          intent: plan.intent,
+          teams: [],
+          prediction: null,
+          simulationResult: null,
+          reasoningSteps: steps.map((s) => s.title),
+          explanation,
+          followUpContext: `rules:${topic}`,
+          createdAt,
+        })
+      : "none";
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: steps,
+      explanation,
+      fanInsight,
+      llmEnhanced: false,
+      persisted,
+      createdAt: createdAt.toISOString(),
+      language: lang,
+    };
+  }
 
   // ---- TEAM NEWS DIGEST -------------------------------------------------
   if (plan.intent === "team-news" && plan.teamSlugs.length >= 1) {

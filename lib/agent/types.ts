@@ -13,6 +13,7 @@ export type AgentIntent =
   | "scenario" // follow-up: "What if Messi was unavailable?"
   | "tiktok-preview" // "Give me a TikTok-style preview..."
   | "team-news" // "Show me the latest Argentina news"
+  | "rules-explanation" // "How do best third-placed teams advance?"
   | "unknown";
 
 /** A single visible step in the agent's reasoning timeline. */
