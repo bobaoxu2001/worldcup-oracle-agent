@@ -14,6 +14,11 @@ export type AgentIntent =
   | "tiktok-preview" // "Give me a TikTok-style preview..."
   | "team-news" // "Show me the latest Argentina news"
   | "rules-explanation" // "How do best third-placed teams advance?"
+  | "group-qualification" // "Which teams qualify from Group A?"
+  | "path-analysis" // "Argentina path to the final"
+  | "team-analysis" // "Is Argentina strong this year?"
+  | "team-comparison" // "Compare Argentina and France"
+  | "model-explanation" // "How does your model work?"
   | "unknown";
 
 /** A single visible step in the agent's reasoning timeline. */
@@ -115,6 +120,50 @@ export interface NewsImpactReport {
   disclaimer: string;
 }
 
+/** One model dimension / prediction factor shown in the factors card. */
+export interface StructuredFactor {
+  label: string;
+  value: string;
+  weight: "high" | "medium" | "low";
+}
+
+/**
+ * Normalized structured result attached to every answer type. This is what the
+ * UI factors card renders, what the optional LLM narrates (its ONLY source of
+ * truth), and what gets persisted to MongoDB alongside the legacy fields.
+ */
+export interface StructuredResult {
+  intentType: string;
+  language: string;
+  query: string;
+  teams: string[];
+  group: string | null;
+  stage: string | null;
+  summary: string;
+  probabilities: Record<string, number> | null;
+  rankings: Array<Record<string, unknown>> | null;
+  modelFactors: StructuredFactor[];
+  rulesApplied: string[];
+  newsSignals: string[];
+  limitations: string[];
+  confidence: number; // 0–100
+}
+
+/** Group-qualification table view for the UI. */
+export interface GroupTableData {
+  group: string;
+  rows: {
+    slug: string;
+    name: string;
+    flag: string;
+    elo: number;
+    winGroup: number;
+    advance: number;
+    expectedPoints: number;
+  }[];
+  focusSlug?: string;
+}
+
 /** The complete answer the agent returns for one turn. */
 export interface AgentResponse {
   intent: AgentIntent;
@@ -132,6 +181,10 @@ export interface AgentResponse {
   scenarioNote?: string;
   /** Daily news intelligence considered for this matchup (two-team intents). */
   newsImpact?: NewsImpactReport;
+  /** Normalized structured result (new intents; the LLM's only source of truth). */
+  structured?: StructuredResult;
+  /** Group-qualification table (group-qualification intent). */
+  groupTable?: GroupTableData;
   /** Single-team news digest (team-news intent). */
   teamNews?: TeamNewsView;
   /** Whether news shown is from a live API ('api') or curated demo data. */

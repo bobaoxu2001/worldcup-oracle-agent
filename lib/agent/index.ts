@@ -19,7 +19,7 @@
 
 import { predictMatch, getChampionProbabilities } from "@/lib/prediction-engine";
 import { planQuery } from "./planner";
-import { teamRef } from "./matchResolver";
+import { teamRef, resolveTeams } from "./matchResolver";
 import { runSimulation } from "./simulator";
 import { resolveScenario } from "./scenario";
 import {
@@ -39,8 +39,21 @@ import {
   buildChampionSummary,
 } from "@/lib/i18n/responseLocalizer";
 import { isLangCode, type LangCode } from "@/lib/i18n/languages";
-import { classifyIntentWithLLM, llmConfigured } from "@/lib/llm/provider";
+import {
+  classifyIntentWithLLM,
+  generateAnalystNarrative,
+  generateClarification,
+  llmConfigured,
+} from "@/lib/llm/provider";
 import { explainRules } from "./rulesExplain";
+import {
+  buildGroupQualification,
+  buildPathAnalysis,
+  buildTeamAnalysis,
+  buildTeamComparison,
+  buildModelExplanation,
+} from "./analysis";
+import { groupOf } from "@/lib/seed/world-cup-2026-groups";
 import {
   analyzeNewsImpact,
   buildNewsNarrative,
@@ -54,6 +67,7 @@ import type {
   ReasoningStep,
   ChampionAnswer,
   NewsImpactReport,
+  StructuredResult,
 } from "./types";
 
 export interface AgentInput {
@@ -74,6 +88,48 @@ function step(
   detail?: string
 ): ReasoningStep {
   return { id, title, status: "completed", description, detail };
+}
+
+/**
+ * Narrate a structured result with the optional LLM (EN/zh), else fall back to
+ * the deterministic text (translated for non-English when a translator exists).
+ * The structured result is the LLM's ONLY source of truth — it may rephrase,
+ * never invent.
+ */
+async function narrateOrFallback(
+  structured: StructuredResult,
+  deterministic: string,
+  lang: LangCode
+): Promise<{ text: string; enhanced: boolean }> {
+  if ((lang === "en-US" || lang === "zh-CN") && llmConfigured()) {
+    const out = await generateAnalystNarrative(structured, lang === "zh-CN" ? "zh" : "en");
+    if (out) return { text: out, enhanced: true };
+  }
+  if (lang !== "en-US") {
+    const r = await localizeText(deterministic, lang);
+    return { text: r.text, enhanced: r.method === "gemini" };
+  }
+  return { text: deterministic, enhanced: false };
+}
+
+/** Build the normalized StructuredResult shell shared by the new intents. */
+function makeStructured(
+  base: Partial<StructuredResult> & Pick<StructuredResult, "intentType" | "query" | "summary">
+): StructuredResult {
+  return {
+    language: "en",
+    teams: [],
+    group: null,
+    stage: null,
+    probabilities: null,
+    rankings: null,
+    modelFactors: [],
+    rulesApplied: [],
+    newsSignals: [],
+    limitations: [],
+    confidence: 50,
+    ...base,
+  };
 }
 
 function toPredictionResult(b: PredictionBundle): PredictionResult {
@@ -134,14 +190,46 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   if (plan.intent === "unknown" && llmConfigured()) {
     const llm = await classifyIntentWithLLM(query, plan.intent);
     if (llm) {
-      if (llm.intentType === "TOURNAMENT_FORECAST") plan.intent = "champion-odds";
-      else if (llm.intentType === "RULES_EXPLANATION") plan.intent = "rules-explanation";
-      else if (llm.intentType === "NEWS_OR_INJURY" && plan.teamSlugs.length >= 1)
-        plan.intent = "team-news";
-      else if (llm.intentType === "MATCH_PREDICTION" && plan.teamSlugs.length === 2)
-        plan.intent = "match-prediction";
-      // TEAM_ANALYSIS / TEAM_COMPARISON / MODEL_EXPLANATION / CLARIFICATION →
-      // stay "unknown" (handled by the helpful fallback) until a later phase.
+      // Backfill anchors from the LLM's labels (resolved through OUR resolver —
+      // the LLM only suggests names; the deterministic resolver validates them).
+      if (plan.teamSlugs.length === 0 && llm.teams.length > 0) {
+        plan.teamSlugs = resolveTeams(llm.teams.join(" vs ")).map((t) => t.slug);
+      }
+      if (!plan.group && llm.group) plan.group = llm.group;
+
+      const n = plan.teamSlugs.length;
+      switch (llm.intentType) {
+        case "TOURNAMENT_FORECAST":
+          plan.intent = "champion-odds";
+          break;
+        case "RULES_EXPLANATION":
+          plan.intent = "rules-explanation";
+          break;
+        case "GROUP_QUALIFICATION":
+          if (plan.group || n >= 1) plan.intent = "group-qualification";
+          else plan.intent = "rules-explanation"; // generic third-place question
+          break;
+        case "PATH_ANALYSIS":
+          if (n >= 1) plan.intent = "path-analysis";
+          break;
+        case "TEAM_ANALYSIS":
+          if (n >= 1) plan.intent = "team-analysis";
+          break;
+        case "TEAM_COMPARISON":
+          if (n === 2) plan.intent = "team-comparison";
+          else if (n === 1) plan.intent = "team-analysis";
+          break;
+        case "NEWS_OR_INJURY":
+          if (n >= 1) plan.intent = "team-news";
+          break;
+        case "MATCH_PREDICTION":
+          if (n === 2) plan.intent = "match-prediction";
+          break;
+        case "MODEL_EXPLANATION":
+          plan.intent = "model-explanation";
+          break;
+        // CLARIFICATION → stays "unknown" (helpful fallback below).
+      }
     }
   }
 
@@ -173,6 +261,290 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation,
       fanInsight,
       llmEnhanced: false,
+      persisted,
+      createdAt: createdAt.toISOString(),
+      language: lang,
+    };
+  }
+
+  // ---- MODEL EXPLANATION ------------------------------------------------
+  if (plan.intent === "model-explanation") {
+    const m = buildModelExplanation();
+    const structured = makeStructured({
+      intentType: "MODEL_EXPLANATION",
+      query,
+      language: lang === "zh-CN" ? "zh" : "en",
+      summary: m.summary,
+      modelFactors: m.factors,
+      rulesApplied: m.rulesApplied,
+      limitations: m.limitations,
+      confidence: m.confidence,
+    });
+    const steps = plan.planLabels.map((t, i) => step(`model-${i}`, t, "Done."));
+    const { text, enhanced } = await narrateOrFallback(structured, m.explanation, lang);
+    const persisted = persist
+      ? await savePrediction({
+          userQuery: query,
+          intent: plan.intent,
+          teams: [],
+          prediction: null,
+          simulationResult: null,
+          reasoningSteps: steps.map((s) => s.title),
+          explanation: text,
+          followUpContext: "",
+          createdAt,
+          language: lang,
+          summary: m.summary,
+          modelFactors: m.factors,
+          rulesApplied: m.rulesApplied,
+          limitations: m.limitations,
+          confidence: m.confidence,
+        })
+      : "none";
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: steps,
+      structured,
+      explanation: text,
+      fanInsight: "🔍 Deterministic engine + capped news layer + MongoDB memory — the LLM only narrates, never invents numbers.",
+      llmEnhanced: enhanced,
+      persisted,
+      createdAt: createdAt.toISOString(),
+      language: lang,
+    };
+  }
+
+  // ---- GROUP QUALIFICATION ----------------------------------------------
+  if (plan.intent === "group-qualification") {
+    const focusSlug = plan.teamSlugs[0];
+    const groupName = plan.group ?? (focusSlug ? groupOf(focusSlug).name : undefined);
+    if (groupName) {
+      const g = buildGroupQualification(groupName, focusSlug);
+      const structured = makeStructured({
+        intentType: "GROUP_QUALIFICATION",
+        query,
+        language: lang === "zh-CN" ? "zh" : "en",
+        teams: focusSlug ? [focusSlug] : [],
+        group: groupName,
+        summary: g.summary,
+        rankings: g.rankings,
+        modelFactors: g.factors,
+        rulesApplied: g.rulesApplied,
+        limitations: g.limitations,
+        confidence: g.confidence,
+      });
+      const steps = plan.planLabels.map((t, i) =>
+        step(`gq-${i}`, t, i === 0 ? `Group ${groupName}${focusSlug ? ` · focus ${teamRef(focusSlug).name}` : ""}.` : "Done.")
+      );
+      const { text, enhanced } = await narrateOrFallback(structured, g.explanation, lang);
+      const persisted = persist
+        ? await savePrediction({
+            userQuery: query,
+            intent: plan.intent,
+            teams: focusSlug ? [focusSlug] : [],
+            prediction: null,
+            simulationResult: null,
+            reasoningSteps: steps.map((s) => s.title),
+            explanation: text,
+            followUpContext: `group:${groupName}`,
+            createdAt,
+            language: lang,
+            group: groupName,
+            summary: g.summary,
+            rankings: g.rankings,
+            modelFactors: g.factors,
+            rulesApplied: g.rulesApplied,
+            limitations: g.limitations,
+            confidence: g.confidence,
+          })
+        : "none";
+      return {
+        intent: plan.intent,
+        query,
+        reasoningSteps: steps,
+        structured,
+        groupTable: g.table,
+        explanation: text,
+        fanInsight: `🎟️ ${g.summary}`,
+        llmEnhanced: enhanced,
+        persisted,
+        createdAt: createdAt.toISOString(),
+        language: lang,
+      };
+    }
+    // No group/team anchor → answer the generic third-place rule instead.
+    plan.intent = "rules-explanation";
+    const { topic, explanation, fanInsight } = explainRules(query || "third place", lang);
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: [step("rules", "Explain the qualification rule", `Topic: ${topic}.`)],
+      explanation,
+      fanInsight,
+      llmEnhanced: false,
+      persisted: "none",
+      createdAt: createdAt.toISOString(),
+      language: lang,
+    };
+  }
+
+  // ---- PATH ANALYSIS ------------------------------------------------------
+  if (plan.intent === "path-analysis" && plan.teamSlugs.length >= 1) {
+    const team = teamRef(plan.teamSlugs[0]);
+    const p = buildPathAnalysis(team);
+    const structured = makeStructured({
+      intentType: "PATH_ANALYSIS",
+      query,
+      language: lang === "zh-CN" ? "zh" : "en",
+      teams: [team.slug],
+      group: groupOf(team.slug).name,
+      summary: p.summary,
+      rankings: p.rankings,
+      modelFactors: p.factors,
+      rulesApplied: p.rulesApplied,
+      limitations: p.limitations,
+      confidence: p.confidence,
+    });
+    const steps = plan.planLabels.map((t, i) =>
+      step(`path-${i}`, t, i === 0 ? `${team.name} · Group ${groupOf(team.slug).name}.` : "Done.")
+    );
+    const { text, enhanced } = await narrateOrFallback(structured, p.explanation, lang);
+    const persisted = persist
+      ? await savePrediction({
+          userQuery: query,
+          intent: plan.intent,
+          teams: [team.slug],
+          prediction: null,
+          simulationResult: null,
+          reasoningSteps: steps.map((s) => s.title),
+          explanation: text,
+          followUpContext: `path:${team.slug}`,
+          createdAt,
+          language: lang,
+          group: groupOf(team.slug).name,
+          summary: p.summary,
+          rankings: p.rankings,
+          modelFactors: p.factors,
+          rulesApplied: p.rulesApplied,
+          limitations: p.limitations,
+          confidence: p.confidence,
+        })
+      : "none";
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: steps,
+      structured,
+      explanation: text,
+      fanInsight: `🗺️ ${p.summary}`,
+      llmEnhanced: enhanced,
+      persisted,
+      createdAt: createdAt.toISOString(),
+      language: lang,
+    };
+  }
+
+  // ---- TEAM ANALYSIS ------------------------------------------------------
+  if (plan.intent === "team-analysis" && plan.teamSlugs.length >= 1) {
+    const team = teamRef(plan.teamSlugs[0]);
+    const { resolved } = await resolveTeamNews(team, 4);
+    const a = buildTeamAnalysis(team, resolved.items);
+    const structured = makeStructured({
+      intentType: "TEAM_ANALYSIS",
+      query,
+      language: lang === "zh-CN" ? "zh" : "en",
+      teams: [team.slug],
+      group: groupOf(team.slug).name,
+      summary: a.summary,
+      modelFactors: a.factors,
+      newsSignals: resolved.items.slice(0, 3).map((n) => `${n.impactLevel}-impact ${n.category}: ${n.title}${n.demo ? " (demo)" : ""}`),
+      limitations: a.limitations,
+      confidence: a.confidence,
+    });
+    const steps = plan.planLabels.map((t, i) =>
+      step(`ta-${i}`, t, i === 0 ? `${team.flag} ${team.name}.` : "Done.")
+    );
+    const { text, enhanced } = await narrateOrFallback(structured, a.explanation, lang);
+    const persisted = persist
+      ? await savePrediction({
+          userQuery: query,
+          intent: plan.intent,
+          teams: [team.slug],
+          prediction: null,
+          simulationResult: null,
+          reasoningSteps: steps.map((s) => s.title),
+          explanation: text,
+          followUpContext: `team:${team.slug}`,
+          createdAt,
+          language: lang,
+          summary: a.summary,
+          modelFactors: a.factors,
+          newsSignals: structured.newsSignals,
+          limitations: a.limitations,
+          confidence: a.confidence,
+        })
+      : "none";
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: steps,
+      structured,
+      explanation: text,
+      fanInsight: `📊 ${a.summary}`,
+      llmEnhanced: enhanced,
+      persisted,
+      createdAt: createdAt.toISOString(),
+      language: lang,
+    };
+  }
+
+  // ---- TEAM COMPARISON ----------------------------------------------------
+  if (plan.intent === "team-comparison" && plan.teamSlugs.length === 2) {
+    const a = teamRef(plan.teamSlugs[0]);
+    const b = teamRef(plan.teamSlugs[1]);
+    const c = buildTeamComparison(a, b);
+    const structured = makeStructured({
+      intentType: "TEAM_COMPARISON",
+      query,
+      language: lang === "zh-CN" ? "zh" : "en",
+      teams: [a.slug, b.slug],
+      summary: c.summary,
+      probabilities: c.probabilities,
+      modelFactors: c.factors,
+      limitations: c.limitations,
+      confidence: c.confidence,
+    });
+    const steps = plan.planLabels.map((t, i) =>
+      step(`tc-${i}`, t, i === 0 ? `${a.flag} ${a.name} vs ${b.flag} ${b.name}.` : "Done.")
+    );
+    const { text, enhanced } = await narrateOrFallback(structured, c.explanation, lang);
+    const persisted = persist
+      ? await savePrediction({
+          userQuery: query,
+          intent: plan.intent,
+          teams: [a.slug, b.slug],
+          prediction: null,
+          simulationResult: null,
+          reasoningSteps: steps.map((s) => s.title),
+          explanation: text,
+          followUpContext: `compare:${a.slug}-${b.slug}`,
+          createdAt,
+          language: lang,
+          summary: c.summary,
+          modelFactors: c.factors,
+          limitations: c.limitations,
+          confidence: c.confidence,
+        })
+      : "none";
+    return {
+      intent: plan.intent,
+      query,
+      reasoningSteps: steps,
+      structured,
+      explanation: text,
+      fanInsight: `⚖️ ${c.summary}`,
+      llmEnhanced: enhanced,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -350,10 +722,26 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           : "Could not confidently identify two teams."
       ),
     ];
+    const examples = [
+      "Match prediction: Who will win Argentina vs Germany?",
+      "Tournament forecast: Who will win the 2026 World Cup?",
+      "Group qualification: Which teams qualify from Group A?",
+      "Team analysis: Is Argentina strong this year?",
+      "News: Germany injury update",
+      "Rules: How do yellow cards affect qualification?",
+    ];
     const explanationEn =
-      "I couldn't pin down a matchup. Try naming two teams, e.g. **\"Who will win Argentina vs Portugal?\"**, or ask **\"Which team has the best chance to win the 2026 World Cup?\"**";
-    const fanEn = "Give me two teams and I'll run 10,000 simulations. ⚽";
-    const explanation = lang === "en-US" ? explanationEn : (await localizeText(explanationEn, lang)).text;
+      "I couldn't match that to one of my analyses yet. Here's what you can ask:\n\n• " +
+      examples.join("\n• ");
+    const fanEn = "Give me a matchup, a team, a group, or a rules question — I'll take it from there. ⚽";
+    let explanation = explanationEn;
+    if (llmConfigured()) {
+      const c = await generateClarification(query, examples, lang === "zh-CN" ? "zh" : "en");
+      if (c) explanation = c;
+    }
+    if (explanation === explanationEn && lang !== "en-US") {
+      explanation = (await localizeText(explanationEn, lang)).text;
+    }
     const fanInsight = lang === "en-US" ? fanEn : (await localizeText(fanEn, lang)).text;
     return {
       intent: "unknown",

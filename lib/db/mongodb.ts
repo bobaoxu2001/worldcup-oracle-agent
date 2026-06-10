@@ -31,6 +31,17 @@ export interface StoredPrediction {
   explanation: string;
   followUpContext: string;
   createdAt: Date;
+  // ── Structured-result extension (all OPTIONAL — older records lack them) ──
+  language?: string;
+  group?: string | null;
+  tournamentStage?: string | null;
+  summary?: string;
+  rankings?: Array<Record<string, unknown>> | null;
+  modelFactors?: Array<{ label: string; value: string; weight: string }>;
+  rulesApplied?: string[];
+  newsSignals?: string[];
+  limitations?: string[];
+  confidence?: number;
 }
 
 export type PersistMode = "mongodb" | "memory";
@@ -48,31 +59,42 @@ const memoryStore: StoredPrediction[] = (__g.__wcoaPredMem ??= []);
 const MEMORY_LIMIT = 50;
 
 // ---- Mongo connection (lazy, cached, fail-soft) ----
-let clientPromise: Promise<MongoClient> | null = null;
-let mongoUnavailable = false;
+// The client promise lives on globalThis so ALL route/page bundles in one
+// server process share a single pooled connection (Next bundles each route
+// separately — a plain module variable would give every route its own client,
+// and a transient failure in one bundle would strand it on the memory store).
+// A failed connect is retried after a short cooldown instead of latching off
+// forever, so a brief DNS/network blip doesn't permanently disable Atlas.
+const __gm = globalThis as unknown as {
+  __wcoaMongoClient?: Promise<MongoClient> | null;
+  __wcoaMongoFailedAt?: number;
+};
+const RETRY_COOLDOWN_MS = 60_000;
 
 function getClient(): Promise<MongoClient> | null {
   const uri = process.env.MONGODB_URI;
-  if (!uri || mongoUnavailable) return null;
-  if (!clientPromise) {
+  if (!uri) return null;
+  if (!__gm.__wcoaMongoClient) {
+    const failedAt = __gm.__wcoaMongoFailedAt ?? 0;
+    if (Date.now() - failedAt < RETRY_COOLDOWN_MS) return null;
     const client = new MongoClient(uri, {
       // Serverless cold connects to Atlas (SRV + TLS + topology discovery) need
       // more headroom than a local box; 2.5s was too tight on Vercel.
       serverSelectionTimeoutMS: 8000,
       connectTimeoutMS: 8000,
     });
-    clientPromise = client.connect().catch((err) => {
+    __gm.__wcoaMongoClient = client.connect().catch((err) => {
       console.warn("[mongodb] connection failed — using in-memory fallback:", err?.message);
-      mongoUnavailable = true;
-      clientPromise = null;
+      __gm.__wcoaMongoFailedAt = Date.now();
+      __gm.__wcoaMongoClient = null;
       throw err;
     });
   }
-  return clientPromise;
+  return __gm.__wcoaMongoClient;
 }
 
 export function mongoConfigured(): boolean {
-  return Boolean(process.env.MONGODB_URI) && !mongoUnavailable;
+  return Boolean(process.env.MONGODB_URI);
 }
 
 /**

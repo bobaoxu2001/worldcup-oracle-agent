@@ -14,6 +14,7 @@
 
 import { geminiGenerate, geminiConfigured } from "@/lib/llm/gemini";
 import { getLanguage, type LangCode } from "./languages";
+import { llmConfigured, llmTranslate } from "@/lib/llm/provider";
 import type { PredictionResult, ChampionAnswer } from "@/lib/agent/types";
 
 export type LocalizationMethod = "none" | "gemini" | "template";
@@ -32,17 +33,24 @@ export async function geminiTranslate(text: string, lang: LangCode): Promise<str
 }
 
 /**
- * Localize a narrative string. en → unchanged. Otherwise Gemini-translate, or
- * fall back to the original English when Gemini is unavailable/fails.
+ * Localize a narrative string. en → unchanged. Otherwise translate with Gemini
+ * when configured, else DeepSeek when configured (same number-preserving
+ * instructions), else keep the English text ("template" method).
  */
 export async function localizeText(
   text: string,
   lang: LangCode
 ): Promise<{ text: string; method: LocalizationMethod }> {
   if (lang === "en-US") return { text, method: "none" };
-  if (!geminiConfigured()) return { text, method: "template" };
-  const out = await geminiTranslate(text, lang);
-  return out ? { text: out, method: "gemini" } : { text, method: "template" };
+  if (geminiConfigured()) {
+    const out = await geminiTranslate(text, lang);
+    if (out) return { text: out, method: "gemini" };
+  }
+  if (llmConfigured()) {
+    const out = await llmTranslate(text, getLanguage(lang).englishName);
+    if (out) return { text: out, method: "gemini" };
+  }
+  return { text, method: "template" };
 }
 
 const PCT = (x: number) => `${Math.round(x * 100)}%`;

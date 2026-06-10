@@ -23,6 +23,9 @@ import { RecentPredictions } from "./recent-predictions";
 import { NewsImpact } from "./news-impact";
 import { TeamNewsDigest } from "./team-news-digest";
 import { DataTransparency } from "./data-transparency";
+import { IntentBadge } from "./intent-badge";
+import { FactorsCard } from "./factors-card";
+import { GroupTableCard } from "./group-table-card";
 import { cn } from "@/lib/utils";
 import type { AgentResponse, ReasoningStep } from "@/lib/agent/types";
 import type { StoredPrediction, PersistMode } from "@/lib/db/mongodb";
@@ -437,6 +440,10 @@ function AgentAnswer({
   const speakText = response.localizedSummary || plainText(response.explanation);
   return (
     <div className="space-y-4">
+      <div className="flex items-center">
+        <IntentBadge intent={response.intent} />
+      </div>
+
       <ReasoningTimeline steps={response.reasoningSteps} />
 
       {prediction && <PredictionCard p={prediction} />}
@@ -444,6 +451,8 @@ function AgentAnswer({
       {prediction && simulation && (
         <SimulationCenter sim={simulation} teamA={prediction.teamA} teamB={prediction.teamB} />
       )}
+      {response.groupTable && <GroupTableCard table={response.groupTable} />}
+      {response.structured && !prediction && <FactorsCard structured={response.structured} />}
       {teamNews && (
         <TeamNewsDigest view={teamNews} source={response.newsSource} provider={response.newsProvider} />
       )}

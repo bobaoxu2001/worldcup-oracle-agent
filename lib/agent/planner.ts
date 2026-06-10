@@ -15,6 +15,8 @@ export interface Plan {
   intent: AgentIntent;
   teamSlugs: string[]; // resolved team slugs (0, 1, or 2)
   player?: { player: string; slug: string };
+  /** Group letter ("A".."L") when the question names one. */
+  group?: string;
   /** Human-readable plan steps shown before execution. */
   planLabels: string[];
 }
@@ -32,6 +34,28 @@ const NEWS_RE =
   /\b(news|latest|updates?|injury report|roster|call[- ]?ups?|squad|what changed|who replaced|team news|this week)\b/i;
 // References to (re)running a prediction — keeps a "does X news change the prediction?" follow-up on the match path.
 const PREDICT_REF = /\b(predict|prediction|who (will )?win|odds|chance|affect|change the)\b/i;
+// General two-team comparison (not a single match): "compare X and Y", "is X stronger than Y".
+const COMPARE_RE =
+  /\b(compare|comparison|side[- ]by[- ]side|stronger than|better than|who is stronger)\b|更强|相比|对比|谁更/i;
+// Knockout path: "Argentina path to the final", "which opponents could Brazil face?".
+const PATH_RE =
+  /\b(path|road|route)\s+to\b|\bknockout (path|route)\b|\bpossible opponents\b|\bopponents could\b|路径|晋级之路|通往/i;
+// Group qualification: "which teams qualify from Group A?", "can X get out of the group?".
+const GROUPQ_RE =
+  /\b(qualify|qualification|advance|progress|get (out of|through)|make it out)\b[\s\S]*\bgroup\b|\bgroup\s+[a-l]\b|小组出线|能出线|能不能出线/i;
+// Single-team strength question: "is Argentina strong this year?", "how good is Germany?".
+const ANALYSIS_RE =
+  /\bis\s+[\w\s]+\s(strong|good|any good)\b|\bhow (good|strong) is\b|\bstrengths? (and|&) weakness/i;
+const ANALYSIS_ZH_RE = /今年强吗|强不强|实力如何|实力怎么样|怎么样/;
+// Model/agent self-explanation: "how does your model work?", "what data do you use?".
+const MODEL_RE =
+  /\bhow (does|do) (your|the|this) (model|agent|system|prediction)s? work\b|\bwhat data (do you|does (it|the model)) use\b|\bwhy did you (pick|choose)\b|\bhow (is|are) (the )?(probabilit|predictions?)\w* (calculated|computed|made)\b|模型怎么|你的模型|用什么数据|怎么算/i;
+
+/** Extract an explicit group letter ("Group A" … "Group L" / A组). */
+function detectGroupLetter(query: string): string | undefined {
+  const m = query.match(/\bgroup\s+([a-l])\b/i) || query.match(/([A-La-l])\s*组/);
+  return m ? m[1].toUpperCase() : undefined;
+}
 
 export function planQuery(
   query: string,
@@ -42,6 +66,7 @@ export function planQuery(
   const teamSlugs = teams.map((t) => t.slug);
   const player = resolvePlayer(query) ?? undefined;
 
+  const group = detectGroupLetter(query);
   let intent: AgentIntent;
 
   // A follow-up that names a what-if scenario re-analyses the prior matchup.
@@ -51,12 +76,25 @@ export function planQuery(
     // "Does the injury news change the prediction?" → re-run the prior matchup
     // (runAgent supplies the two teams from context).
     intent = "match-prediction";
+  } else if (MODEL_RE.test(query)) {
+    // "How does your model work?" / "你的模型怎么算的？"
+    intent = "model-explanation";
   } else if (TIKTOK_RE.test(query) && teamSlugs.length === 2) {
     intent = "tiktok-preview";
   } else if (SCENARIO_RE.test(query) && (teamSlugs.length === 2 || player)) {
     intent = "scenario";
+  } else if (COMPARE_RE.test(query) && teamSlugs.length === 2) {
+    // "Compare Argentina and France" / "阿根廷和法国谁更强？" — general
+    // comparison, not one specific match.
+    intent = "team-comparison";
   } else if (teamSlugs.length === 2) {
     intent = "match-prediction";
+  } else if (PATH_RE.test(query) && teamSlugs.length === 1) {
+    // "Argentina path to the final" / "阿根廷通往决赛的路径是什么？"
+    intent = "path-analysis";
+  } else if (group || (GROUPQ_RE.test(query) && teamSlugs.length === 1)) {
+    // "Which teams qualify from Group A?" / "Can Argentina qualify from the group?"
+    intent = "group-qualification";
   } else if (
     NEWS_RE.test(query) &&
     teamSlugs.length === 1 &&
@@ -68,6 +106,12 @@ export function planQuery(
   } else if (looksLikeRulesQuestion(query) && teamSlugs.length < 2) {
     // "How do best third-placed teams advance?" / "黄牌怎么影响小组排名？"
     intent = "rules-explanation";
+  } else if (
+    (ANALYSIS_RE.test(query) || ANALYSIS_ZH_RE.test(query)) &&
+    teamSlugs.length === 1
+  ) {
+    // "Is Argentina strong this year?" / "阿根廷今年强吗？"
+    intent = "team-analysis";
   } else if (CHAMPION_RE.test(query) || TOURNAMENT_RE.test(query)) {
     intent = "champion-odds";
   } else if (teamSlugs.length === 1) {
@@ -78,7 +122,7 @@ export function planQuery(
   }
 
   const planLabels = planLabelsFor(intent);
-  return { intent, teamSlugs, player, planLabels };
+  return { intent, teamSlugs, player, group, planLabels };
 }
 
 function planLabelsFor(intent: AgentIntent): string[] {
@@ -124,6 +168,40 @@ function planLabelsFor(intent: AgentIntent): string[] {
         "Identify the rules question",
         "Locate the relevant 2026 World Cup rule",
         "Explain it in plain language with examples",
+      ];
+    case "group-qualification":
+      return [
+        "Identify the group / team in question",
+        "Simulate the group 20,000 times",
+        "Rank qualification probabilities",
+        "Explain top-2 and best-third routes",
+      ];
+    case "path-analysis":
+      return [
+        "Locate the team's group & bracket slots",
+        "Read stage-by-stage simulation odds",
+        "Map the official Round-of-32 routing",
+        "Flag the key risk rounds",
+      ];
+    case "team-analysis":
+      return [
+        "Load the team's Elo profile",
+        "Derive attack/defense proxies",
+        "Check news & discipline signals",
+        "Summarize the tournament outlook",
+      ];
+    case "team-comparison":
+      return [
+        "Load both teams' Elo profiles",
+        "Compare attack, defense & title odds",
+        "Compute a neutral-ground matchup",
+        "Call the overall edge",
+      ];
+    case "model-explanation":
+      return [
+        "Collect the model's dimensions",
+        "Explain engine, news & memory layers",
+        "List the known limitations",
       ];
     default:
       return [

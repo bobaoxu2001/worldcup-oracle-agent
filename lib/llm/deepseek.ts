@@ -13,10 +13,8 @@
  * back to the deterministic path.
  */
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
+import type { ChatMessage } from "./types";
+export type { ChatMessage } from "./types";
 
 export function deepseekConfigured(): boolean {
   return Boolean(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY.length > 10);
