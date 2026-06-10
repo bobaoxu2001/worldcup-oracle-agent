@@ -13,7 +13,9 @@
 
 import { analystNarrativePrompt, polishPrompt } from "./prompts";
 
-const MODEL = "gemini-2.0-flash";
+// Model is configurable via env so a deprecated default never silently disables
+// Gemini. (gemini-2.0-flash was retired → 404.) Override with GEMINI_MODEL.
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const ENDPOINT = (key: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
 

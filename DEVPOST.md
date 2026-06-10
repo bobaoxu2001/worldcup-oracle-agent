@@ -75,7 +75,7 @@ The agent uses a **cost-aware provider router**: DeepSeek handles routine narrat
 
 1. **Deterministic router first** — if the heuristic parser confidently classifies the intent and the engines produce a structured result, that result is the source of truth (numbers, rules, simulations, rankings).
 2. **DeepSeek — the low-cost default** (`deepseek-chat` via REST): routine intent refinement, standard analyst narrative, Chinese localization, team comparison, model explanation, and most common questions.
-3. **Gemini — premium escalation** (`gemini-2.0-flash` via REST): `selectLLMProvider()` routes a query to Gemini when `assessComplexity()` flags it — multi-step tournament reasoning, **path-to-final**, **group qualification / best-third-place** logic, **rules + prediction combined**, **more than two teams**, ambiguous intent, low deterministic confidence, or long-form Chinese explanations. Gemini is also the **fallback when DeepSeek fails/times out**.
+3. **Gemini — premium escalation** (`gemini-2.5-flash` via REST): `selectLLMProvider()` routes a query to Gemini when `assessComplexity()` flags it — multi-step tournament reasoning, **path-to-final**, **group qualification / best-third-place** logic, **rules + prediction combined**, **more than two teams**, ambiguous intent, low deterministic confidence, or long-form Chinese explanations. Gemini is also the **fallback when DeepSeek fails/times out**.
 4. **Graceful fallback** — if Gemini isn't configured → DeepSeek; if neither is configured → deterministic templates. No loss of correctness.
 
 ```
@@ -128,7 +128,7 @@ Each stage is a real, inspectable TypeScript function and the reasoning timeline
 | **Open-source license** | **MIT** (`LICENSE` in repo root) |
 | **MongoDB track integration** | **MongoDB Atlas** is the live production **memory layer** via the official `mongodb` driver — `predictions` (all intent types) + `team_news` collections, follow-up context, status surfaced at `/memory` and `GET /api/memory/status` |
 | **MCP usage** | MCP-assisted **development/deployment** (Vercel MCP inspection; browser/preview MCP for screenshots & verification). Not a production runtime dependency. |
-| **Gemini / Google usage** | **Google Gemini** (`gemini-2.0-flash`, `lib/llm/gemini.ts`) is **live in production** as the **premium escalation provider** in the cost-aware router — it handles complex multi-step reasoning, ambiguous intent, and DeepSeek fallback. DeepSeek remains the low-cost default. |
+| **Gemini / Google usage** | **Google Gemini** (`gemini-2.5-flash`, `lib/llm/gemini.ts`) is **live in production** as the **premium escalation provider** in the cost-aware router — it handles complex multi-step reasoning, ambiguous intent, and DeepSeek fallback. DeepSeek remains the low-cost default. |
 | **Agent behavior beyond chat** | Plans, classifies intent (10+ types), routes to deterministic rules/simulation engines, persists to memory, explains results, answers follow-ups. |
 | **Multi-step workflow** | Visible reasoning timeline: plan → resolve → news → impact → engine → Monte Carlo → narrate → persist. |
 | **Demo video** | _paste your 3-min link_ |

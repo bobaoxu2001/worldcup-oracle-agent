@@ -349,7 +349,7 @@ selectLLMProvider(structuredResult, query, language, complexity) → "deepseek" 
 
 - **Deterministic router first** — confident intent + structured result ⇒ that result is the source of truth.
 - **DeepSeek** (`lib/llm/provider.ts` + `deepseek.ts`, `deepseek-chat`) — the **low-cost default**: routine intent refinement, standard analyst narrative, Chinese localization, team comparison, model explanation, common questions.
-- **Google Gemini** (`lib/llm/gemini.ts`, `gemini-2.0-flash`) — the **premium escalation**, chosen by `assessComplexity()` for: path-to-final, group qualification / best-third-place logic, rules + prediction combined, more than two teams, ambiguous intent, low deterministic confidence, or long-form Chinese explanations — and as the **fallback when DeepSeek fails/times out**.
+- **Google Gemini** (`lib/llm/gemini.ts`, `gemini-2.5-flash`) — the **premium escalation**, chosen by `assessComplexity()` for: path-to-final, group qualification / best-third-place logic, rules + prediction combined, more than two teams, ambiguous intent, low deterministic confidence, or long-form Chinese explanations — and as the **fallback when DeepSeek fails/times out**.
 - **Graceful fallback** — Gemini missing → DeepSeek; neither → deterministic templates.
 
 A 6–9s timeout means a slow API can never stall the demo. The **Data Transparency** card and the "Why?" badge show the **actual provider used** (`DeepSeek-enhanced` / `Gemini-enhanced` / `Deterministic engine`), and that provider is persisted to MongoDB with the result. Routing decisions are covered by `npm run test:routing` (22 checks). We never claim Gemini generates answers it didn't — the numbers are always deterministic.
