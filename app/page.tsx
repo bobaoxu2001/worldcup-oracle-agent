@@ -1,6 +1,7 @@
 import { AgentChat } from "@/components/agent/agent-chat";
 import { getRecentPredictions } from "@/lib/db/mongodb";
 import { geminiConfigured } from "@/lib/llm/gemini";
+import { llmConfigured } from "@/lib/llm/provider";
 import { mongoConfigured } from "@/lib/db/mongodb";
 import { newsProviderConfigured } from "@/lib/news/newsIngestor";
 
@@ -9,6 +10,8 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const { items, source } = await getRecentPredictions(6);
   const gemini = geminiConfigured();
+  const deepseek = llmConfigured();
+  const llmLabel = deepseek ? "DeepSeek-enhanced" : gemini ? "Gemini-enhanced" : "LLM-ready";
   const mongo = mongoConfigured();
   const liveNews = newsProviderConfigured();
 
@@ -35,7 +38,7 @@ export default async function Home() {
           <Stat label="48 teams · real 2026 draw" />
           <Stat label="Elo + Dixon-Coles + Monte Carlo" />
           <Stat label={liveNews ? "Live news-aware" : "Daily news-aware"} on={liveNews} />
-          <Stat label={gemini ? "Gemini-enhanced" : "Gemini-ready"} on={gemini} />
+          <Stat label={llmLabel} on={deepseek || gemini} />
           <Stat label={mongo ? "MongoDB memory" : "Memory fallback"} on={mongo} />
         </div>
       </section>

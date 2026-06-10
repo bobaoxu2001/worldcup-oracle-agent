@@ -476,7 +476,7 @@ function AgentAnswer({
             )}
           >
             <Cpu className="h-3 w-3" />
-            {response.llmEnhanced ? "Gemini-enhanced" : "Deterministic engine"}
+            {response.llmEnhanced ? "LLM-enhanced" : "Deterministic engine"}
           </span>
           <span className="ml-auto">
             <SpeakButton text={speakText} lang={answerLang} listenLabel={t(answerLang, "listen")} stopLabel={t(answerLang, "stop")} />

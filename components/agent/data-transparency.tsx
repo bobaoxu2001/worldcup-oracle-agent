@@ -33,7 +33,7 @@ export function DataTransparency({ response }: { response: AgentResponse }) {
         : { value: "Not persisted", strong: false };
 
   const llm = response.llmEnhanced
-    ? { value: "Gemini-enhanced prose", strong: true }
+    ? { value: "LLM-enhanced prose", strong: true }
     : { value: "Deterministic explanation", strong: false };
 
   const rows = [
@@ -82,7 +82,7 @@ export function DataTransparency({ response }: { response: AgentResponse }) {
       </div>
 
       <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground/80">
-        Probabilities come from the deterministic statistical engine. The news and Gemini layers only
+        Probabilities come from the deterministic statistical engine. The news and LLM layers only
         adjust or explain using transparent, capped rules — never fabricated numbers.
       </p>
     </div>
