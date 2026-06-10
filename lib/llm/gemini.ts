@@ -49,13 +49,26 @@ export async function geminiGenerate(
         },
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Secret-safe: log status + short body so config issues (invalid key, API
+      // not enabled, bad model) are diagnosable in runtime logs. Never logs the key.
+      let detail = "";
+      try {
+        detail = (await res.text()).slice(0, 300);
+      } catch {
+        /* ignore */
+      }
+      console.warn(`[gemini] request failed: HTTP ${res.status} ${detail}`);
+      return null;
+    }
     const data = (await res.json()) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];
     };
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) console.warn("[gemini] response had no text candidate");
     return text?.trim() || null;
-  } catch {
+  } catch (err) {
+    console.warn("[gemini] request error:", (err as Error)?.message);
     return null;
   } finally {
     clearTimeout(timeout);
