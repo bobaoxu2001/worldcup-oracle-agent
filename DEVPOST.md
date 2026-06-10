@@ -67,15 +67,19 @@ Status is also exposed as JSON at `GET /api/memory/status`. The design stays fai
 
 ---
 
-## 🤖 DeepSeek hybrid LLM layer (deterministic engine = source of truth)
+## 🤖 Hybrid LLM layer — DeepSeek (active) + Gemini (wired) · deterministic engine = source of truth
 
-The agent uses a **hybrid architecture** where deterministic TypeScript code owns every number and the LLM only handles language. **DeepSeek (`lib/llm/*`, `deepseek-chat` via REST) is live in production** and does exactly three things:
+The agent uses a **hybrid architecture** where deterministic TypeScript code owns every number and the LLM layer only handles language. There are **two real LLM seams** in `lib/llm/`:
 
-1. **Intent understanding** — refines the deterministic router's guess into one of 10+ intent types when the question is ambiguous.
-2. **Analyst narrative** — turns the structured result into a fluent explanation, where that structured JSON is its **only** source of truth: it copies the probabilities/rankings verbatim and is given hard rules to **never invent** probabilities, news, injuries, suspensions, or sources.
-3. **Chinese localization** — generates the answer in 中文 (with a Google **Gemini** fallback at `lib/llm/gemini.ts` if DeepSeek is absent).
+- **DeepSeek (`lib/llm/provider.ts` + `deepseek.ts`, `deepseek-chat` via REST) — the active runtime LLM in the current production deployment** (`DEEPSEEK_API_KEY` is set on Vercel). It does exactly three things:
+  1. **Intent understanding** — refines the deterministic router's guess into one of 10+ intent types when the question is ambiguous.
+  2. **Analyst narrative** — turns the structured result into a fluent explanation, where that structured JSON is its **only** source of truth: it copies the probabilities/rankings verbatim and is given hard rules to **never invent** probabilities, news, injuries, suspensions, or sources.
+  3. **Chinese localization** — produces the 中文 answer (number-preserving).
+- **Google Gemini (`lib/llm/gemini.ts`, `gemini-2.0-flash` via REST) — the Google integration seam.** It is fully implemented and used as the **English narrative polish** (`polishWithGemini`) and the **preferred translation/localization path** (`localizeText` tries Gemini before DeepSeek). It activates when `GOOGLE_API_KEY` is set. **In the current production deployment Gemini is wired but not enabled** (no `GOOGLE_API_KEY`), so DeepSeek serves these calls; setting `GOOGLE_API_KEY` switches the localization/narrative-polish path to Gemini with DeepSeek as fallback.
 
-Everything is **fail-soft**: if `DEEPSEEK_API_KEY` is missing or a call times out (6–9s budgets), the agent falls back to its deterministic router and templated explanations with zero loss of correctness. Each answer's **Data Transparency** card badges the live `LLM` state (**enhanced** vs **deterministic engine**), so the seam is fully transparent — the agent's *reasoning and numbers* stay trustworthy.
+> **Honest labelling:** the UI badges the LLM layer as **"LLM-enhanced"** (provider-neutral) and the homepage chip names the **active** provider (e.g. *DeepSeek-enhanced* in production). We deliberately do **not** claim "Gemini generates all answers" — the numbers are always deterministic, and the active narrator is whichever provider is configured.
+
+Everything is **fail-soft**: if no LLM key is present or a call times out (6–9s budgets), the agent falls back to its deterministic router and templated explanations with zero loss of correctness. Each answer's **Data Transparency** card badges the live `LLM` state (**LLM-enhanced** vs **deterministic engine**), so the seam is fully transparent — the agent's *reasoning and numbers* stay trustworthy.
 
 ---
 
@@ -88,6 +92,41 @@ WorldCup Oracle is **rules-aware**, not just a matchup model:
 - **Configurable discipline model** (`lib/prediction-engine/discipline.ts`) — yellow-card / red-card fair-play points and suspension thresholds power the suspension-risk read and the "do cards affect group ranking?" explainer.
 
 The agent can therefore **explain the rules** (best-third advancement, card/fair-play effects, tiebreakers) — in English or 中文 — not just output probabilities.
+
+---
+
+## 🧩 Agent workflow & MCP-assisted development
+
+**The app is designed around an explicit agent workflow** (not a single chatbot call):
+
+```
+intent planning → intent routing → rules/simulation engines → memory → LLM narrative → MongoDB persist
+```
+
+Each stage is a real, inspectable TypeScript function and the reasoning timeline is shown live to the user.
+
+**MCP was used on the development & deployment side** (via connected tools in our agent IDE), not as a production runtime dependency:
+
+- **Vercel MCP** — connected and used to inspect project/deployment/runtime state during the deploy; environment-variable management and the production redeploy were performed with the **Vercel CLI** (`vercel env add`, `vercel redeploy`).
+- **Browser-automation MCP + Playwright** and a **local-preview MCP** — used to drive the live app and **capture the production screenshots** and verify behavior.
+
+> **Honest scope:** this is an **MCP-assisted development/deployment workflow**. We did **not** use **MongoDB MCP**, **GitHub MCP**, or **Google Cloud Agent Builder**, and no MCP server runs inside the deployed app. MongoDB integration is a **runtime** integration via the official `mongodb` Node driver (see below); git operations used the `git`/`gh` CLI.
+
+---
+
+## ✅ Hackathon compliance
+
+| Requirement | Status |
+|---|---|
+| **Hosted project URL** | https://worldcup-oracle-agent.vercel.app (live, zero-config) |
+| **Public repository** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
+| **Open-source license** | **MIT** (`LICENSE` in repo root) |
+| **MongoDB track integration** | **MongoDB Atlas** is the live production **memory layer** via the official `mongodb` driver — `predictions` (all intent types) + `team_news` collections, follow-up context, status surfaced at `/memory` and `GET /api/memory/status` |
+| **MCP usage** | MCP-assisted **development/deployment** (Vercel MCP inspection; browser/preview MCP for screenshots & verification). Not a production runtime dependency. |
+| **Gemini / Google usage** | **Google Gemini** (`gemini-2.0-flash`) is wired as the narrative-polish + preferred-translation seam (`lib/llm/gemini.ts`), enabled by `GOOGLE_API_KEY`. Active LLM in the current deploy is **DeepSeek**; Gemini activates when its key is set. |
+| **Agent behavior beyond chat** | Plans, classifies intent (10+ types), routes to deterministic rules/simulation engines, persists to memory, explains results, answers follow-ups. |
+| **Multi-step workflow** | Visible reasoning timeline: plan → resolve → news → impact → engine → Monte Carlo → narrate → persist. |
+| **Demo video** | _paste your 3-min link_ |
 
 ---
 

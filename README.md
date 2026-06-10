@@ -339,11 +339,16 @@ Status is also available as JSON at **`GET /api/memory/status`**.
 
 ---
 
-## Google Cloud / Gemini readiness
+## LLM layer — DeepSeek (active) + Google Gemini (wired)
 
-Gemini plugs into a single seam (`lib/llm/gemini.ts`). When `GOOGLE_API_KEY` is set, the agent asks Gemini to rewrite its deterministic explanation into livelier prose (numbers preserved exactly). When it's **not** set — the default for the demo — the built-in deterministic generator is used and everything works identically. A 6-second timeout means a slow API can never stall the demo.
+The agent has **two real LLM seams**, and the deterministic engine is always the source of truth for every number:
 
-The UI badges each answer as **`Gemini-enhanced`** or **`Deterministic engine`** so the seam is visible.
+- **DeepSeek** (`lib/llm/provider.ts` + `deepseek.ts`, `deepseek-chat` via REST) — the **active runtime LLM in the current production deployment** (`DEEPSEEK_API_KEY` is set). It refines ambiguous intents, writes the analyst narrative (the structured result is its only source of truth), and produces the Chinese answer.
+- **Google Gemini** (`lib/llm/gemini.ts`, `gemini-2.0-flash` via REST) — the **Google integration seam**, implemented as the English narrative polish (`polishWithGemini`) and the **preferred** translation/localization path (`localizeText` tries Gemini before DeepSeek). It activates when `GOOGLE_API_KEY` is set. **In the current deploy Gemini is wired but not enabled** (no key), so DeepSeek serves these calls; adding `GOOGLE_API_KEY` switches the localization/polish path to Gemini with DeepSeek as fallback.
+
+A 6–9s timeout means a slow API can never stall the demo, and with **no** LLM key the deterministic generator is used and everything works identically. The UI badges each answer as **`LLM-enhanced`** or **`Deterministic engine`** (provider-neutral), and the homepage chip names the **active** provider (e.g. *DeepSeek-enhanced* in production) — we never claim Gemini generates answers it didn't.
+
+> **MCP-assisted development/deployment:** the deploy used the **Vercel MCP** (project/deployment inspection; env + redeploy via the Vercel CLI) and **browser/preview MCP** tooling to capture these production screenshots. No MCP server runs inside the deployed app, and **MongoDB MCP / GitHub MCP / Google Cloud Agent Builder were not used** — MongoDB is a runtime integration via the official `mongodb` driver. See the **Hackathon compliance** table in [`DEVPOST.md`](DEVPOST.md).
 
 ---
 
@@ -403,7 +408,11 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 |----------|---------|------------|
 | `MONGODB_URI` | Agent memory + `team_news` (MongoDB Partner Track) | Falls back to in-memory store |
 | `MONGODB_DB` | Database name (default `worldcup_oracle`) | Uses default |
-| `GOOGLE_API_KEY` | Gemini narrative polish | Uses deterministic generator |
+| `AI_PROVIDER` | Selects the hybrid LLM provider (e.g. `deepseek`) | Deterministic generator |
+| `DEEPSEEK_API_KEY` | DeepSeek intent/narrative/localization (active LLM in prod) | Deterministic generator |
+| `DEEPSEEK_BASE_URL` | DeepSeek API base (e.g. `https://api.deepseek.com`) | Uses default |
+| `DEEPSEEK_MODEL` | DeepSeek model id (e.g. `deepseek-chat`) | Uses default |
+| `GOOGLE_API_KEY` | Gemini narrative polish + preferred translation path | Falls back to DeepSeek, then deterministic |
 | `NEWS_API_KEY` | Live team news via NewsAPI.org | Uses curated demo signals |
 | `GNEWS_API_KEY` | Live team news via GNews.io | Uses curated demo signals |
 | `SERPAPI_API_KEY` | Live team news via SerpAPI (Google News) | Uses curated demo signals |
@@ -421,7 +430,8 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 2. **No env vars needed** for a working demo. To enable the live paths, add any of the variables above in **Project → Settings → Environment Variables**:
    - `MONGODB_URI` (+ optional `MONGODB_DB`) → real agent memory (Atlas)
    - `GNEWS_API_KEY` (or `SERPAPI_API_KEY` / `NEWS_API_KEY` / `GOOGLE_SEARCH_API_KEY` + `GOOGLE_SEARCH_ENGINE_ID`) → live news
-   - `GOOGLE_API_KEY` → Gemini-enhanced explanations
+   - `AI_PROVIDER=deepseek` + `DEEPSEEK_API_KEY` (+ `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL`) → DeepSeek-enhanced narratives & Chinese localization
+   - `GOOGLE_API_KEY` → enable Gemini for narrative polish / preferred translation
    - `NEXT_PUBLIC_APP_URL` → your deployed URL (for metadata/OG)
 3. Deploy. The included [`vercel.json`](vercel.json) registers a **daily cron** that calls `/api/news/refresh` at 06:00 UTC to keep `team_news` fresh.
 4. Paste the resulting URL into the table at the top of this README and into `DEVPOST.md`.
