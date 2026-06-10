@@ -8,7 +8,7 @@
 | **💻 GitHub** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
 | **🎥 Demo video** | _paste your 3-min link_ |
 
-> The deployed demo **works with zero API keys** — deterministic Elo + Dixon-Coles + Monte Carlo engine, curated demo news, and an in-memory fallback. Add `MONGODB_URI`, a news key (e.g. `GNEWS_API_KEY`), or `GOOGLE_API_KEY` on Vercel to light up live memory, live news, and Gemini-enhanced multilingual prose.
+> The deployed demo **works with zero API keys** — deterministic Elo + Dixon-Coles + Monte Carlo engine, curated demo news, and an in-memory fallback. **Production is live on MongoDB Atlas with the DeepSeek hybrid LLM layer active.** Add `MONGODB_URI`, a news key (e.g. `GNEWS_API_KEY`), or `DEEPSEEK_API_KEY` (or `GOOGLE_API_KEY` for the Gemini fallback) to light up live memory, live news, and LLM-enhanced multilingual analyst narratives.
 
 ---
 
@@ -28,7 +28,7 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 
 ## 🔮 What it does
 
-- **Understands** a natural-language question and **plans** the right analysis (single match · scenario what-if · tournament winner · social preview · team-news digest).
+- **Understands** a natural-language question (English or 中文) and **plans** the right analysis across **10+ intent types**: match prediction · tournament forecast · **group qualification** · **team comparison** · **rules explanation** · **model explanation** · team analysis · path-to-the-final · scenario what-if · team-news digest.
 - **Resolves** teams from casual names (`USA`, `Türkiye`, `the Netherlands`).
 - **Pulls recent team news** (injuries, returns, call-ups, suspensions, tactics) for both sides and **classifies** each item (category · impact · direction).
 - **Scores news impact** with a transparent, capped signal layer and shows **base vs news-adjusted** probabilities with per-outcome deltas.
@@ -47,7 +47,8 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 - **Agent pipeline** — plain, typed, inspectable functions in `lib/agent/*`:
   `planner → matchResolver → newsResolver → impactAnalyzer → predictionEngine → simulator → explanationGenerator → MongoDB memory`. The reasoning timeline shown to the user mirrors these steps.
 - **News intelligence** — `lib/news/*`: a multi-source provider abstraction (NewsAPI / GNews / SerpAPI / Google Custom Search), a deterministic keyword classifier, a MongoDB-backed store, and curated demo signals as a zero-key fallback.
-- **Everything fails soft** — no MongoDB, no Gemini, no news key? The app still runs end-to-end.
+- **DeepSeek hybrid LLM layer** (`lib/llm/*`) for intent understanding, analyst narrative, and Chinese localization — the deterministic engine remains the single source of truth for all numbers and rules.
+- **Everything fails soft** — no MongoDB, no DeepSeek/Gemini, no news key? The app still runs end-to-end.
 
 ---
 
@@ -56,7 +57,7 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 MongoDB is the agent's **memory**, not just a database — and it's **live in production on MongoDB Atlas** at https://worldcup-oracle-agent.vercel.app:
 
 - **MongoDB Atlas persistent memory is live** — the deployed app connects to Atlas and persists across sessions.
-- **Prediction sessions are saved to the `predictions` collection** — `userQuery`, `intent`, `teams`, `prediction` (probabilities + confidence), `simulationResult`, `reasoningSteps`, `explanation`, `followUpContext`, `createdAt` (indexed on `createdAt`, `teams`, `intent`).
+- **Every intent type is saved to the `predictions` collection** — match predictions, tournament forecasts, group qualification, team comparisons, and rules/model explanations all persist, with `userQuery`, `intent`, `teams`, `prediction`, `simulationResult`, `reasoningSteps`, `explanation`, `followUpContext`, `createdAt`, plus the extended structured fields (`summary`, `rankings`, `modelFactors`, `rulesApplied`, `newsSignals`, `limitations`, `confidence`, `language`). The schema extension is backward-compatible, so older records still render. `/memory` shows each session's **intent-type badge**.
 - **Team news is stored in the `team_news` collection** — classified daily signals, indexed on `team + publishedAt`, `category`, `impactLevel`, `demo`.
 - **Follow-up context** is stored alongside predictions so "what-if" questions re-analyse the right matchup and news.
 - **`/memory` shows the backend status and recent saved sessions** read straight from MongoDB.
@@ -66,9 +67,27 @@ Status is also exposed as JSON at `GET /api/memory/status`. The design stays fai
 
 ---
 
-## ☁️ Google Cloud / Gemini usage
+## 🤖 DeepSeek hybrid LLM layer (deterministic engine = source of truth)
 
-Gemini plugs into one seam — `lib/llm/gemini.ts` (`gemini-2.0-flash` via REST). When `GOOGLE_API_KEY` is set, Gemini **restyles the agent's deterministic explanation** into livelier prose, with strict instructions to preserve every number. When it's not set, the deterministic generator is used and the product is identical. A 6-second timeout means a slow API can never stall the demo. The UI badges each answer **Gemini-enhanced** or **Deterministic engine** so the seam is transparent. This keeps the agent's *reasoning and numbers* trustworthy while leaving a clean path to deeper Gemini (function-calling) integration.
+The agent uses a **hybrid architecture** where deterministic TypeScript code owns every number and the LLM only handles language. **DeepSeek (`lib/llm/*`, `deepseek-chat` via REST) is live in production** and does exactly three things:
+
+1. **Intent understanding** — refines the deterministic router's guess into one of 10+ intent types when the question is ambiguous.
+2. **Analyst narrative** — turns the structured result into a fluent explanation, where that structured JSON is its **only** source of truth: it copies the probabilities/rankings verbatim and is given hard rules to **never invent** probabilities, news, injuries, suspensions, or sources.
+3. **Chinese localization** — generates the answer in 中文 (with a Google **Gemini** fallback at `lib/llm/gemini.ts` if DeepSeek is absent).
+
+Everything is **fail-soft**: if `DEEPSEEK_API_KEY` is missing or a call times out (6–9s budgets), the agent falls back to its deterministic router and templated explanations with zero loss of correctness. Each answer's **Data Transparency** card badges the live `LLM` state (**enhanced** vs **deterministic engine**), so the seam is fully transparent — the agent's *reasoning and numbers* stay trustworthy.
+
+---
+
+## 📐 Rules-aware 2026 World Cup engine
+
+WorldCup Oracle is **rules-aware**, not just a matchup model:
+
+- **Official 2026 format & bracket** reused from a validated module (`lib/prediction-engine/bracket-2026.ts`) — 48 teams, 12 groups, top-2 + 8 best third-placed teams → R32 (Annex C routing, all 495 combinations validated).
+- **FIFA group tiebreakers** in the correct order — points → overall goal difference → overall goals → head-to-head → fair play → FIFA ranking.
+- **Configurable discipline model** (`lib/prediction-engine/discipline.ts`) — yellow-card / red-card fair-play points and suspension thresholds power the suspension-risk read and the "do cards affect group ranking?" explainer.
+
+The agent can therefore **explain the rules** (best-third advancement, card/fair-play effects, tiebreakers) — in English or 中文 — not just output probabilities.
 
 ---
 
@@ -85,7 +104,8 @@ Gemini plugs into one seam — `lib/llm/gemini.ts` (`gemini-2.0-flash` via REST)
 
 - A genuinely **agentic** product: a visible, inspectable pipeline with planning, tool steps, and memory — not a single prompt.
 - **News-aware predictions** with a transparent base-vs-adjusted view.
-- A **Data Transparency card** on every result — judges can see exactly what produced the answer (Elo · Dixon-Coles · 10k Monte Carlo · live/demo news · MongoDB/in-memory · Gemini/deterministic), reflecting the live runtime state. No black-box "AI numbers."
+- A **Data Transparency card** on every result — judges can see exactly what produced the answer (Elo · Dixon-Coles · 10k Monte Carlo · live/demo news · MongoDB/in-memory · DeepSeek/deterministic), reflecting the live runtime state. No black-box "AI numbers."
+- A **rules-aware, multi-intent agent** — match prediction, tournament forecast, group qualification, team comparison, and rules/model explanations, in English and 中文.
 - **Live or demo news, clearly labelled** — plug in a GNews/SerpAPI/NewsAPI/Google CSE key for live mode; otherwise honest, generic sample signals.
 - **Official, validated** 2026 bracket (all 495 Annex C combinations pass).
 - **MongoDB as a first-class memory layer** with a dedicated Memory Center.
@@ -110,6 +130,11 @@ Gemini plugs into one seam — `lib/llm/gemini.ts` (`gemini-2.0-flash` via REST)
 3. What if Germany's injured defender returns?
 4. Show me the latest Argentina team news before predicting.
 5. Which team has the best chance to win the 2026 World Cup?
+6. **谁会赢得世界杯冠军？** _(Chinese tournament forecast — DeepSeek-enhanced)_
+7. **Compare Argentina and France** _(team comparison)_
+8. **How do best third-place teams advance?** _(rules explanation)_
+9. **黄牌会影响小组排名吗？** _(yellow-card / fair-play rules, in Chinese)_
+10. **How does your model work?** _(model explanation)_
 
 ---
 
