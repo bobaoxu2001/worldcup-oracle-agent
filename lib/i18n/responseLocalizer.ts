@@ -17,7 +17,7 @@ import { getLanguage, type LangCode } from "./languages";
 import { llmConfigured, llmTranslate } from "@/lib/llm/provider";
 import type { PredictionResult, ChampionAnswer } from "@/lib/agent/types";
 
-export type LocalizationMethod = "none" | "gemini" | "template";
+export type LocalizationMethod = "none" | "gemini" | "deepseek" | "template";
 
 /** Translate text into `lang` preserving all numbers. Returns null on failure. */
 export async function geminiTranslate(text: string, lang: LangCode): Promise<string | null> {
@@ -48,7 +48,7 @@ export async function localizeText(
   }
   if (llmConfigured()) {
     const out = await llmTranslate(text, getLanguage(lang).englishName);
-    if (out) return { text: out, method: "gemini" };
+    if (out) return { text: out, method: "deepseek" };
   }
   return { text, method: "template" };
 }

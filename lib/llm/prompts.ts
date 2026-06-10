@@ -76,6 +76,36 @@ export function analystNarrativeMessages(
   ];
 }
 
+/**
+ * Single-string version of the analyst-narrative prompt, for providers with a
+ * single-prompt API (e.g. Gemini). Same hard rules as the chat-message form.
+ */
+export function analystNarrativePrompt(structuredJson: string, language: "en" | "zh"): string {
+  return analystNarrativeMessages(structuredJson, language)
+    .map((m) => m.content)
+    .join("\n\n");
+}
+
+const POLISH_SYSTEM =
+  `You are WorldCup Oracle, an expert, hype-but-credible football analyst. ` +
+  `Rewrite the analysis below into 2-3 tight, engaging paragraphs for a fan. ` +
+  `Keep every number and fact EXACTLY as given — do not invent stats. Be confident and fun, not flowery.`;
+
+/** Polish a deterministic explanation (chat-message form, e.g. DeepSeek). */
+export function polishMessages(deterministic: string, context: string): ChatMessage[] {
+  return [
+    { role: "system", content: POLISH_SYSTEM },
+    { role: "user", content: `Context: ${context}\n\nAnalysis to rewrite:\n${deterministic}` },
+  ];
+}
+
+/** Polish a deterministic explanation (single-string form, e.g. Gemini). */
+export function polishPrompt(deterministic: string, context: string): string {
+  return polishMessages(deterministic, context)
+    .map((m) => m.content)
+    .join("\n\n");
+}
+
 /** Clarification: friendly redirect for unclear queries. */
 export function clarificationMessages(
   query: string,

@@ -339,14 +339,20 @@ Status is also available as JSON at **`GET /api/memory/status`**.
 
 ---
 
-## LLM layer — DeepSeek (active) + Google Gemini (wired)
+## Cost-aware LLM layer — DeepSeek (default) + Gemini (premium escalation)
 
-The agent has **two real LLM seams**, and the deterministic engine is always the source of truth for every number:
+The agent uses a **cost-aware provider router**: DeepSeek handles routine narrative/localization tasks, while Gemini is reserved for complex multi-step reasoning, ambiguous intent resolution, and fallback. The deterministic engine is always the source of truth for every number, rule, and ranking.
 
-- **DeepSeek** (`lib/llm/provider.ts` + `deepseek.ts`, `deepseek-chat` via REST) — the **active runtime LLM in the current production deployment** (`DEEPSEEK_API_KEY` is set). It refines ambiguous intents, writes the analyst narrative (the structured result is its only source of truth), and produces the Chinese answer.
-- **Google Gemini** (`lib/llm/gemini.ts`, `gemini-2.0-flash` via REST) — the **Google integration seam**, implemented as the English narrative polish (`polishWithGemini`) and the **preferred** translation/localization path (`localizeText` tries Gemini before DeepSeek). It activates when `GOOGLE_API_KEY` is set. **In the current deploy Gemini is wired but not enabled** (no key), so DeepSeek serves these calls; adding `GOOGLE_API_KEY` switches the localization/polish path to Gemini with DeepSeek as fallback.
+```
+selectLLMProvider(structuredResult, query, language, complexity) → "deepseek" | "gemini" | "none"
+```
 
-A 6–9s timeout means a slow API can never stall the demo, and with **no** LLM key the deterministic generator is used and everything works identically. The UI badges each answer as **`LLM-enhanced`** or **`Deterministic engine`** (provider-neutral), and the homepage chip names the **active** provider (e.g. *DeepSeek-enhanced* in production) — we never claim Gemini generates answers it didn't.
+- **Deterministic router first** — confident intent + structured result ⇒ that result is the source of truth.
+- **DeepSeek** (`lib/llm/provider.ts` + `deepseek.ts`, `deepseek-chat`) — the **low-cost default**: routine intent refinement, standard analyst narrative, Chinese localization, team comparison, model explanation, common questions.
+- **Google Gemini** (`lib/llm/gemini.ts`, `gemini-2.0-flash`) — the **premium escalation**, chosen by `assessComplexity()` for: path-to-final, group qualification / best-third-place logic, rules + prediction combined, more than two teams, ambiguous intent, low deterministic confidence, or long-form Chinese explanations — and as the **fallback when DeepSeek fails/times out**.
+- **Graceful fallback** — Gemini missing → DeepSeek; neither → deterministic templates.
+
+A 6–9s timeout means a slow API can never stall the demo. The **Data Transparency** card and the "Why?" badge show the **actual provider used** (`DeepSeek-enhanced` / `Gemini-enhanced` / `Deterministic engine`), and that provider is persisted to MongoDB with the result. Routing decisions are covered by `npm run test:routing` (22 checks). We never claim Gemini generates answers it didn't — the numbers are always deterministic.
 
 > **MCP-assisted development/deployment:** the deploy used the **Vercel MCP** (project/deployment inspection; env + redeploy via the Vercel CLI) and **browser/preview MCP** tooling to capture these production screenshots. No MCP server runs inside the deployed app, and **MongoDB MCP / GitHub MCP / Google Cloud Agent Builder were not used** — MongoDB is a runtime integration via the official `mongodb` driver. See the **Hackathon compliance** table in [`DEVPOST.md`](DEVPOST.md).
 
@@ -504,7 +510,7 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 
 - [x] **Agentic product** — explicit, inspectable pipeline (planner → resolver → news → impact → engine → simulator → explainer → memory) with a visible reasoning timeline.
 - [x] **MongoDB Track — live on Atlas** — prediction sessions persist to `predictions`, news to `team_news` (both indexed); `/memory` shows the **MongoDB Atlas** backend + recent saved sessions, and each result's Data Transparency card reads `Memory: MongoDB Atlas`.
-- [x] **Google Cloud / Gemini-ready** — single Gemini seam (`lib/llm/gemini.ts`); deterministic fallback when no key.
+- [x] **Cost-aware LLM routing** — DeepSeek default + **Gemini** (`lib/llm/gemini.ts`, live in prod) premium escalation for complex/ambiguous queries + fallback; deterministic when no key. Routing tested via `npm run test:routing`.
 - [x] **Runs with zero config** — predictions, simulations, news and memory all work with an empty `.env`.
 - [x] **Fail-soft** — missing/invalid MongoDB, Gemini or news keys never break the demo.
 - [x] **Open source** — [MIT `LICENSE`](LICENSE).

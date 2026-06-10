@@ -191,16 +191,18 @@ export interface AgentResponse {
   newsSource?: NewsSource;
   /** Active live news provider name (e.g. "GNews"), or null in demo mode. */
   newsProvider?: string | null;
-  /** True when an LLM (Gemini) generated the narrative, false on fallback. */
+  /** True when an LLM generated/polished the narrative, false on deterministic fallback. */
   llmEnhanced: boolean;
+  /** Which LLM actually produced the prose (cost-aware router): deepseek · gemini · null. */
+  llmProvider?: "deepseek" | "gemini" | null;
   persisted: "mongodb" | "memory" | "none";
   createdAt: string;
   /** Global Voice Mode: the language the answer was localized to (BCP-47). */
   language?: string;
   /** In-language one-line result summary (deterministic, used for TTS/headline). */
   localizedSummary?: string;
-  /** How the narrative was localized: none (English) · gemini · template. */
-  localizationMethod?: "none" | "gemini" | "template";
+  /** How the narrative was localized: none (English) · gemini · deepseek · template. */
+  localizationMethod?: "none" | "gemini" | "deepseek" | "template";
 }
 
 /** Internal: raw model bundle before narrative generation. */

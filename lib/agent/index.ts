@@ -27,7 +27,6 @@ import {
   buildFanInsight,
   buildTiktokScript,
   buildChampionExplanation,
-  polishWithGemini,
 } from "./explanationGenerator";
 import { savePrediction } from "@/lib/db/mongodb";
 import { geminiConfigured } from "@/lib/llm/gemini";
@@ -41,9 +40,11 @@ import {
 import { isLangCode, type LangCode } from "@/lib/i18n/languages";
 import {
   classifyIntentWithLLM,
-  generateAnalystNarrative,
+  generateNarrative,
+  polishNarrative,
   generateClarification,
   llmConfigured,
+  type ActiveProvider,
 } from "@/lib/llm/provider";
 import { explainRules } from "./rulesExplain";
 import {
@@ -99,17 +100,27 @@ function step(
 async function narrateOrFallback(
   structured: StructuredResult,
   deterministic: string,
-  lang: LangCode
-): Promise<{ text: string; enhanced: boolean }> {
-  if ((lang === "en-US" || lang === "zh-CN") && llmConfigured()) {
-    const out = await generateAnalystNarrative(structured, lang === "zh-CN" ? "zh" : "en");
-    if (out) return { text: out, enhanced: true };
+  lang: LangCode,
+  query: string,
+  intent: string
+): Promise<{ text: string; enhanced: boolean; provider: ActiveProvider | null }> {
+  if (lang === "en-US" || lang === "zh-CN") {
+    const { text, provider } = await generateNarrative(structured, lang === "zh-CN" ? "zh" : "en", {
+      query,
+      intent,
+      teamCount: structured.teams?.length ?? 0,
+      confidence: structured.confidence,
+      language: lang,
+    });
+    if (text) return { text, enhanced: true, provider };
   }
   if (lang !== "en-US") {
     const r = await localizeText(deterministic, lang);
-    return { text: r.text, enhanced: r.method === "gemini" };
+    const provider: ActiveProvider | null =
+      r.method === "gemini" ? "gemini" : r.method === "deepseek" ? "deepseek" : null;
+    return { text: r.text, enhanced: provider !== null, provider };
   }
-  return { text: deterministic, enhanced: false };
+  return { text: deterministic, enhanced: false, provider: null };
 }
 
 /** Build the normalized StructuredResult shell shared by the new intents. */
@@ -165,14 +176,24 @@ function toPredictionResult(b: PredictionBundle): PredictionResult {
 async function finalizeNarrative(
   english: string,
   context: string,
-  lang: LangCode
-): Promise<{ text: string; enhanced: boolean; method: "none" | "gemini" | "template" }> {
+  lang: LangCode,
+  query: string,
+  intent: string
+): Promise<{
+  text: string;
+  enhanced: boolean;
+  method: "none" | "gemini" | "deepseek" | "template";
+  provider: ActiveProvider | null;
+}> {
   if (lang === "en-US") {
-    const r = await polishWithGemini(english, context);
-    return { text: r.text, enhanced: r.enhanced, method: r.enhanced ? "gemini" : "none" };
+    const { text, provider } = await polishNarrative(english, context, { query, intent });
+    const method = provider ?? "none";
+    return { text, enhanced: provider !== null, method, provider };
   }
   const r = await localizeText(english, lang);
-  return { text: r.text, enhanced: r.method === "gemini", method: r.method };
+  const provider: ActiveProvider | null =
+    r.method === "gemini" ? "gemini" : r.method === "deepseek" ? "deepseek" : null;
+  return { text: r.text, enhanced: provider !== null, method: r.method, provider };
 }
 
 export async function runAgent(input: AgentInput): Promise<AgentResponse> {
@@ -281,7 +302,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       confidence: m.confidence,
     });
     const steps = plan.planLabels.map((t, i) => step(`model-${i}`, t, "Done."));
-    const { text, enhanced } = await narrateOrFallback(structured, m.explanation, lang);
+    const { text, enhanced, provider } = await narrateOrFallback(structured, m.explanation, lang, query, plan.intent);
     const persisted = persist
       ? await savePrediction({
           userQuery: query,
@@ -299,6 +320,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           rulesApplied: m.rulesApplied,
           limitations: m.limitations,
           confidence: m.confidence,
+          llmProvider: provider,
         })
       : "none";
     return {
@@ -309,6 +331,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation: text,
       fanInsight: "🔍 Deterministic engine + capped news layer + MongoDB memory — the LLM only narrates, never invents numbers.",
       llmEnhanced: enhanced,
+      llmProvider: provider,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -337,7 +360,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       const steps = plan.planLabels.map((t, i) =>
         step(`gq-${i}`, t, i === 0 ? `Group ${groupName}${focusSlug ? ` · focus ${teamRef(focusSlug).name}` : ""}.` : "Done.")
       );
-      const { text, enhanced } = await narrateOrFallback(structured, g.explanation, lang);
+      const { text, enhanced, provider } = await narrateOrFallback(structured, g.explanation, lang, query, plan.intent);
       const persisted = persist
         ? await savePrediction({
             userQuery: query,
@@ -357,6 +380,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
             rulesApplied: g.rulesApplied,
             limitations: g.limitations,
             confidence: g.confidence,
+            llmProvider: provider,
           })
         : "none";
       return {
@@ -368,6 +392,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
         explanation: text,
         fanInsight: `🎟️ ${g.summary}`,
         llmEnhanced: enhanced,
+        llmProvider: provider,
         persisted,
         createdAt: createdAt.toISOString(),
         language: lang,
@@ -409,7 +434,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const steps = plan.planLabels.map((t, i) =>
       step(`path-${i}`, t, i === 0 ? `${team.name} · Group ${groupOf(team.slug).name}.` : "Done.")
     );
-    const { text, enhanced } = await narrateOrFallback(structured, p.explanation, lang);
+    const { text, enhanced, provider } = await narrateOrFallback(structured, p.explanation, lang, query, plan.intent);
     const persisted = persist
       ? await savePrediction({
           userQuery: query,
@@ -429,6 +454,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           rulesApplied: p.rulesApplied,
           limitations: p.limitations,
           confidence: p.confidence,
+          llmProvider: provider,
         })
       : "none";
     return {
@@ -439,6 +465,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation: text,
       fanInsight: `🗺️ ${p.summary}`,
       llmEnhanced: enhanced,
+      llmProvider: provider,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -465,7 +492,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const steps = plan.planLabels.map((t, i) =>
       step(`ta-${i}`, t, i === 0 ? `${team.flag} ${team.name}.` : "Done.")
     );
-    const { text, enhanced } = await narrateOrFallback(structured, a.explanation, lang);
+    const { text, enhanced, provider } = await narrateOrFallback(structured, a.explanation, lang, query, plan.intent);
     const persisted = persist
       ? await savePrediction({
           userQuery: query,
@@ -483,6 +510,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           newsSignals: structured.newsSignals,
           limitations: a.limitations,
           confidence: a.confidence,
+          llmProvider: provider,
         })
       : "none";
     return {
@@ -493,6 +521,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation: text,
       fanInsight: `📊 ${a.summary}`,
       llmEnhanced: enhanced,
+      llmProvider: provider,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -518,7 +547,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const steps = plan.planLabels.map((t, i) =>
       step(`tc-${i}`, t, i === 0 ? `${a.flag} ${a.name} vs ${b.flag} ${b.name}.` : "Done.")
     );
-    const { text, enhanced } = await narrateOrFallback(structured, c.explanation, lang);
+    const { text, enhanced, provider } = await narrateOrFallback(structured, c.explanation, lang, query, plan.intent);
     const persisted = persist
       ? await savePrediction({
           userQuery: query,
@@ -535,6 +564,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           modelFactors: c.factors,
           limitations: c.limitations,
           confidence: c.confidence,
+          llmProvider: provider,
         })
       : "none";
     return {
@@ -545,6 +575,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation: text,
       fanInsight: `⚖️ ${c.summary}`,
       llmEnhanced: enhanced,
+      llmProvider: provider,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -572,10 +603,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     ];
 
     const digest = buildTeamNewsDigest(view, source);
-    const { text, enhanced, method } = await finalizeNarrative(
+    const { text, enhanced, method, provider } = await finalizeNarrative(
       digest,
       `Latest team-news digest for ${team.name}. Keep facts and any 'demo data' caveat intact.`,
-      lang
+      lang,
+      query,
+      plan.intent
     );
 
     const topNeg = view.items.find((i) => i.direction === "negative");
@@ -595,6 +628,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           explanation: text,
           followUpContext: `team-news:${team.slug}`,
           createdAt,
+          llmProvider: provider,
         })
       : "none";
 
@@ -608,6 +642,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       newsSource: source,
       newsProvider: activeNewsProviderName(),
       llmEnhanced: enhanced,
+      llmProvider: provider,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -658,10 +693,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       answer.contenders[0].champion * 100
     ).toFixed(1)}% — but 10k sims say it's wide open.`;
 
-    const { text, enhanced, method } = await finalizeNarrative(
+    const { text, enhanced, method, provider } = await finalizeNarrative(
       explanation,
       "Tournament title odds from a 10,000-run Monte Carlo simulation of the 2026 World Cup.",
-      lang
+      lang,
+      query,
+      plan.intent
     );
     const fanInsight = lang === "en-US" ? fanInsightEn : (await localizeText(fanInsightEn, lang)).text;
     const localizedSummary = lang === "en-US" ? undefined : buildChampionSummary(answer, lang);
@@ -684,6 +721,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
           explanation: text,
           followUpContext: "",
           createdAt,
+          llmProvider: provider,
         })
       : "none";
 
@@ -695,6 +733,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       explanation: text,
       fanInsight,
       llmEnhanced: enhanced,
+      llmProvider: provider,
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
@@ -875,12 +914,14 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const tiktokScript =
     plan.intent === "tiktok-preview" ? buildTiktokScript(bundle) : undefined;
 
-  const { text, enhanced, method } = await finalizeNarrative(
+  const { text, enhanced, method, provider } = await finalizeNarrative(
     explanation,
     `News-aware match prediction: ${teamA.name} vs ${teamB.name}.${
       scenario ? " This is a what-if scenario re-analysis." : ""
     } A capped news-signal layer adjusted the probabilities; keep all numbers and the 'demo data' caveat intact.`,
-    lang
+    lang,
+    query,
+    plan.intent
   );
   // In-language deterministic headline (also used for text-to-speech).
   const localizedSummary = lang === "en-US" ? undefined : buildMatchSummary(result, lang);
@@ -911,6 +952,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
         explanation: text,
         followUpContext,
         createdAt,
+        llmProvider: provider,
       })
     : "none";
 
@@ -928,6 +970,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     tiktokScript,
     scenarioNote: scenario?.label,
     llmEnhanced: enhanced,
+    llmProvider: provider,
     persisted,
     createdAt: createdAt.toISOString(),
     language: lang,

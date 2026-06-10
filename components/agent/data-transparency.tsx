@@ -32,9 +32,14 @@ export function DataTransparency({ response }: { response: AgentResponse }) {
         ? { value: "In-memory fallback", strong: false }
         : { value: "Not persisted", strong: false };
 
-  const llm = response.llmEnhanced
-    ? { value: "LLM-enhanced prose", strong: true }
-    : { value: "Deterministic explanation", strong: false };
+  const llm =
+    response.llmProvider === "gemini"
+      ? { value: "Gemini-enhanced prose", strong: true }
+      : response.llmProvider === "deepseek"
+        ? { value: "DeepSeek-enhanced prose", strong: true }
+        : response.llmEnhanced
+          ? { value: "LLM-enhanced prose", strong: true }
+          : { value: "Deterministic explanation", strong: false };
 
   const rows = [
     { icon: <Gauge className="h-3.5 w-3.5" />, label: "Team strength", value: "Calibrated Elo ratings", strong: true },

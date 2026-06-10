@@ -10,6 +10,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "validate:bracket": "tsx scripts/validate-bracket.ts",
+    "test:routing": "tsx scripts/test-llm-routing.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {

@@ -11,6 +11,8 @@
  * Rapid Agent Hackathon.
  */
 
+import { analystNarrativePrompt, polishPrompt } from "./prompts";
+
 const MODEL = "gemini-2.0-flash";
 const ENDPOINT = (key: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
@@ -58,4 +60,34 @@ export async function geminiGenerate(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/**
+ * Gemini analyst narrative from a structured result (the JSON is the only source
+ * of truth). Used by the cost-aware router for complex/escalated queries.
+ * Returns null on any failure so the router can fall back to DeepSeek.
+ */
+export async function geminiNarrative(
+  structuredJson: string,
+  language: "en" | "zh"
+): Promise<string | null> {
+  if (!geminiConfigured()) return null;
+  const out = await geminiGenerate(analystNarrativePrompt(structuredJson, language), {
+    maxTokens: 700,
+    timeoutMs: 9000,
+  });
+  return out && out.length > 40 ? out : null;
+}
+
+/** Gemini polish of a deterministic English explanation (numbers preserved). */
+export async function geminiPolish(
+  deterministic: string,
+  context: string
+): Promise<string | null> {
+  if (!geminiConfigured()) return null;
+  const out = await geminiGenerate(polishPrompt(deterministic, context), {
+    maxTokens: 450,
+    timeoutMs: 9000,
+  });
+  return out && out.length > 40 ? out : null;
 }

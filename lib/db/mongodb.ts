@@ -42,6 +42,8 @@ export interface StoredPrediction {
   newsSignals?: string[];
   limitations?: string[];
   confidence?: number;
+  /** Which LLM (if any) produced the narrative for this session. */
+  llmProvider?: "deepseek" | "gemini" | null;
 }
 
 export type PersistMode = "mongodb" | "memory";

@@ -57,7 +57,7 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 MongoDB is the agent's **memory**, not just a database — and it's **live in production on MongoDB Atlas** at https://worldcup-oracle-agent.vercel.app:
 
 - **MongoDB Atlas persistent memory is live** — the deployed app connects to Atlas and persists across sessions.
-- **Every intent type is saved to the `predictions` collection** — match predictions, tournament forecasts, group qualification, team comparisons, and rules/model explanations all persist, with `userQuery`, `intent`, `teams`, `prediction`, `simulationResult`, `reasoningSteps`, `explanation`, `followUpContext`, `createdAt`, plus the extended structured fields (`summary`, `rankings`, `modelFactors`, `rulesApplied`, `newsSignals`, `limitations`, `confidence`, `language`). The schema extension is backward-compatible, so older records still render. `/memory` shows each session's **intent-type badge**.
+- **Every intent type is saved to the `predictions` collection** — match predictions, tournament forecasts, group qualification, team comparisons, and rules/model explanations all persist, with `userQuery`, `intent`, `teams`, `prediction`, `simulationResult`, `reasoningSteps`, `explanation`, `followUpContext`, `createdAt`, plus the extended structured fields (`summary`, `rankings`, `modelFactors`, `rulesApplied`, `newsSignals`, `limitations`, `confidence`, `language`) and the **`llmProvider`** that produced the narrative (`deepseek` / `gemini` / none). The schema extension is backward-compatible, so older records still render. `/memory` shows each session's **intent-type badge**.
 - **Team news is stored in the `team_news` collection** — classified daily signals, indexed on `team + publishedAt`, `category`, `impactLevel`, `demo`.
 - **Follow-up context** is stored alongside predictions so "what-if" questions re-analyse the right matchup and news.
 - **`/memory` shows the backend status and recent saved sessions** read straight from MongoDB.
@@ -67,19 +67,24 @@ Status is also exposed as JSON at `GET /api/memory/status`. The design stays fai
 
 ---
 
-## 🤖 Hybrid LLM layer — DeepSeek (active) + Gemini (wired) · deterministic engine = source of truth
+## 🤖 Cost-aware hybrid LLM layer — DeepSeek (default) + Gemini (premium escalation) · deterministic engine = source of truth
 
-The agent uses a **hybrid architecture** where deterministic TypeScript code owns every number and the LLM layer only handles language. There are **two real LLM seams** in `lib/llm/`:
+The agent uses a **cost-aware provider router**: DeepSeek handles routine narrative/localization tasks, while Gemini is reserved for complex multi-step reasoning, ambiguous intent resolution, and fallback. Deterministic TypeScript code owns every number; the LLM layer only handles language.
 
-- **DeepSeek (`lib/llm/provider.ts` + `deepseek.ts`, `deepseek-chat` via REST) — the active runtime LLM in the current production deployment** (`DEEPSEEK_API_KEY` is set on Vercel). It does exactly three things:
-  1. **Intent understanding** — refines the deterministic router's guess into one of 10+ intent types when the question is ambiguous.
-  2. **Analyst narrative** — turns the structured result into a fluent explanation, where that structured JSON is its **only** source of truth: it copies the probabilities/rankings verbatim and is given hard rules to **never invent** probabilities, news, injuries, suspensions, or sources.
-  3. **Chinese localization** — produces the 中文 answer (number-preserving).
-- **Google Gemini (`lib/llm/gemini.ts`, `gemini-2.0-flash` via REST) — the Google integration seam.** It is fully implemented and used as the **English narrative polish** (`polishWithGemini`) and the **preferred translation/localization path** (`localizeText` tries Gemini before DeepSeek). It activates when `GOOGLE_API_KEY` is set. **In the current production deployment Gemini is wired but not enabled** (no `GOOGLE_API_KEY`), so DeepSeek serves these calls; setting `GOOGLE_API_KEY` switches the localization/narrative-polish path to Gemini with DeepSeek as fallback.
+**Provider chain (`lib/llm/provider.ts`):**
 
-> **Honest labelling:** the UI badges the LLM layer as **"LLM-enhanced"** (provider-neutral) and the homepage chip names the **active** provider (e.g. *DeepSeek-enhanced* in production). We deliberately do **not** claim "Gemini generates all answers" — the numbers are always deterministic, and the active narrator is whichever provider is configured.
+1. **Deterministic router first** — if the heuristic parser confidently classifies the intent and the engines produce a structured result, that result is the source of truth (numbers, rules, simulations, rankings).
+2. **DeepSeek — the low-cost default** (`deepseek-chat` via REST): routine intent refinement, standard analyst narrative, Chinese localization, team comparison, model explanation, and most common questions.
+3. **Gemini — premium escalation** (`gemini-2.0-flash` via REST): `selectLLMProvider()` routes a query to Gemini when `assessComplexity()` flags it — multi-step tournament reasoning, **path-to-final**, **group qualification / best-third-place** logic, **rules + prediction combined**, **more than two teams**, ambiguous intent, low deterministic confidence, or long-form Chinese explanations. Gemini is also the **fallback when DeepSeek fails/times out**.
+4. **Graceful fallback** — if Gemini isn't configured → DeepSeek; if neither is configured → deterministic templates. No loss of correctness.
 
-Everything is **fail-soft**: if no LLM key is present or a call times out (6–9s budgets), the agent falls back to its deterministic router and templated explanations with zero loss of correctness. Each answer's **Data Transparency** card badges the live `LLM` state (**LLM-enhanced** vs **deterministic engine**), so the seam is fully transparent — the agent's *reasoning and numbers* stay trustworthy.
+```
+selectLLMProvider(structuredResult, query, language, complexity) → "deepseek" | "gemini" | "none"
+```
+
+> **Hard rules:** the structured JSON is the LLM's **only** source of truth — it copies probabilities/rankings verbatim and is forbidden from inventing probabilities, news, injuries, suspensions, or sources. We deliberately do **not** claim "Gemini generates all answers."
+
+**Transparency:** every answer's **Data Transparency** card and the "Why?" badge show the **actual provider used** — `DeepSeek-enhanced`, `Gemini-enhanced`, or `Deterministic` — and the provider is persisted to MongoDB with the result. Routing is covered by a unit test suite (`npm run test:routing`, 22 checks).
 
 ---
 
@@ -123,7 +128,7 @@ Each stage is a real, inspectable TypeScript function and the reasoning timeline
 | **Open-source license** | **MIT** (`LICENSE` in repo root) |
 | **MongoDB track integration** | **MongoDB Atlas** is the live production **memory layer** via the official `mongodb` driver — `predictions` (all intent types) + `team_news` collections, follow-up context, status surfaced at `/memory` and `GET /api/memory/status` |
 | **MCP usage** | MCP-assisted **development/deployment** (Vercel MCP inspection; browser/preview MCP for screenshots & verification). Not a production runtime dependency. |
-| **Gemini / Google usage** | **Google Gemini** (`gemini-2.0-flash`) is wired as the narrative-polish + preferred-translation seam (`lib/llm/gemini.ts`), enabled by `GOOGLE_API_KEY`. Active LLM in the current deploy is **DeepSeek**; Gemini activates when its key is set. |
+| **Gemini / Google usage** | **Google Gemini** (`gemini-2.0-flash`, `lib/llm/gemini.ts`) is **live in production** as the **premium escalation provider** in the cost-aware router — it handles complex multi-step reasoning, ambiguous intent, and DeepSeek fallback. DeepSeek remains the low-cost default. |
 | **Agent behavior beyond chat** | Plans, classifies intent (10+ types), routes to deterministic rules/simulation engines, persists to memory, explains results, answers follow-ups. |
 | **Multi-step workflow** | Visible reasoning timeline: plan → resolve → news → impact → engine → Monte Carlo → narrate → persist. |
 | **Demo video** | _paste your 3-min link_ |
