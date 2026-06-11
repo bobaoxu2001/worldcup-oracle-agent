@@ -25,7 +25,7 @@ import {
   eliminationNotice,
   toView,
 } from "@/lib/live-sports/tournamentState";
-import { planQuery } from "./planner";
+import { planQuery, isOutOfScopeCompetition } from "./planner";
 import { teamRef, resolveTeams } from "./matchResolver";
 import { runSimulation } from "./simulator";
 import { resolveScenario } from "./scenario";
@@ -146,6 +146,15 @@ async function deterministicAnswer(
   return { text: r.text, enhanced: false, provider: null };
 }
 
+// Betting-intent wording gets an explicit deterministic disclaimer appended
+// after narration (the footer/disclaimer alone is too easy to miss).
+const BETTING_RE = /\b(bet|bets|betting|wager|wagering|gamble|gambling|parlay|stake|bookie|odds slip)\b|赌|投注|下注/i;
+const BETTING_NOTE =
+  "\n\n_⚠️ Not betting advice. Probabilities are model estimates for entertainment & informational purposes only._";
+function withBettingNote(text: string, query: string): string {
+  return BETTING_RE.test(query) && !text.includes("Not betting advice") ? text + BETTING_NOTE : text;
+}
+
 /** Build the normalized StructuredResult shell shared by the new intents. */
 function makeStructured(
   base: Partial<StructuredResult> & Pick<StructuredResult, "intentType" | "query" | "summary">
@@ -228,11 +237,15 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const createdAt = new Date();
   const lang: LangCode = isLangCode(input.language) ? input.language : "en-US";
 
+  // Out-of-scope competitions (Euros, CL, …) must never be silently answered
+  // with World Cup odds — and the LLM refinement below must not "rescue" them.
+  const outOfScope = isOutOfScopeCompetition(query);
+
   // ---- Optional LLM intent refinement (deterministic stays source of truth) --
   // Only when the deterministic parser is unsure AND a provider is configured.
   // The LLM only relabels intent; every number, news item and ruling remains
   // deterministic. Any failure/missing key falls back to the deterministic guess.
-  if (plan.intent === "unknown" && llmConfigured()) {
+  if (plan.intent === "unknown" && !outOfScope && llmConfigured()) {
     const llm = await classifyIntentWithLLM(query, plan.intent);
     if (llm) {
       // Backfill anchors from the LLM's labels (resolved through OUR resolver —
@@ -787,6 +800,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
         plan.intent
       ));
     }
+    text = withBettingNote(text, query);
     const fanInsight = lang === "en-US" ? fanInsightEn : (await localizeText(fanInsightEn, lang)).text;
     const localizedSummary = lang === "en-US" ? undefined : buildChampionSummary(answer, lang);
 
@@ -857,12 +871,18 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       "News: Germany injury update",
       "Rules: How do yellow cards affect qualification?",
     ];
+    const scopeNote = outOfScope
+      ? "This agent is focused on the **FIFA World Cup 2026** — I don't model other competitions (Euros, Champions League, …), so I won't answer that with World Cup numbers.\n\n"
+      : "";
     const explanationEn =
+      scopeNote +
       "I couldn't match that to one of my analyses yet. Here's what you can ask:\n\n• " +
       examples.join("\n• ");
     const fanEn = "Give me a matchup, a team, a group, or a rules question — I'll take it from there. ⚽";
     let explanation = explanationEn;
-    if (llmConfigured()) {
+    // Out-of-scope answers stay deterministic — the LLM doesn't get a chance to
+    // improvise about a competition the engine doesn't model.
+    if (!outOfScope && llmConfigured()) {
       const c = await generateClarification(query, examples, lang === "zh-CN" ? "zh" : "en");
       if (c) explanation = c;
     }
@@ -1002,7 +1022,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   const tiktokScript =
     plan.intent === "tiktok-preview" ? buildTiktokScript(bundle) : undefined;
 
-  const { text, enhanced, method, provider } = await finalizeNarrative(
+  const matchNarrated = await finalizeNarrative(
     explanation,
     `News-aware match prediction: ${teamA.name} vs ${teamB.name}.${
       scenario ? " This is a what-if scenario re-analysis." : ""
@@ -1011,6 +1031,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     query,
     plan.intent
   );
+  const text = withBettingNote(matchNarrated.text, query);
+  const { enhanced, method, provider } = matchNarrated;
   // In-language deterministic headline (also used for text-to-speech).
   const localizedSummary = lang === "en-US" ? undefined : buildMatchSummary(result, lang);
   if (lang !== "en-US") fanInsight = (await localizeText(fanInsight, lang)).text;

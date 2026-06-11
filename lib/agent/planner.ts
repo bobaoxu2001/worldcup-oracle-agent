@@ -57,6 +57,17 @@ function detectGroupLetter(query: string): string | undefined {
   return m ? m[1].toUpperCase() : undefined;
 }
 
+// Other competitions are out of scope — this agent only models the FIFA World
+// Cup 2026. A question about the Euros/CL/etc. must NOT be silently answered
+// with World Cup odds.
+const OTHER_COMP_RE =
+  /\b(euros?\s*(20\d\d)?|uefa euro|champions league|europa league|premier league|la liga|serie a|bundesliga|copa am[eé]rica|nations league|club world cup|olympics?|gold cup|afcon)\b/i;
+const WC_RE = /world cup|世界杯|ワールドカップ/i;
+
+export function isOutOfScopeCompetition(query: string): boolean {
+  return OTHER_COMP_RE.test(query) && !WC_RE.test(query);
+}
+
 export function planQuery(
   query: string,
   isFollowUp = false,
@@ -68,6 +79,17 @@ export function planQuery(
 
   const group = detectGroupLetter(query);
   let intent: AgentIntent;
+
+  // Out-of-scope competition → clarification, never World Cup odds in disguise.
+  if (isOutOfScopeCompetition(query)) {
+    intent = "unknown";
+    return {
+      intent,
+      teamSlugs: [],
+      player,
+      planLabels: ["Detect competition scope", "Redirect to supported questions"],
+    };
+  }
 
   // A follow-up that names a what-if scenario re-analyses the prior matchup.
   if (isFollowUp && (SCENARIO_RE.test(query) || player)) {

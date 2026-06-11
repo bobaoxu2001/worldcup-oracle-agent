@@ -15,7 +15,7 @@
 import assert from "node:assert";
 import { assessComplexity, selectLLMProvider } from "@/lib/llm/provider";
 import { resolveTeams } from "@/lib/agent/matchResolver";
-import { planQuery } from "@/lib/agent/planner";
+import { planQuery, isOutOfScopeCompetition } from "@/lib/agent/planner";
 import { isRelevantTeamNews } from "@/lib/news/newsClassifier";
 import { buildTeamNewsDigest } from "@/lib/agent/impactAnalyzer";
 import { buildPathAnalysis } from "@/lib/agent/analysis";
@@ -139,6 +139,13 @@ check(
   "demo batch → no false 'no strong signal' line (demo is labelled separately)",
   !buildTeamNewsDigest(weakView, "demo").includes("no strong team-specific")
 );
+
+console.log("scope guard (other competitions):");
+check('"Will Italy win Euro 2024?" is out of scope', isOutOfScopeCompetition("Will Italy win Euro 2024?") === true);
+check('"Will Italy win Euro 2024?" plans unknown, not champion odds', planQuery("Will Italy win Euro 2024?", false, false).intent === "unknown");
+check("Champions League question is out of scope", isOutOfScopeCompetition("Who wins the Champions League?") === true);
+check("World Cup question is IN scope", isOutOfScopeCompetition("Who will win the World Cup?") === false);
+check('"Who will win the champion?" stays champion-odds', planQuery("Who will win the champion?", false, false).intent === "champion-odds");
 
 console.log("path-analysis potential path:");
 const path = buildPathAnalysis({ slug: "argentina", name: "Argentina", flag: "🇦🇷", elo: 2064 });

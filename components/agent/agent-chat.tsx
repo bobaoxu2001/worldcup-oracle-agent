@@ -41,6 +41,7 @@ const DEMO_PROMPTS: { q: string; hint: string }[] = [
   { q: "How do best third-place teams advance?", hint: "2026 rules explainer" },
   { q: "Compare Argentina and France", hint: "Team comparison — model dimensions" },
   { q: "Brazil locker room conflict", hint: "Contextual news signals (GNews)" },
+  { q: "Argentina's path to the final", hint: "Gemini escalation · bracket path reasoning" },
 ];
 
 // Minimal local typings for the Web Speech API (not in every TS lib version).
@@ -292,6 +293,11 @@ export function AgentChat({
                   </button>
                 ))}
               </div>
+              <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground/60">
+                Routine answers use <span className="text-foreground/80">DeepSeek</span>. Complex path, group, and
+                multi-step reasoning escalates to <span className="text-foreground/80">Gemini</span>. Deterministic
+                engines own probabilities and rules.
+              </p>
             </div>
           </div>
         )}
