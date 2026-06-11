@@ -65,10 +65,15 @@ async function safeJson(
   }
 }
 
-/** Build the search query for a team ("Argentina national football team injury squad news"). */
+/**
+ * Build the search query for a team. GNews/NewsAPI treat spaces as AND and
+ * bare hyphens as operator syntax ("call-up" made GNews return HTTP 400, and
+ * AND-ing 7 words returned ~zero articles). Quoted phrases + OR keep the query
+ * valid and high-recall; the keyword classifier then sorts categories.
+ */
 function queryFor(teamSlug: string): string {
   const name = getTeam(teamSlug).name;
-  return `${name} national football team injury squad call-up news`;
+  return `"${name}" AND ("World Cup" OR "national team")`;
 }
 
 function asDate(s: unknown): Date {
