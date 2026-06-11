@@ -68,6 +68,17 @@ export function isOutOfScopeCompetition(query: string): boolean {
   return OTHER_COMP_RE.test(query) && !WC_RE.test(query);
 }
 
+// Match-result language (EN + 中文): "X vs Y", "who wins X against Y",
+// "韩国打捷克", "预测…比赛结果", "今晚…比赛". When present, the question is about
+// ONE match — it must never fall through to tournament/champion odds, even if
+// only one (or neither) team resolves.
+const MATCH_LANG_RE =
+  /\bvs\.?\b|\bversus\b|\bagainst\b|\bwho wins\b|\bmatch (result|prediction)\b|打(?![算入出击折])|对阵|对战|对决|交锋|比赛|谁赢/i;
+
+export function hasMatchLanguage(query: string): boolean {
+  return MATCH_LANG_RE.test(query);
+}
+
 export function planQuery(
   query: string,
   isFollowUp = false,
@@ -134,6 +145,11 @@ export function planQuery(
   ) {
     // "Is Argentina strong this year?" / "阿根廷今年强吗？"
     intent = "team-analysis";
+  } else if (hasMatchLanguage(query) && teamSlugs.length < 2 && !TOURNAMENT_RE.test(query)) {
+    // Match-result wording but we couldn't resolve BOTH teams ("预测韩国队今晚比赛",
+    // unsupported opponent, …) → ask for clarification. NEVER answer a match
+    // question with tournament/champion odds.
+    intent = "unknown";
   } else if (CHAMPION_RE.test(query) || TOURNAMENT_RE.test(query)) {
     intent = "champion-odds";
   } else if (teamSlugs.length === 1) {

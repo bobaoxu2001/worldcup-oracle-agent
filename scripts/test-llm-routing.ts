@@ -140,6 +140,18 @@ check(
   !buildTeamNewsDigest(weakView, "demo").includes("no strong team-specific")
 );
 
+console.log("match-language routing (zh + en, never tournament forecast):");
+check('"预测一下今晚韩国打捷克比赛的结果" → match-prediction', planQuery("预测一下今晚韩国打捷克比赛的结果", false, false).intent === "match-prediction");
+check("…and resolves Korea + Czechia", JSON.stringify(resolveTeams("预测一下今晚韩国打捷克比赛的结果").map((t) => t.slug).sort()) === JSON.stringify(["czech-republic", "south-korea"]));
+check('"韩国vs捷克谁赢" → match-prediction', planQuery("韩国vs捷克谁赢", false, false).intent === "match-prediction");
+check('"今晚韩国打捷克" → match-prediction', planQuery("今晚韩国打捷克", false, false).intent === "match-prediction");
+check('"South Korea vs Czech Republic prediction" → match-prediction', planQuery("South Korea vs Czech Republic prediction", false, false).intent === "match-prediction");
+check('"Czechia vs Korea" → match-prediction', planQuery("Czechia vs Korea", false, false).intent === "match-prediction");
+check('"预测韩国队今晚比赛" (no opponent) → clarification, not champion odds', planQuery("预测韩国队今晚比赛", false, false).intent === "unknown");
+check('"谁会赢得世界杯冠军？" still tournament forecast', planQuery("谁会赢得世界杯冠军？", false, false).intent === "champion-odds");
+check('"Can Portugal still win the World Cup?" still champion gating', planQuery("Can Portugal still win the World Cup?", false, false).intent === "champion-odds");
+check('"How do best third-place teams advance?" still rules', planQuery("How do best third-place teams advance?", false, false).intent === "rules-explanation");
+
 console.log("scope guard (other competitions):");
 check('"Will Italy win Euro 2024?" is out of scope', isOutOfScopeCompetition("Will Italy win Euro 2024?") === true);
 check('"Will Italy win Euro 2024?" plans unknown, not champion odds', planQuery("Will Italy win Euro 2024?", false, false).intent === "unknown");

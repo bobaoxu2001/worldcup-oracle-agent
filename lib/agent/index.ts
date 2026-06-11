@@ -25,7 +25,7 @@ import {
   eliminationNotice,
   toView,
 } from "@/lib/live-sports/tournamentState";
-import { planQuery, isOutOfScopeCompetition } from "./planner";
+import { planQuery, isOutOfScopeCompetition, hasMatchLanguage } from "./planner";
 import { teamRef, resolveTeams } from "./matchResolver";
 import { runSimulation } from "./simulator";
 import { resolveScenario } from "./scenario";
@@ -155,6 +155,18 @@ function withBettingNote(text: string, query: string): string {
   return BETTING_RE.test(query) && !text.includes("Not betting advice") ? text + BETTING_NOTE : text;
 }
 
+// "今晚/tonight" wording must not imply we verified an official fixture — the
+// engine simulates any matchup; it does not check the real schedule.
+const TONIGHT_RE = /今晚|今天|tonight|today/i;
+function withFixtureNote(text: string, query: string, lang: string): string {
+  if (!TONIGHT_RE.test(query)) return text;
+  const note =
+    lang === "zh-CN"
+      ? "\n\n_（这是基于模型的对阵模拟，并非经核实的官方赛程。）_"
+      : "\n\n_Model-based matchup simulation — not a verified official fixture._";
+  return text.includes("official fixture") || text.includes("官方赛程") ? text : text + note;
+}
+
 /** Build the normalized StructuredResult shell shared by the new intents. */
 function makeStructured(
   base: Partial<StructuredResult> & Pick<StructuredResult, "intentType" | "query" | "summary">
@@ -258,7 +270,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       const n = plan.teamSlugs.length;
       switch (llm.intentType) {
         case "TOURNAMENT_FORECAST":
-          plan.intent = "champion-odds";
+          // A question with match-result wording is about ONE match — never let
+          // the LLM relabel it as a tournament forecast (champion odds).
+          if (!hasMatchLanguage(query)) plan.intent = "champion-odds";
           break;
         case "RULES_EXPLANATION":
           plan.intent = "rules-explanation";
@@ -1031,7 +1045,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     query,
     plan.intent
   );
-  const text = withBettingNote(matchNarrated.text, query);
+  const text = withFixtureNote(withBettingNote(matchNarrated.text, query), query, lang);
   const { enhanced, method, provider } = matchNarrated;
   // In-language deterministic headline (also used for text-to-speech).
   const localizedSummary = lang === "en-US" ? undefined : buildMatchSummary(result, lang);
