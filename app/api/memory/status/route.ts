@@ -3,8 +3,7 @@ import { countPredictions, mongoConnected } from "@/lib/db/mongodb";
 import { getNewsStats, newsMode } from "@/lib/news/newsIngestor";
 import { llmConfigured } from "@/lib/llm/provider";
 import { geminiConfigured } from "@/lib/llm/gemini";
-import { getTournamentState } from "@/lib/live-sports/tournamentState";
-import { apiFootballConfigured } from "@/lib/live-sports/apiFootball";
+import { getTournamentState, liveProviderConfigured } from "@/lib/live-sports/tournamentState";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +45,7 @@ export async function GET() {
       },
       // Live tournament state (deterministic elimination source of truth).
       tournamentState: {
-        configured: apiFootballConfigured(),
+        configured: liveProviderConfigured(),
         mode: tState.mode, // "live" | "cache" | "demo" | "unavailable"
         source: tState.source,
         fetchedAt: tState.fetchedAt,

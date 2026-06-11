@@ -15,6 +15,7 @@
 import { getMongoDb } from "@/lib/db/mongodb";
 import { getTeam } from "@/lib/seed/world-cup-2026-groups";
 import { apiFootballConfigured, fetchFixtures, fetchInjuries } from "./apiFootball";
+import { footballDataConfigured, fetchFixturesFD } from "./footballData";
 import type {
   LiveFixture,
   LiveInjury,
@@ -115,10 +116,25 @@ export function demoSnapshot(): TournamentStateSnapshot {
   };
 }
 
+/**
+ * Whether ANY live tournament-state provider is configured.
+ * Priority when both are set: API-Football (richer: injuries), else
+ * football-data.org (fixtures/results — all that elimination gating needs).
+ */
+export function liveProviderConfigured(): boolean {
+  return apiFootballConfigured() || footballDataConfigured();
+}
+
+function liveProviderName(): string {
+  if (apiFootballConfigured()) return "API-Football";
+  if (footballDataConfigured()) return "football-data.org";
+  return "none";
+}
+
 export function unavailableSnapshot(): TournamentStateSnapshot {
   return {
     mode: "unavailable",
-    source: "API-Football (unreachable)",
+    source: "Live API (unreachable)",
     fetchedAt: null,
     expiresAt: null,
     confidence: 0,
@@ -265,27 +281,30 @@ function isFresh(snap: TournamentStateSnapshot | null): boolean {
 export async function getTournamentState(): Promise<TournamentStateSnapshot> {
   const cache = await readCache();
   const cacheFresh = isFresh(cache);
-  if (cache && cacheFresh) return decideSnapshot({ cache, cacheFresh, live: null, apiConfigured: apiFootballConfigured() });
+  if (cache && cacheFresh) return decideSnapshot({ cache, cacheFresh, live: null, apiConfigured: liveProviderConfigured() });
 
   let live: TournamentStateSnapshot | null = null;
   let fixtures: LiveFixture[] = [];
   let injuries: LiveInjury[] = [];
-  if (apiFootballConfigured()) {
-    const fx = await fetchFixtures();
+  if (liveProviderConfigured()) {
+    // Provider seam: API-Football preferred (has injuries), else football-data.org
+    // (fixtures/results only — injuries stay news-context).
+    const useApiFootball = apiFootballConfigured();
+    const fx = useApiFootball ? await fetchFixtures() : await fetchFixturesFD();
     if (fx) {
       fixtures = fx;
-      injuries = (await fetchInjuries()) ?? [];
+      injuries = useApiFootball ? (await fetchInjuries()) ?? [] : [];
       const teams = classifyTeams(fx);
       live = snapshotFromTeams(teams, {
         mode: "live",
-        source: "API-Football",
+        source: liveProviderName(),
         confidence: 0.9,
         ttlMs: Math.min(FIXTURES_TTL_MS, INJURIES_TTL_MS),
       });
     }
   }
 
-  const chosen = decideSnapshot({ cache, cacheFresh, live, apiConfigured: apiFootballConfigured() });
+  const chosen = decideSnapshot({ cache, cacheFresh, live, apiConfigured: liveProviderConfigured() });
   if (live && chosen.mode === "live") await writeCache(live, fixtures, injuries);
   return chosen;
 }

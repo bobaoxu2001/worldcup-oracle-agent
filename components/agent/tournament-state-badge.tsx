@@ -45,8 +45,8 @@ export function TournamentStateBadge({ state }: { state: TournamentStateView }) 
       </div>
       {state.mode === "demo" && (
         <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground/80">
-          No live data source configured — all teams treated as active. Set <code>API_FOOTBALL_KEY</code> for live
-          fixtures, standings &amp; eliminations.
+          No live data source configured — all teams treated as active. Set <code>API_FOOTBALL_KEY</code> or{" "}
+          <code>FOOTBALL_DATA_API_KEY</code> for live fixtures, results &amp; eliminations.
         </p>
       )}
       {state.mode === "unavailable" && (

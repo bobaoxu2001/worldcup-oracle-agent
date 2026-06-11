@@ -19,6 +19,7 @@ import {
   decideSnapshot,
   demoSnapshot,
 } from "@/lib/live-sports/tournamentState";
+import { mapFdMatch } from "@/lib/live-sports/footballData";
 import type { TournamentStateSnapshot, LiveFixture } from "@/lib/live-sports/types";
 
 let passed = 0;
@@ -107,5 +108,34 @@ check("API unavailable → stale cache used", decideSnapshot({ cache, cacheFresh
 check("API key set but no data & no cache → unavailable (no false elimination)", decideSnapshot({ cache: null, cacheFresh: false, live: null, apiConfigured: true }).mode === "unavailable");
 check("no key & no cache → demo", decideSnapshot({ cache: null, cacheFresh: false, live: null, apiConfigured: false }).mode === "demo");
 check("demo snapshot has zero eliminations", demoSnapshot().eliminatedCount === 0);
+
+console.log("football-data.org mapping:");
+const fdKnockout = mapFdMatch({
+  id: 9,
+  utcDate: "2026-07-04T20:00:00Z",
+  status: "FINISHED",
+  stage: "LAST_16",
+  homeTeam: { name: "Portugal", tla: "POR" },
+  awayTeam: { name: "Spain", tla: "ESP" },
+  score: { winner: "AWAY_TEAM", fullTime: { home: 1, away: 2 } },
+});
+check("FD LAST_16 → 'Round of 16' (knockout-classified)", fdKnockout.round === "Round of 16");
+check("FD FINISHED → 'FT'", fdKnockout.status === "FT");
+check("FD TLA codes resolve to canonical slugs", fdKnockout.homeSlug === "portugal" && fdKnockout.awaySlug === "spain");
+check("FD winner mapped to homeWinner/awayWinner", fdKnockout.homeWinner === false && fdKnockout.awayWinner === true);
+check(
+  "FD knockout loss classifies elimination end-to-end",
+  classifyTeams([fdKnockout]).find((t) => t.slug === "portugal")?.status === "eliminated"
+);
+const fdGroupDraw = mapFdMatch({
+  status: "FINISHED",
+  stage: "GROUP_STAGE",
+  homeTeam: { name: "Portugal", tla: "POR" },
+  awayTeam: { name: "Spain", tla: "ESP" },
+  score: { winner: "DRAW", fullTime: { home: 1, away: 1 } },
+});
+check("FD group draw → no winner flags, no elimination", fdGroupDraw.homeWinner === null && classifyTeams([fdGroupDraw]).every((t) => t.status !== "eliminated"));
+const fdScheduled = mapFdMatch({ status: "TIMED", stage: "LAST_16", homeTeam: { name: "Portugal", tla: "POR" }, awayTeam: { name: "Spain", tla: "ESP" }, score: { winner: null } });
+check("FD scheduled knockout → not finished, no elimination", fdScheduled.status !== "FT" && classifyTeams([fdScheduled]).every((t) => t.status !== "eliminated"));
 
 console.log(`\nAll ${passed} tournament-state checks passed.`);
