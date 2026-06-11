@@ -160,12 +160,17 @@ function norm(s: string): string {
     .trim();
 }
 
+// FIFA codes that are also common English words — matching them lowercase
+// hijacks queries ("Can Portugal still win?" → Canada). Full names/aliases
+// still match these teams; only the bare 3-letter code is skipped.
+const CODE_STOPWORDS = new Set(["can", "par", "mar"]);
+
 // Build a normalized lookup of every canonical name / code / slug.
 const CANONICAL: Record<string, string> = {};
 for (const t of TEAMS) {
   CANONICAL[norm(t.name)] = t.slug;
   CANONICAL[norm(t.slug.replace(/-/g, " "))] = t.slug;
-  CANONICAL[norm(t.fifaCode)] = t.slug;
+  if (!CODE_STOPWORDS.has(norm(t.fifaCode))) CANONICAL[norm(t.fifaCode)] = t.slug;
 }
 for (const [alias, slug] of Object.entries(ALIASES)) {
   CANONICAL[norm(alias)] = slug;

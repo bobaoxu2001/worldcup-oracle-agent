@@ -103,7 +103,7 @@ The agent can therefore **explain the rules** (best-third advancement, card/fair
 
 ## 📡 Live tournament state (deterministic elimination)
 
-So the agent never keeps predicting eliminated teams as champions, a **live tournament-state layer** (`lib/live-sports/*`) is the deterministic source of truth — **not** the LLM or news headlines:
+So the agent never keeps predicting eliminated teams as champions, a **live tournament-state layer** (`lib/live-sports/*`) is the deterministic source of truth — **not** the LLM or news headlines. **It is live in production via football-data.org** (badge: `Live API` on fresh fetches, `Cached` from MongoDB):
 
 - **Real sports data** via **API-Football / API-SPORTS** or **football-data.org** (fixtures, standings, results; injuries on API-Football), normalized to canonical team IDs and **cached aggressively in MongoDB** (`team_state`, `live_fixtures`, `live_injuries`; ~2h fixtures / ~8h injuries TTL) to respect the free tiers.
 - **Conservative classification** (`active · qualified · eliminated · unknown`): elimination only from a finished **knockout loss**; group stage is never guessed, so the agent **never falsely eliminates** a team.

@@ -364,7 +364,7 @@ A 6–9s timeout means a slow API can never stall the demo. The **Data Transpare
 
 ## 📡 Live tournament state (no predicting eliminated teams)
 
-The agent has a **deterministic tournament-state layer** so it never keeps offering an eliminated team as a possible champion. It is fed by a **real sports data API** — **API-Football / API-SPORTS** (fixtures, standings, injuries) or **football-data.org** (fixtures/results, v4 `X-Auth-Token`) — normalized to the app's canonical team IDs and **cached aggressively in MongoDB** (free-tier friendly).
+The agent has a **deterministic tournament-state layer** so it never keeps offering an eliminated team as a possible champion. It is fed by a **real sports data API** — **API-Football / API-SPORTS** (fixtures, standings, injuries) or **football-data.org** (fixtures/results, v4 `X-Auth-Token`) — normalized to the app's canonical team IDs and **cached aggressively in MongoDB** (free-tier friendly). **Live in production via football-data.org**: the Tournament State badge reads `Live API` on fresh fetches and `Cached` when served from MongoDB.
 
 - **Source of truth is data, not the LLM/news.** `lib/live-sports/*` classifies each team `active · qualified · eliminated · unknown`. Elimination is only inferred from **direct evidence** (a finished knockout loss); group-stage is never guessed (best-third maths), so the agent **never falsely eliminates** a team.
 - **Deterministic gating overrides the model.** Before champion/path/team analysis, eliminated teams are removed from title contention (champion probability → 0). Ask *"Can Portugal still win?"* after elimination and the answer is a hard **"No — already eliminated based on the latest tournament state"** — the LLM cannot override it.

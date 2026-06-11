@@ -14,6 +14,8 @@
 
 import assert from "node:assert";
 import { assessComplexity, selectLLMProvider } from "@/lib/llm/provider";
+import { resolveTeams } from "@/lib/agent/matchResolver";
+import { planQuery } from "@/lib/agent/planner";
 
 let passed = 0;
 function check(name: string, cond: boolean) {
@@ -71,5 +73,14 @@ console.log("provider selection — no keys:");
 setKeys({ deepseek: false, gemini: false });
 check("simple query → none (deterministic)", selectLLMProvider({ query: "Who will win the champion?" }) === "none");
 check("complex query → none (deterministic)", selectLLMProvider({ query: "Brazil's path to the final?", intent: "path-analysis" }) === "none");
+
+console.log("team resolution (FIFA-code stopwords):");
+const canQ = resolveTeams("Can Portugal still win the World Cup?");
+check('"Can …" does not resolve to Canada', !canQ.some((t) => t.slug === "canada"));
+check('"Can Portugal still win…" resolves only Portugal', canQ.length === 1 && canQ[0].slug === "portugal");
+const canPlan = planQuery("Can Portugal still win the World Cup?", false, false);
+check('"Can Portugal still win…" routes to champion odds, not a match', canPlan.intent === "champion-odds" && canPlan.teamSlugs[0] === "portugal");
+check('"Canada vs Portugal" still resolves both teams', resolveTeams("Canada vs Portugal").length === 2);
+check('"on par with Morocco in March" resolves only Morocco', resolveTeams("Is Spain on par with Morocco?").every((t) => ["spain", "morocco"].includes(t.slug)));
 
 console.log(`\nAll ${passed} routing checks passed.`);
