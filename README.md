@@ -30,17 +30,21 @@ It feels like **a World Cup prediction model + a daily football news intelligenc
 
 ## 📸 Screenshots
 
-_Captured from the **live production deployment** running on **MongoDB Atlas** with the **DeepSeek** hybrid LLM layer active._
+_Captured from the **live production deployment** running on **MongoDB Atlas** with the **cost-aware LLM router** active (DeepSeek default · Gemini escalation)._
 
-**Rules-aware, multi-intent forecasting + DeepSeek analyst narratives:**
+**DeepSeek — the low-cost default for routine narrative & localization:**
 
-| Tournament forecast — DeepSeek-enhanced **Chinese** answer | Team comparison — `llmEnhanced` analyst narrative |
+| Tournament forecast — **DeepSeek-enhanced** 中文 answer | Team comparison — **DeepSeek-enhanced** narrative |
 |---|---|
-| ![Chinese champion forecast](docs/screenshots/champion-zh-deepseek.png) | ![Team comparison](docs/screenshots/team-comparison.png) |
-| **Rules explainer — how the 8 best third-placed teams advance** | **Rules explainer — yellow-card / fair-play (中文)** |
-| ![Best third-place rules](docs/screenshots/rules-third-place.png) | ![Yellow-card rules](docs/screenshots/rules-yellow-card.png) |
+| ![Chinese champion forecast (DeepSeek)](docs/screenshots/champion-zh-deepseek.png) | ![Team comparison (DeepSeek)](docs/screenshots/team-comparison.png) |
 
-**Agent Memory Center (`/memory`) — multiple intent types persisted to MongoDB Atlas:**
+**Gemini — premium escalation for complex multi-step reasoning:**
+
+| Group qualification / best-third-place — **Gemini-enhanced** | Path to the final — **Gemini-enhanced** |
+|---|---|
+| ![Group qualification (Gemini)](docs/screenshots/group-qualification-gemini.png) | ![Path to the final (Gemini)](docs/screenshots/path-to-final-gemini.png) |
+
+**Agent Memory Center (`/memory`) — MongoDB Atlas backend with multiple intent types (and `llmProvider`) persisted:**
 
 ![Memory intents](docs/screenshots/memory-intents.png)
 
