@@ -493,6 +493,14 @@ function AgentAnswer({
 
       {(prediction || champions) && <DataTransparency response={response} />}
 
+      {/* concise uncertainty disclaimer on every probability-bearing answer */}
+      {(prediction || champions || response.structured?.probabilities) && (
+        <p className="px-1 text-[10px] leading-relaxed text-muted-foreground/60">
+          ⚖️ Probabilities are model estimates, not guarantees. They combine historical strength,
+          simulations, live tournament state, and capped news signals.
+        </p>
+      )}
+
       {response.persisted !== "none" && <MemoryBadge persisted={response.persisted} />}
 
       {/* Why? explanation */}
@@ -510,7 +518,7 @@ function AgentAnswer({
           >
             <Cpu className="h-3 w-3" />
             {response.llmProvider === "gemini"
-              ? "Gemini-enhanced"
+              ? "Gemini escalation · complex multi-step reasoning"
               : response.llmProvider === "deepseek"
                 ? "DeepSeek-enhanced"
                 : response.llmEnhanced

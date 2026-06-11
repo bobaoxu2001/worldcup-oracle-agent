@@ -443,7 +443,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const team = teamRef(plan.teamSlugs[0]);
     const pState = await getTournamentState();
     const pEliminated = isEliminated(team.slug, pState);
-    const p = buildPathAnalysis(team);
+    const pStatus = pEliminated
+      ? "eliminated"
+      : pState.teams.find((t) => t.slug === team.slug)?.status ??
+        (pState.mode === "demo" || pState.mode === "unavailable" ? "active (no live state)" : "active");
+    const p = buildPathAnalysis(team, pStatus);
     const structured = makeStructured({
       intentType: "PATH_ANALYSIS",
       query,

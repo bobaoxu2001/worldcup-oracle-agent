@@ -21,7 +21,13 @@ import {
 } from "@/lib/prediction-engine";
 import { expectedGoals } from "@/lib/prediction-engine/elo";
 import { matchProb } from "@/lib/prediction-engine/elo";
-import { R32_MATCHES, positionLabel, type Position } from "@/lib/prediction-engine/bracket-2026";
+import {
+  R32_MATCHES,
+  BRACKET_2026,
+  positionLabel,
+  type Position,
+  type GroupLetter,
+} from "@/lib/prediction-engine/bracket-2026";
 import { GROUPS, getTeam, groupOf } from "@/lib/seed/world-cup-2026-groups";
 import { computeDisciplineRisk, type DisciplineRisk } from "@/lib/prediction-engine/discipline";
 import type { TeamNewsItem } from "@/lib/news/types";
@@ -137,7 +143,78 @@ function describePosition(pos: Position): string {
   return label;
 }
 
-export function buildPathAnalysis(team: TeamRef) {
+/** Groups that can feed a bracket position (best-third pool reported separately). */
+function feedingGroups(pos: Position): GroupLetter[] {
+  if (pos.kind === "winner" || pos.kind === "runnerUp") return [pos.group];
+  if (pos.kind === "third") return []; // Annex C pool — depends on which thirds advance
+  const m = BRACKET_2026.find((x) => x.no === pos.match);
+  if (!m) return [];
+  return [...new Set([...feedingGroups(m.home), ...feedingGroups(m.away)])];
+}
+
+function sideHasThird(pos: Position): boolean {
+  if (pos.kind === "third") return true;
+  if (pos.kind !== "winnerOf") return false;
+  const m = BRACKET_2026.find((x) => x.no === pos.match);
+  return m ? sideHasThird(m.home) || sideHasThird(m.away) : false;
+}
+
+/** Strongest team by Elo among the given groups — a concrete example opponent. */
+function strongestIn(groups: GroupLetter[], excludeSlug: string) {
+  let best: { name: string; flag: string; elo: number } | null = null;
+  for (const g of groups) {
+    const grp = GROUPS.find((x) => x.name === g);
+    if (!grp) continue;
+    for (const slug of grp.teams) {
+      if (slug === excludeSlug) continue;
+      const elo = getRating(slug);
+      if (!best || elo > best.elo) {
+        const t = getTeam(slug);
+        best = { name: t.name, flag: t.flag, elo };
+      }
+    }
+  }
+  return best;
+}
+
+const ROUND_LABEL: Record<string, string> = {
+  R16: "Round of 16",
+  QF: "Quarter-final",
+  SF: "Semi-final",
+  Final: "Final",
+};
+
+/**
+ * Trace the OFFICIAL bracket chain from an R32 match to the final: for each
+ * later round, which match the team would play and which groups feed the
+ * opposite side (with the strongest example opponent by Elo). Deterministic —
+ * no invented fixtures, just the published routing.
+ */
+function tracePotentialPath(startMatchNo: number, mySlug: string) {
+  const steps: { round: string; matchNo: number; oppGroups: GroupLetter[]; hasThird: boolean; example: ReturnType<typeof strongestIn> }[] = [];
+  let current = startMatchNo;
+  for (;;) {
+    const next = BRACKET_2026.find(
+      (m) =>
+        (m.home.kind === "winnerOf" && m.home.match === current) ||
+        (m.away.kind === "winnerOf" && m.away.match === current)
+    );
+    if (!next) break;
+    const other = next.home.kind === "winnerOf" && next.home.match === current ? next.away : next.home;
+    const oppGroups = feedingGroups(other);
+    steps.push({
+      round: ROUND_LABEL[next.round] ?? next.round,
+      matchNo: next.no,
+      oppGroups,
+      hasThird: sideHasThird(other),
+      example: strongestIn(oppGroups, mySlug),
+    });
+    current = next.no;
+  }
+  return steps;
+}
+
+export function buildPathAnalysis(team: TeamRef, status?: string) {
   const group = groupOf(team.slug);
   const odds = getChampionOddsFor(team.slug);
   const rows = simulateGroup(group.name);
@@ -182,6 +259,9 @@ export function buildPathAnalysis(team: TeamRef) {
 
   const lines: string[] = [];
   lines.push(`**${team.flag} ${team.name} — path to the final (official 2026 bracket).**`);
+  if (status) {
+    lines.push(`\nCurrent status: **${status}** (live tournament state).`);
+  }
   lines.push(
     `\nGroup ${group.name}: win the group ${pct(mine.winGroup)}, finish top-2 ${pct(mine.advance)}.`
   );
@@ -190,6 +270,29 @@ export function buildPathAnalysis(team: TeamRef) {
       `• As **Group ${group.name} winners** → vs ${winnerOpp} (Match ${winnerMatch?.no ?? "—"}).\n` +
       `• As **runners-up** → vs ${runnerOpp} (Match ${runnerMatch?.no ?? "—"}).`
   );
+
+  // Concrete scenario path: trace the official match chain for the group-winner
+  // route, naming the groups feeding each opposite side + the strongest example
+  // opponent by Elo. No invented fixtures — this is the published routing.
+  if (winnerMatch) {
+    const steps = tracePotentialPath(winnerMatch.no, team.slug);
+    if (steps.length) {
+      const stepLines = steps.map((s) => {
+        const groupsTxt = s.oppGroups.length
+          ? `winner side from Group${s.oppGroups.length > 1 ? "s" : ""} ${s.oppGroups.join("/")}`
+          : "best-third pool";
+        const third = s.hasThird && s.oppGroups.length ? " (+ best-third routing)" : "";
+        const ex = s.example ? ` — strongest likely: ${s.example.flag} ${s.example.name} (Elo ${s.example.elo})` : "";
+        return `• ${s.round} (Match ${s.matchNo}): vs ${groupsTxt}${third}${ex}`;
+      });
+      lines.push(
+        `\n**Potential path (scenario: winning Group ${group.name}):**\n` +
+          `• Round of 32 (Match ${winnerMatch.no}): vs ${winnerOpp}\n` +
+          stepLines.join("\n") +
+          `\n\n_Exact opponents depend on group finish and third-place routing, so this is a scenario path, not a fixed bracket._`
+      );
+    }
+  }
   if (stageRows.length) {
     lines.push(
       `\nStage-by-stage probabilities (10,000 tournament simulations):\n` +

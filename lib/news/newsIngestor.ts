@@ -13,7 +13,7 @@
  */
 
 import { getActiveProvider, newsProviderConfigured } from "./newsProvider";
-import { classifyNews } from "./newsClassifier";
+import { classifyNews, isRelevantTeamNews } from "./newsClassifier";
 import { saveTeamNews, getTeamNews, getNewsStats, getLastNewsUpdate, hasStoredNews } from "./teamNewsStore";
 import { getDemoNews, TRACKED_TEAMS, hasDemoNews } from "./demoNews";
 import type { NewsRefreshSummary, NewsSource, TeamNewsItem } from "./types";
@@ -36,7 +36,9 @@ async function fetchAndClassify(team: string, limit: number): Promise<TeamNewsIt
   const raw = await provider.fetchTeamNews(team, limit);
   const now = new Date();
   return raw
-    .filter((r) => r.title)
+    // Conservative relevance gate: drop women's/youth/other-topic articles that
+    // only loosely matched the search, so unrelated names never become signals.
+    .filter((r) => r.title && isRelevantTeamNews(team, r.title, r.summary))
     .map((r) => {
       const c = classifyNews(r.title, r.summary);
       return {

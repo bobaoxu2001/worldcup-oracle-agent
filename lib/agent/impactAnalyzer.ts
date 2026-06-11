@@ -167,6 +167,18 @@ export function buildTeamNewsDigest(
     lines.push(`\n${dir} ${cap} impact · ${it.category} — ${it.title}`);
     if (it.summary) lines.push(`  ${it.summary}`);
   }
+  // Honesty over hype: if nothing in the batch is a real injury/suspension/
+  // conflict signal with at least medium impact, say so plainly — the agent
+  // never invents squad trouble that the sources don't support.
+  const strongSignal = view.items.some(
+    (it) =>
+      (it.category === "injury" || it.category === "suspension") && it.impactLevel !== "low"
+  );
+  if (source === "api" && !strongSignal) {
+    lines.push(
+      "\n_I found recent headlines, but no strong team-specific injury/suspension/conflict signal in the current news batch._"
+    );
+  }
   lines.push(`\n${view.headline}`);
   lines.push(
     "\nAsk me to predict a matchup and I'll fold this news into the probabilities."

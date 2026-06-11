@@ -16,6 +16,8 @@ import assert from "node:assert";
 import { assessComplexity, selectLLMProvider } from "@/lib/llm/provider";
 import { resolveTeams } from "@/lib/agent/matchResolver";
 import { planQuery } from "@/lib/agent/planner";
+import { isRelevantTeamNews } from "@/lib/news/newsClassifier";
+import { buildTeamNewsDigest } from "@/lib/agent/impactAnalyzer";
 
 let passed = 0;
 function check(name: string, cond: boolean) {
@@ -89,5 +91,44 @@ check('"Does Portugal have any suspension or injury concerns?" → team-news', p
 check('"Portugal injury news" → team-news', planQuery("Portugal injury news", false, false).intent === "team-news");
 check('"France suspension news" → team-news', planQuery("France suspension news", false, false).intent === "team-news");
 check("generic card-rules question (no team) still rules-explanation", planQuery("How do yellow card suspensions work?", false, false).intent === "rules-explanation");
+
+console.log("news relevance gate (no unrelated names as signals):");
+check(
+  "Ireland women's report mentioning Brazil is rejected for Brazil",
+  isRelevantTeamNews("brazil", "Chloe Mustaki: Ireland women fall to defeat against Brazil", "Match report from the friendly in Dublin.") === false
+);
+check(
+  "article not mentioning the team at all is rejected",
+  isRelevantTeamNews("brazil", "Premier League roundup: top scorers this weekend", "Club football recap.") === false
+);
+check(
+  "youth-squad article is rejected",
+  isRelevantTeamNews("portugal", "Portugal U-21 squad named for qualifiers", "Youth call-ups announced.") === false
+);
+check(
+  "men's national-team article passes",
+  isRelevantTeamNews("brazil", "Brazil name squad for World Cup opener", "The seleção confirmed 26 players.") === true
+);
+check(
+  "men's article that also mentions women's tournament passes when men's is explicit",
+  isRelevantTeamNews("brazil", "Brazil men's team trains ahead of opener; women's side also in action", "") === true
+);
+const weakView = {
+  team: { slug: "portugal", name: "Portugal", flag: "🇵🇹", elo: 1934 },
+  items: [
+    { title: "Group K preview", summary: "", category: "other", impactLevel: "low", direction: "neutral", affectedPlayers: [], demo: false },
+  ],
+  netDirection: "neutral",
+  headline: "No major negative signals.",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
+check(
+  "weak live batch → digest says no strong signal found",
+  buildTeamNewsDigest(weakView, "api").includes("no strong team-specific injury/suspension/conflict signal")
+);
+check(
+  "demo batch → no false 'no strong signal' line (demo is labelled separately)",
+  !buildTeamNewsDigest(weakView, "demo").includes("no strong team-specific")
+);
 
 console.log(`\nAll ${passed} routing checks passed.`);

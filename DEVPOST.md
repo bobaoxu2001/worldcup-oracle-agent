@@ -85,7 +85,7 @@ selectLLMProvider(structuredResult, query, language, complexity) → "deepseek" 
 
 > **Hard rules:** the structured JSON is the LLM's **only** source of truth — it copies probabilities/rankings verbatim and is forbidden from inventing probabilities, news, injuries, suspensions, or sources. We deliberately do **not** claim "Gemini generates all answers."
 
-**Transparency:** every answer's **Data Transparency** card and the "Why?" badge show the **actual provider used** — `DeepSeek-enhanced`, `Gemini-enhanced`, or `Deterministic` — and the provider is persisted to MongoDB with the result. Routing is covered by a unit test suite (`npm run test:routing`, 22 checks).
+**Transparency:** every answer's **Data Transparency** card and the "Why?" badge show the **actual provider and its role** — `DeepSeek · routine narrative/localization`, **`Gemini escalation · complex multi-step reasoning`** (visible on path-to-final, group-qualification, and other multi-step answers), or `None · deterministic rules engine` — and the provider is persisted to MongoDB with the result. LLMs explain and classify; they never decide facts. Routing is covered by a unit test suite (`npm run test:routing`).
 
 ---
 
