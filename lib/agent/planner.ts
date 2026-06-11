@@ -79,6 +79,22 @@ export function hasMatchLanguage(query: string): boolean {
   return MATCH_LANG_RE.test(query);
 }
 
+// Well-known nations that did NOT qualify for the 2026 finals in this model's
+// field. Asking "Can Italy win?" must get an honest "not in the field" answer —
+// never the generic champion board (which reads as a misleading dodge).
+const NON_QUALIFIED: { re: RegExp; en: string; zh: string }[] = [
+  { re: /\bitaly\b|意大利|イタリア/i, en: "Italy", zh: "意大利" },
+  { re: /\bchina\b|中国|中国队/i, en: "China", zh: "中国队" },
+  { re: /\brussia\b|俄罗斯/i, en: "Russia", zh: "俄罗斯" },
+  { re: /\bindia\b|印度/i, en: "India", zh: "印度" },
+  { re: /\bgreece\b|希腊/i, en: "Greece", zh: "希腊" },
+];
+
+export function detectNonQualifiedTeam(query: string): { en: string; zh: string } | null {
+  for (const t of NON_QUALIFIED) if (t.re.test(query)) return { en: t.en, zh: t.zh };
+  return null;
+}
+
 export function planQuery(
   query: string,
   isFollowUp = false,
@@ -99,6 +115,18 @@ export function planQuery(
       teamSlugs: [],
       player,
       planLabels: ["Detect competition scope", "Redirect to supported questions"],
+    };
+  }
+
+  // A named non-qualified nation (Italy, China, …) → honest "not in the field"
+  // answer, never the generic champion board.
+  if (detectNonQualifiedTeam(query)) {
+    intent = "unknown";
+    return {
+      intent,
+      teamSlugs: [],
+      player,
+      planLabels: ["Check the 2026 finals field", "Explain the limitation"],
     };
   }
 

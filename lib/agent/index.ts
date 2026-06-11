@@ -25,7 +25,7 @@ import {
   eliminationNotice,
   toView,
 } from "@/lib/live-sports/tournamentState";
-import { planQuery, isOutOfScopeCompetition, hasMatchLanguage } from "./planner";
+import { planQuery, isOutOfScopeCompetition, hasMatchLanguage, detectNonQualifiedTeam } from "./planner";
 import { teamRef, resolveTeams } from "./matchResolver";
 import { runSimulation } from "./simulator";
 import { resolveScenario } from "./scenario";
@@ -252,12 +252,14 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   // Out-of-scope competitions (Euros, CL, …) must never be silently answered
   // with World Cup odds — and the LLM refinement below must not "rescue" them.
   const outOfScope = isOutOfScopeCompetition(query);
+  // Same for nations that didn't qualify (Italy, China, …): honest answer only.
+  const nonQualified = detectNonQualifiedTeam(query);
 
   // ---- Optional LLM intent refinement (deterministic stays source of truth) --
   // Only when the deterministic parser is unsure AND a provider is configured.
   // The LLM only relabels intent; every number, news item and ruling remains
   // deterministic. Any failure/missing key falls back to the deterministic guess.
-  if (plan.intent === "unknown" && !outOfScope && llmConfigured()) {
+  if (plan.intent === "unknown" && !outOfScope && !nonQualified && llmConfigured()) {
     const llm = await classifyIntentWithLLM(query, plan.intent);
     if (llm) {
       // Backfill anchors from the LLM's labels (resolved through OUR resolver —
@@ -885,18 +887,23 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       "News: Germany injury update",
       "Rules: How do yellow cards affect qualification?",
     ];
-    const scopeNote = outOfScope
-      ? "This agent is focused on the **FIFA World Cup 2026** — I don't model other competitions (Euros, Champions League, …), so I won't answer that with World Cup numbers.\n\n"
-      : "";
+    const hasCJK = /[一-鿿]/.test(query);
+    const scopeNote = nonQualified
+      ? hasCJK || lang === "zh-CN"
+        ? `**${nonQualified.zh}** 不在本模型的 2026 世界杯 48 强决赛圈名单中，因此无法夺冠，也无法参与对阵模拟。可以问我已晋级的球队（如阿根廷、西班牙、法国）。\n\n`
+        : `**${nonQualified.en}** is not in the 2026 World Cup finals field (48 teams) in this model, so it can't win the tournament or be simulated in a matchup. Ask about a qualified team (e.g. Argentina, Spain, France).\n\n`
+      : outOfScope
+        ? "This agent is focused on the **FIFA World Cup 2026** — I don't model other competitions (Euros, Champions League, …), so I won't answer that with World Cup numbers.\n\n"
+        : "";
     const explanationEn =
       scopeNote +
       "I couldn't match that to one of my analyses yet. Here's what you can ask:\n\n• " +
       examples.join("\n• ");
     const fanEn = "Give me a matchup, a team, a group, or a rules question — I'll take it from there. ⚽";
     let explanation = explanationEn;
-    // Out-of-scope answers stay deterministic — the LLM doesn't get a chance to
-    // improvise about a competition the engine doesn't model.
-    if (!outOfScope && llmConfigured()) {
+    // Out-of-scope / non-qualified answers stay deterministic — the LLM doesn't
+    // get a chance to improvise about teams or competitions the engine doesn't model.
+    if (!outOfScope && !nonQualified && llmConfigured()) {
       const c = await generateClarification(query, examples, lang === "zh-CN" ? "zh" : "en");
       if (c) explanation = c;
     }
