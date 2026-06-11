@@ -464,9 +464,15 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const steps = plan.planLabels.map((t, i) =>
       step(`path-${i}`, t, i === 0 ? `${team.name} · Group ${groupOf(team.slug).name}.` : "Done.")
     );
-    const { text, enhanced, provider } = pEliminated
+    const narrated = pEliminated
       ? await deterministicAnswer(`${eliminationNotice(team.slug, pState, "en-US")}\n\n${p.explanation}`, lang)
       : await narrateOrFallback(structured, p.explanation, lang, query, plan.intent);
+    // Deterministic bracket path appended AFTER narration — the LLM never gets
+    // the chance to drop or rewrite the official routing.
+    const text = p.pathBlock && !narrated.text.includes("Potential path")
+      ? `${narrated.text}\n\n${p.pathBlock}`
+      : narrated.text;
+    const { enhanced, provider } = narrated;
     const persisted = persist
       ? await savePrediction({
           userQuery: query,

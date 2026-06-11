@@ -274,6 +274,9 @@ export function buildPathAnalysis(team: TeamRef, status?: string) {
   // Concrete scenario path: trace the official match chain for the group-winner
   // route, naming the groups feeding each opposite side + the strongest example
   // opponent by Elo. No invented fixtures — this is the published routing.
+  // Returned SEPARATELY (pathBlock) so the agent appends it verbatim AFTER any
+  // LLM narration — the LLM never gets the chance to drop or rewrite it.
+  let pathBlock = "";
   if (winnerMatch) {
     const steps = tracePotentialPath(winnerMatch.no, team.slug);
     if (steps.length) {
@@ -285,12 +288,11 @@ export function buildPathAnalysis(team: TeamRef, status?: string) {
         const ex = s.example ? ` — strongest likely: ${s.example.flag} ${s.example.name} (Elo ${s.example.elo})` : "";
         return `• ${s.round} (Match ${s.matchNo}): vs ${groupsTxt}${third}${ex}`;
       });
-      lines.push(
-        `\n**Potential path (scenario: winning Group ${group.name}):**\n` +
-          `• Round of 32 (Match ${winnerMatch.no}): vs ${winnerOpp}\n` +
-          stepLines.join("\n") +
-          `\n\n_Exact opponents depend on group finish and third-place routing, so this is a scenario path, not a fixed bracket._`
-      );
+      pathBlock =
+        `**Potential path (scenario: winning Group ${group.name}):**\n` +
+        `• Round of 32 (Match ${winnerMatch.no}): vs ${winnerOpp}\n` +
+        stepLines.join("\n") +
+        `\n\n_Exact opponents depend on group finish and third-place routing, so this is a scenario path, not a fixed bracket._`;
     }
   }
   if (stageRows.length) {
@@ -311,6 +313,7 @@ export function buildPathAnalysis(team: TeamRef, status?: string) {
 
   return {
     explanation: lines.join("\n"),
+    pathBlock,
     summary: `${team.name}: ${pct(mine.advance)} to exit Group ${group.name}; ${odds ? pct(odds.final, 1) : "—"} to reach the final, ${odds ? pct(odds.champion, 1) : "—"} to win it all.`,
     factors,
     rankings: stageRows.map((s, i) => ({ rank: i + 1, name: s.stage, probability: s.p })),

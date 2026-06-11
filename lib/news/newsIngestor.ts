@@ -123,9 +123,16 @@ export async function getNewsForTeam(
   limit = 6
 ): Promise<{ items: TeamNewsItem[]; source: NewsSource; storedSource: "mongodb" | "memory" }> {
   const stored = await getTeamNews(team, limit);
-  if (stored.items.length > 0) {
-    const source: NewsSource = stored.items.some((i) => !i.demo) ? "api" : "demo";
-    return { items: stored.items, source, storedSource: stored.source };
+  // Read-time relevance gate: also filters signals stored BEFORE the ingest
+  // filter existed (e.g. women's/youth items), so off-topic names disappear
+  // immediately instead of waiting for the next cron refresh. Demo items are
+  // curated and skip the gate.
+  const relevant = stored.items.filter(
+    (i) => i.demo || isRelevantTeamNews(team, i.title, i.summary)
+  );
+  if (relevant.length > 0) {
+    const source: NewsSource = relevant.some((i) => !i.demo) ? "api" : "demo";
+    return { items: relevant, source, storedSource: stored.source };
   }
   // Empty store → seed demo on the fly (and persist so the rail stays warm).
   if (hasDemoNews(team)) {

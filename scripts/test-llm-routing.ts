@@ -18,6 +18,7 @@ import { resolveTeams } from "@/lib/agent/matchResolver";
 import { planQuery } from "@/lib/agent/planner";
 import { isRelevantTeamNews } from "@/lib/news/newsClassifier";
 import { buildTeamNewsDigest } from "@/lib/agent/impactAnalyzer";
+import { buildPathAnalysis } from "@/lib/agent/analysis";
 
 let passed = 0;
 function check(name: string, cond: boolean) {
@@ -129,6 +130,15 @@ check(
 check(
   "demo batch → no false 'no strong signal' line (demo is labelled separately)",
   !buildTeamNewsDigest(weakView, "demo").includes("no strong team-specific")
+);
+
+console.log("path-analysis potential path:");
+const path = buildPathAnalysis({ slug: "argentina", name: "Argentina", flag: "🇦🇷", elo: 2064 });
+check("pathBlock traces to the Final with match numbers", path.pathBlock.includes("Potential path") && path.pathBlock.includes("Final (Match 104)"));
+check("pathBlock includes the scenario caveat", path.pathBlock.includes("scenario path, not a fixed bracket"));
+check(
+  "status line renders when provided",
+  buildPathAnalysis({ slug: "argentina", name: "Argentina", flag: "🇦🇷", elo: 2064 }, "active").explanation.includes("Current status: **active**")
 );
 
 console.log(`\nAll ${passed} routing checks passed.`);
