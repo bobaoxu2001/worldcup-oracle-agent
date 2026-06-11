@@ -35,14 +35,30 @@ export interface NewsProvider {
 
 const FETCH_TIMEOUT_MS = 6000;
 
-async function safeJson(url: string, init?: RequestInit): Promise<unknown | null> {
+async function safeJson(
+  url: string,
+  init?: RequestInit,
+  label = "news"
+): Promise<unknown | null> {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, { ...init, signal: controller.signal });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Secret-safe diagnostics: status + short body only — NEVER the URL,
+      // which may carry the API key as a query parameter.
+      let detail = "";
+      try {
+        detail = (await res.text()).slice(0, 200);
+      } catch {
+        /* ignore */
+      }
+      console.warn(`[news:${label}] request failed: HTTP ${res.status} ${detail}`);
+      return null;
+    }
     return await res.json();
-  } catch {
+  } catch (err) {
+    console.warn(`[news:${label}] request error:`, (err as Error)?.message);
     return null;
   } finally {
     clearTimeout(t);
@@ -89,7 +105,7 @@ const gnewsProvider: NewsProvider = {
     const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(
       queryFor(teamSlug)
     )}&lang=en&max=${limit}&apikey=${key}`;
-    const data = (await safeJson(url)) as { articles?: any[] } | null;
+    const data = (await safeJson(url, undefined, "gnews")) as { articles?: any[] } | null;
     return (data?.articles ?? []).map((a) => ({
       title: a.title ?? "",
       summary: a.description ?? "",

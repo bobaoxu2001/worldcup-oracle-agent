@@ -31,7 +31,7 @@ const SCENARIO_RE =
   /\b(what if|suppose|imagine|without|missing|unavailable|injured|out|suspended|sidelined|if .* (was|were|is|are)\b)/i;
 // News-intelligence intent: user wants the latest team news / what changed.
 const NEWS_RE =
-  /\b(news|latest|updates?|injury report|roster|call[- ]?ups?|squad|what changed|who replaced|team news|this week)\b/i;
+  /\b(news|latest|updates?|injur(?:y|ies)|suspensions?|concerns?|roster|call[- ]?ups?|squad|locker[- ]?room|conflict|tension|bust[- ]?up|morale|what changed|who replaced|team news|this week)\b/i;
 // References to (re)running a prediction — keeps a "does X news change the prediction?" follow-up on the match path.
 const PREDICT_REF = /\b(predict|prediction|who (will )?win|odds|chance|affect|change the)\b/i;
 // General two-team comparison (not a single match): "compare X and Y", "is X stronger than Y".

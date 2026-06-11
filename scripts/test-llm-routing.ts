@@ -83,4 +83,11 @@ check('"Can Portugal still win…" routes to champion odds, not a match', canPla
 check('"Canada vs Portugal" still resolves both teams', resolveTeams("Canada vs Portugal").length === 2);
 check('"on par with Morocco in March" resolves only Morocco', resolveTeams("Is Spain on par with Morocco?").every((t) => ["spain", "morocco"].includes(t.slug)));
 
+console.log("news-intent routing (contextual signals):");
+check('"Brazil locker room conflict" → team-news', planQuery("Brazil locker room conflict", false, false).intent === "team-news");
+check('"Does Portugal have any suspension or injury concerns?" → team-news', planQuery("Does Portugal have any suspension or injury concerns?", false, false).intent === "team-news");
+check('"Portugal injury news" → team-news', planQuery("Portugal injury news", false, false).intent === "team-news");
+check('"France suspension news" → team-news', planQuery("France suspension news", false, false).intent === "team-news");
+check("generic card-rules question (no team) still rules-explanation", planQuery("How do yellow card suspensions work?", false, false).intent === "rules-explanation");
+
 console.log(`\nAll ${passed} routing checks passed.`);
