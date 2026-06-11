@@ -20,7 +20,13 @@ import {
   demoSnapshot,
 } from "@/lib/live-sports/tournamentState";
 import { mapFdMatch } from "@/lib/live-sports/footballData";
-import { buildGroupFixtures, buildKnockoutFixtures, mapLiveFixtures } from "@/lib/schedule/buildSchedule";
+import {
+  buildGroupFixtures,
+  buildKnockoutFixtures,
+  mapLiveFixtures,
+  mergeLiveIntoGroups,
+  bracketColumns,
+} from "@/lib/schedule/buildSchedule";
 import type { TournamentStateSnapshot, LiveFixture } from "@/lib/live-sports/types";
 
 let passed = 0;
@@ -153,5 +159,20 @@ const liveRows = mapLiveFixtures([
 check("live finished fixture → Finished + score", liveRows.some((r) => r.status === "Finished" && r.goals === "1–2"));
 check("live scheduled fixture → Scheduled", liveRows.some((r) => r.status === "Scheduled"));
 check("unmapped opponent shows TBA (not invented)", liveRows.some((r) => r.teamB === "TBA"));
+
+console.log("schedule display (verified dates merged, bracket columns):");
+const merged = mergeLiveIntoGroups(buildGroupFixtures(), [
+  // mexico v south-africa is a real Group A pairing — cached fixture provides the date
+  { id: 7, round: "Group Stage", status: "FT", homeSlug: "south-africa", awaySlug: "mexico", goalsHome: 0, goalsAway: 2, homeWinner: false, awayWinner: true, date: "2026-06-11T19:00:00Z" },
+]);
+const ga = merged.find((g) => g.group === "A")!;
+const matched = ga.rows.find((r) => r.date !== "TBA");
+check("cached fixture date merges into the drawn pairing (either team order)", !!matched && matched.date === "2026-06-11T19:00:00Z");
+check("merged finished fixture carries score + Finished", matched?.score === "0–2" && matched?.status === "Finished");
+check("pairings without a cached fixture stay TBA", ga.rows.filter((r) => r.date === "TBA").length === 5);
+const cols = bracketColumns();
+check("bracket has 5 round columns R32→Final", cols.length === 5 && cols[0].round === "Round of 32" && cols[4].round === "Final");
+check("column sizes 16/8/4/2/1", cols.map((c) => c.matches.length).join(",") === "16,8,4,2,1");
+check("knockout kickoff stays TBA (never invented)", cols.every((c) => c.matches.every((m) => m.date === "TBA")));
 
 console.log(`\nAll ${passed} tournament-state checks passed.`);

@@ -21,9 +21,14 @@ export interface ScheduleRow {
   matchNo?: number;
   teamA: string;
   teamB: string;
+  /** Canonical slugs (group fixtures only) — used to match cached live fixtures. */
+  slugA?: string;
+  slugB?: string;
   date: string; // ISO date or "TBA"
   venue: string; // city/venue or "TBA"
   status: "Scheduled" | "Finished" | "Live" | "TBA" | "Unknown";
+  /** Final score when a matched live fixture is finished, e.g. "1–2". */
+  score?: string;
 }
 
 export interface GroupFixtures {
@@ -52,6 +57,8 @@ export function buildGroupFixtures(): GroupFixtures[] {
         group: g.name,
         teamA: `${a.flag} ${a.name}`,
         teamB: `${b.flag} ${b.name}`,
+        slugA: a.slug,
+        slugB: b.slug,
         date: "TBA",
         venue: "TBA",
         status: "Scheduled" as const,
@@ -99,6 +106,48 @@ function teamLabel(slug: string | null): string {
   } catch {
     return "TBA";
   }
+}
+
+/**
+ * Merge cached live fixtures (football-data.org) into the drawn group pairings:
+ * when a cached fixture has the SAME two teams (either order), its verified
+ * kickoff date / status / score replace the "TBA" placeholders. Pairings
+ * without a cached fixture stay TBA — dates are never invented.
+ */
+export function mergeLiveIntoGroups(
+  groups: GroupFixtures[],
+  fixtures: LiveFixture[]
+): GroupFixtures[] {
+  if (!fixtures.length) return groups;
+  const byPair = new Map<string, LiveFixture>();
+  for (const f of fixtures) {
+    if (!f.homeSlug || !f.awaySlug) continue;
+    byPair.set([f.homeSlug, f.awaySlug].sort().join("|"), f);
+  }
+  return groups.map((g) => ({
+    group: g.group,
+    rows: g.rows.map((r) => {
+      if (!r.slugA || !r.slugB) return r;
+      const f = byPair.get([r.slugA, r.slugB].sort().join("|"));
+      if (!f) return r;
+      const status = liveStatus(f.status);
+      const score =
+        typeof f.goalsHome === "number" && typeof f.goalsAway === "number"
+          ? `${f.goalsHome}–${f.goalsAway}`
+          : undefined;
+      return { ...r, date: f.date || "TBA", status, score };
+    }),
+  }));
+}
+
+/** The knockout bracket grouped into round columns (R32 → Final) for the UI. */
+export function bracketColumns(): { round: string; matches: ScheduleRow[] }[] {
+  const rows = buildKnockoutFixtures();
+  const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
+  return order.map((round) => ({
+    round,
+    matches: rows.filter((r) => r.stage === round),
+  }));
 }
 
 export interface LiveScheduleRow extends ScheduleRow {
