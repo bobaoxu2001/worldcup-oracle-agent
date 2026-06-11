@@ -1,5 +1,6 @@
 import { Radio, Database, FlaskConical, CircleOff } from "lucide-react";
 import type { TournamentStateView } from "@/lib/live-sports/types";
+import { fmtDatetime } from "@/lib/utils";
 
 const META: Record<
   TournamentStateView["mode"],
@@ -15,14 +16,7 @@ const META: Record<
 export function TournamentStateBadge({ state }: { state: TournamentStateView }) {
   const m = META[state.mode];
   const Icon = m.icon;
-  const updated = state.fetchedAt
-    ? new Date(state.fetchedAt).toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "—";
+  const updated = fmtDatetime(state.fetchedAt);
 
   return (
     <div className="glass rounded-2xl p-4">

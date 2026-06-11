@@ -7,6 +7,7 @@ import {
   mapLiveFixtures,
 } from "@/lib/schedule/buildSchedule";
 import { getCachedFixtures } from "@/lib/live-sports/tournamentState";
+import { fmtDatetime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -59,14 +60,7 @@ export default async function SchedulePage() {
   const groups = mergeLiveIntoGroups(buildGroupFixtures(), fixtures);
   const bracket = bracketColumns();
 
-  const updated = fetchedAt
-    ? new Date(fetchedAt).toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const updated = fetchedAt ? fmtDatetime(fetchedAt) : null;
 
   return (
     <div className="container py-8 md:py-12">

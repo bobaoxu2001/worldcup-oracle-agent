@@ -15,3 +15,21 @@ export function formatMoney(cents: number): string {
     currency: "USD",
   }).format(cents / 100);
 }
+
+/**
+ * Locale-safe timestamp for UI cards: "Jun 12 · 02:41 UTC"
+ * Forces en-US + UTC so the output is identical in every browser/server locale.
+ */
+export function fmtDatetime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const hm = d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  });
+  return `${date} · ${hm} UTC`;
+}
