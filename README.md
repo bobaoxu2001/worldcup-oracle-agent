@@ -30,7 +30,7 @@ It feels like **a World Cup prediction model + a daily football news intelligenc
 
 ## 📸 Screenshots
 
-_Captured from the **live production deployment** running on **MongoDB Atlas** with the **cost-aware LLM router** active (DeepSeek default · Gemini escalation)._
+_Captured from the **live production deployment**. Division of labor: **football-data.org** = tournament facts & elimination gating · **GNews** = contextual news signals · **MongoDB Atlas** = memory & cache · **DeepSeek** = routine LLM narratives/localization · **Gemini** = complex-reasoning escalation · **deterministic engine** = all probabilities & rules._
 
 **DeepSeek — the low-cost default for routine narrative & localization:**
 
@@ -44,7 +44,13 @@ _Captured from the **live production deployment** running on **MongoDB Atlas** w
 |---|---|
 | ![Group qualification (Gemini)](docs/screenshots/group-qualification-gemini.png) | ![Path to the final (Gemini)](docs/screenshots/path-to-final-gemini.png) |
 
-**Agent Memory Center (`/memory`) — MongoDB Atlas backend with multiple intent types (and `llmProvider`) persisted:**
+**Live tournament facts & contextual news:**
+
+| "Can Portugal still win?" — **football-data.org** tournament-state gating | Live team-news signals — **GNews** |
+|---|---|
+| ![Tournament-state gating](docs/screenshots/portugal-still-win-gating.png) | ![GNews live news signals](docs/screenshots/news-gnews.png) |
+
+**Agent Memory Center (`/memory`) — MongoDB Atlas persisting sessions (intent + `llmProvider`), news signals & tournament-state cache:**
 
 ![Memory intents](docs/screenshots/memory-intents.png)
 

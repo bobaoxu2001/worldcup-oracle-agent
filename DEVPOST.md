@@ -8,7 +8,7 @@
 | **💻 GitHub** | https://github.com/bobaoxu2001/worldcup-oracle-agent |
 | **🎥 Demo video** | _paste your 3-min link_ |
 
-> The deployed demo **works with zero API keys** — deterministic Elo + Dixon-Coles + Monte Carlo engine, curated demo news, and an in-memory fallback. **Production is live on MongoDB Atlas with the DeepSeek hybrid LLM layer active.** Add `MONGODB_URI`, a news key (e.g. `GNEWS_API_KEY`), or `DEEPSEEK_API_KEY` (or `GOOGLE_API_KEY` for the Gemini fallback) to light up live memory, live news, and LLM-enhanced multilingual analyst narratives.
+> The deployed demo **works with zero API keys** — deterministic Elo + Dixon-Coles + Monte Carlo engine, curated demo news, and an in-memory fallback. **Production runs the full stack live:** **football-data.org** for tournament facts & elimination gating · **GNews** for contextual news signals · **MongoDB Atlas** for memory & cache · **DeepSeek** for routine narratives/localization · **Gemini** for complex-reasoning escalation — with the **deterministic engine** as the source of truth for every probability and rule.
 
 ---
 
