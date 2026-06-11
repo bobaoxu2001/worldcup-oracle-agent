@@ -24,10 +24,10 @@ export function ChampionBoard({ c }: { c: ChampionAnswer }) {
             <span className="w-5 text-center text-xs font-bold text-muted-foreground">{i + 1}</span>
             <span className="text-xl">{t.flag}</span>
             <span className="w-28 shrink-0 truncate text-sm font-semibold">{t.name}</span>
-            <div className="h-2.5 flex-1 overflow-hidden rounded-full border border-white/10 bg-white/[0.04]">
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-neon to-electric"
-                style={{ width: `${Math.max((t.champion / max) * 100, 3)}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-green-400 to-cyan-300 shadow-[0_0_12px_rgba(80,227,194,0.45)] transition-[width] duration-500"
+                style={{ width: `${Math.max((t.champion / max) * 100, 2.5)}%` }}
               />
             </div>
             <span className="w-12 shrink-0 text-right text-sm font-bold tabular-nums">
