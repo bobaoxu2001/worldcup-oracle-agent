@@ -14,7 +14,7 @@
 
 import { getActiveProvider, newsProviderConfigured } from "./newsProvider";
 import { classifyNews } from "./newsClassifier";
-import { saveTeamNews, getTeamNews, getNewsStats, getLastNewsUpdate } from "./teamNewsStore";
+import { saveTeamNews, getTeamNews, getNewsStats, getLastNewsUpdate, hasStoredNews } from "./teamNewsStore";
 import { getDemoNews, TRACKED_TEAMS, hasDemoNews } from "./demoNews";
 import type { NewsRefreshSummary, NewsSource, TeamNewsItem } from "./types";
 
@@ -70,10 +70,24 @@ export async function refreshNews(
   const perTeam: { team: string; count: number }[] = [];
   let total = 0;
 
+  let first = true;
   for (const team of teams) {
+    // Gentle pacing for free-tier rate limits (GNews throttles rapid bursts —
+    // we saw later teams in a batch 429 and lose their live signals).
+    if (useApi && !first) await new Promise((r) => setTimeout(r, 900));
+    first = false;
+
     let items = useApi ? await fetchAndClassify(team, perTeamLimit) : [];
-    // Fall back to demo signals if the API returned nothing (or no API at all).
-    if (items.length === 0 && hasDemoNews(team)) items = getDemoNews(team);
+    // Fallback order: live fetch → KEEP last-known cached signals → demo only
+    // when the store has nothing. A transient API failure must never overwrite
+    // previously-fetched live signals with demo ones.
+    if (items.length === 0) {
+      if (await hasStoredNews(team)) {
+        perTeam.push({ team, count: 0 }); // kept cached signals, nothing rewritten
+        continue;
+      }
+      if (hasDemoNews(team)) items = getDemoNews(team);
+    }
     if (items.length) {
       storedTo = await saveTeamNews(team, items);
       total += items.length;

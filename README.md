@@ -444,7 +444,9 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 | `GOOGLE_SEARCH_API_KEY` + `GOOGLE_SEARCH_ENGINE_ID` | Live team news via Google Custom Search | Uses curated demo signals |
 | `NEXT_PUBLIC_APP_URL` | Absolute URL for metadata | Defaults to `localhost:3000` |
 
-> Configure **any one** of the news providers to go live — the first one set wins. With none set, the agent runs on clearly-labelled demo signals.
+> Configure **any one** of the news providers to go live — the first one set wins (**GNews is live in production**). With none set, the agent runs on clearly-labelled demo signals.
+>
+> **Division of truth:** football-data.org powers tournament **facts** (fixtures, results, elimination gating); GNews powers **contextual signals only** (injuries, suspensions, squad/tactics/form/team-tension news) that can nudge match probabilities within the capped impact layer — never standings, results, or elimination. Free-tier news can be delayed and is rate-limited, so signals are cached in MongoDB `team_news` (daily cron refresh; a failed fetch keeps the last-known live signals rather than overwriting them). LLMs explain and classify — they never decide facts or invent injuries.
 
 > **No environment variables are required for the demo.** Without keys, the app runs in
 > **deterministic + demo-news + in-memory** fallback mode and every feature still works.
