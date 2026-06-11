@@ -73,7 +73,7 @@ export function isOutOfScopeCompetition(query: string): boolean {
 // ONE match — it must never fall through to tournament/champion odds, even if
 // only one (or neither) team resolves.
 const MATCH_LANG_RE =
-  /\bvs\.?\b|\bversus\b|\bagainst\b|\bwho wins\b|\bmatch (result|prediction)\b|打(?![算入出击折])|对阵|对战|对决|交锋|比赛|谁赢/i;
+  /\bvs\.?\b|\bversus\b|\bagainst\b|\bwho (wins|will win)\b|\bmatch (result|prediction)\b|打(?![算入出击折])|对阵|对战|对决|交锋|比赛|谁赢/i;
 
 export function hasMatchLanguage(query: string): boolean {
   return MATCH_LANG_RE.test(query);
