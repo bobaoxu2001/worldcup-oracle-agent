@@ -18,28 +18,28 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
           >
             Agent
           </Link>
           <Link
             href="/schedule"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
           >
             Schedule
           </Link>
           <Link
             href="/news"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
           >
-            Daily News
+            <span className="hidden sm:inline">Daily </span>News
           </Link>
           <Link
             href="/memory"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
           >
             Memory
           </Link>
