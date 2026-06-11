@@ -460,7 +460,7 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
    - `AI_PROVIDER=deepseek` + `DEEPSEEK_API_KEY` (+ `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL`) → DeepSeek-enhanced narratives & Chinese localization
    - `GOOGLE_API_KEY` → enable Gemini for narrative polish / preferred translation
    - `NEXT_PUBLIC_APP_URL` → your deployed URL (for metadata/OG)
-3. Deploy. The included [`vercel.json`](vercel.json) registers a **daily cron** that calls `/api/news/refresh` at 06:00 UTC to keep `team_news` fresh.
+3. Deploy. The included [`vercel.json`](vercel.json) registers a **daily cron** that calls `/api/news/refresh` at 06:00 UTC to keep `team_news` fresh. Optionally set `CRON_SECRET` to lock that route: Vercel Cron then authenticates automatically, and manual refreshes require `Authorization: Bearer <CRON_SECRET>`.
 4. Paste the resulting URL into the table at the top of this README and into `DEVPOST.md`.
 
 Build is standard `next build` — verified locally green; all external services degrade gracefully, so the first deploy succeeds even with zero env vars.

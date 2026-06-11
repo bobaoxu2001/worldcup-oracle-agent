@@ -33,6 +33,16 @@ import type { StoredPrediction, PersistMode } from "@/lib/db/mongodb";
 import { LANGUAGES, DEFAULT_LANG, isLangCode, type LangCode } from "@/lib/i18n/languages";
 import { SUGGESTED_PROMPTS, t } from "@/lib/i18n/prompts";
 
+// Judge-friendly demo rail: one prompt per flagship capability. Each click goes
+// through the normal submit() path, so behavior is identical to typing.
+const DEMO_PROMPTS: { q: string; hint: string }[] = [
+  { q: "谁会赢得世界杯冠军？", hint: "Chinese tournament forecast — DeepSeek narrative" },
+  { q: "Can Portugal still win the World Cup?", hint: "Live tournament-state gating (football-data.org)" },
+  { q: "How do best third-place teams advance?", hint: "2026 rules explainer" },
+  { q: "Compare Argentina and France", hint: "Team comparison — model dimensions" },
+  { q: "Brazil locker room conflict", hint: "Contextual news signals (GNews)" },
+];
+
 // Minimal local typings for the Web Speech API (not in every TS lib version).
 interface SpeechRecognitionEventLike {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -263,6 +273,26 @@ export function AgentChat({
               I&apos;ll plan the analysis, resolve the teams, run 10,000 Monte Carlo simulations,
               explain my reasoning, and remember the result.
             </p>
+
+            {/* judge-friendly demo rail — one click per flagship capability */}
+            <div className="mt-4 border-t border-white/[0.06] pt-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-neon">
+                Try these
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {DEMO_PROMPTS.map((p) => (
+                  <button
+                    key={p.q}
+                    onClick={() => submit(p.q)}
+                    disabled={busy}
+                    title={p.hint}
+                    className="rounded-full border border-neon/20 bg-neon/[0.05] px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-neon/50 hover:bg-neon/[0.1] disabled:opacity-50"
+                  >
+                    {p.q}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

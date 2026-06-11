@@ -24,6 +24,15 @@ export const dynamic = "force-dynamic";
  */
 async function handle(req: Request) {
   try {
+    // Optional protection: when CRON_SECRET is set, require its bearer token.
+    // Vercel Cron automatically sends `Authorization: Bearer ${CRON_SECRET}`
+    // when that env var exists, so the daily schedule keeps working unchanged.
+    // Without CRON_SECRET the route stays open (zero-config demo behavior).
+    const secret = process.env.CRON_SECRET;
+    if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     const team = url.searchParams.get("team");
     const teams = team ? [team] : TRACKED_TEAMS;
