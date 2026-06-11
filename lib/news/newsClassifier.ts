@@ -36,6 +36,10 @@ const ROLE = /\b(goalkeeper|keeper|defender|fullback|full-back|centre-back|cente
 const WOMENS_RE = /\bwomen'?s?\b|\bfemale\b|\bladies\b|\bnwsl\b|\bwsl\b|\bfeminin[ae]\b/i;
 const MENS_RE = /\bmen'?s\b/i;
 const YOUTH_RE = /\bu-?(1[5-9]|2[0-3])s?\b|\bunder-?(1[5-9]|2[0-3])s?\b|\byouth\b|\bacademy\b/i;
+// All 48 finals teams are already qualified — a live "qualification campaign"
+// story is necessarily about a DIFFERENT tournament (e.g. the 2027 Women's
+// World Cup, whose host country can put "for Brazil" in a headline).
+const QUALIFYING_RE = /\bqualif(?:ication|ying)\s+campaign\b|\bqualifiers?\b/i;
 
 export function isRelevantTeamNews(teamSlug: string, title: string, summary = ""): boolean {
   let name: string;
@@ -55,6 +59,8 @@ export function isRelevantTeamNews(teamSlug: string, title: string, summary = ""
   if (WOMENS_RE.test(raw) && !MENS_RE.test(raw)) return false;
   // Youth/academy squads are not the World Cup squad.
   if (YOUTH_RE.test(raw)) return false;
+  // Qualification-campaign stories are about another tournament (field is set).
+  if (QUALIFYING_RE.test(raw)) return false;
   return true;
 }
 

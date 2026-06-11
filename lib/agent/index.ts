@@ -647,13 +647,23 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     ];
 
     const digest = buildTeamNewsDigest(view, source);
-    const { text, enhanced, method, provider } = await finalizeNarrative(
+    const narrated = await finalizeNarrative(
       digest,
       `Latest team-news digest for ${team.name}. Keep facts and any 'demo data' caveat intact.`,
       lang,
       query,
       plan.intent
     );
+    // Honesty guarantee: re-append the weak-signal disclosure if LLM polish
+    // dropped it — the agent never implies squad trouble the sources lack.
+    const strongSignal = view.items.some(
+      (it) => (it.category === "injury" || it.category === "suspension") && it.impactLevel !== "low"
+    );
+    const text =
+      source === "api" && !strongSignal && !narrated.text.includes("no strong team-specific")
+        ? `${narrated.text}\n\n_I found recent headlines, but no strong team-specific injury/suspension/conflict signal in the current news batch._`
+        : narrated.text;
+    const { enhanced, method, provider } = narrated;
 
     const topNeg = view.items.find((i) => i.direction === "negative");
     const fanInsightEn = topNeg

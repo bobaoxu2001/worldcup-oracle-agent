@@ -259,9 +259,6 @@ export function buildPathAnalysis(team: TeamRef, status?: string) {
 
   const lines: string[] = [];
   lines.push(`**${team.flag} ${team.name} — path to the final (official 2026 bracket).**`);
-  if (status) {
-    lines.push(`\nCurrent status: **${status}** (live tournament state).`);
-  }
   lines.push(
     `\nGroup ${group.name}: win the group ${pct(mine.winGroup)}, finish top-2 ${pct(mine.advance)}.`
   );
@@ -289,6 +286,7 @@ export function buildPathAnalysis(team: TeamRef, status?: string) {
         return `• ${s.round} (Match ${s.matchNo}): vs ${groupsTxt}${third}${ex}`;
       });
       pathBlock =
+        (status ? `Current status: **${status}** (live tournament state).\n\n` : "") +
         `**Potential path (scenario: winning Group ${group.name}):**\n` +
         `• Round of 32 (Match ${winnerMatch.no}): vs ${winnerOpp}\n` +
         stepLines.join("\n") +

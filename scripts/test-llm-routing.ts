@@ -111,6 +111,14 @@ check(
   isRelevantTeamNews("brazil", "Brazil name squad for World Cup opener", "The seleção confirmed 26 players.") === true
 );
 check(
+  "real Mustaki headline (2027 WWC qualification campaign) is rejected",
+  isRelevantTeamNews(
+    "brazil",
+    "Mustaki's poise and steel strengthening charge for Brazil",
+    "Chloe Mustaki's whole career has been a story of resilience, so it's fitting she's been so central to a World Cup qualification campaign defined by a healthy di"
+  ) === false
+);
+check(
   "men's article that also mentions women's tournament passes when men's is explicit",
   isRelevantTeamNews("brazil", "Brazil men's team trains ahead of opener; women's side also in action", "") === true
 );
@@ -137,8 +145,8 @@ const path = buildPathAnalysis({ slug: "argentina", name: "Argentina", flag: "�
 check("pathBlock traces to the Final with match numbers", path.pathBlock.includes("Potential path") && path.pathBlock.includes("Final (Match 104)"));
 check("pathBlock includes the scenario caveat", path.pathBlock.includes("scenario path, not a fixed bracket"));
 check(
-  "status line renders when provided",
-  buildPathAnalysis({ slug: "argentina", name: "Argentina", flag: "🇦🇷", elo: 2064 }, "active").explanation.includes("Current status: **active**")
+  "status line renders in the un-droppable pathBlock when provided",
+  buildPathAnalysis({ slug: "argentina", name: "Argentina", flag: "🇦🇷", elo: 2064 }, "active").pathBlock.includes("Current status: **active**")
 );
 
 console.log(`\nAll ${passed} routing checks passed.`);
