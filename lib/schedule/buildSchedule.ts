@@ -1,0 +1,123 @@
+/**
+ * Deterministic World Cup 2026 schedule built from EXISTING data only:
+ *   • group fixtures — the 6 round-robin pairings per group, from the real draw
+ *     (lib/seed/world-cup-2026-groups.ts). Pairings are real; official dates /
+ *     venues are NOT in the seed, so they are shown as "TBA" (never invented).
+ *   • knockout fixtures — the official 2026 bracket (lib/prediction-engine/
+ *     bracket-2026.ts): match number, round, and positional slots (1A, 2B, …).
+ *     Teams resolve only after the groups finish, so they show as slots + "TBA".
+ *
+ * Live fixtures (real dates/results) come separately from the football-data.org
+ * cache via getCachedFixtures() — this module never invents official details.
+ */
+
+import { GROUPS, getTeam } from "@/lib/seed/world-cup-2026-groups";
+import { BRACKET_2026, positionLabel, type Round } from "@/lib/prediction-engine/bracket-2026";
+import type { LiveFixture } from "@/lib/live-sports/types";
+
+export interface ScheduleRow {
+  stage: string;
+  group?: string;
+  matchNo?: number;
+  teamA: string;
+  teamB: string;
+  date: string; // ISO date or "TBA"
+  venue: string; // city/venue or "TBA"
+  status: "Scheduled" | "Finished" | "Live" | "TBA" | "Unknown";
+}
+
+export interface GroupFixtures {
+  group: string;
+  rows: ScheduleRow[];
+}
+
+// Standard 4-team round-robin order (each team plays the other three).
+const RR_PAIRS: [number, number][] = [
+  [0, 1],
+  [2, 3],
+  [0, 2],
+  [1, 3],
+  [0, 3],
+  [1, 2],
+];
+
+export function buildGroupFixtures(): GroupFixtures[] {
+  return GROUPS.map((g) => ({
+    group: g.name,
+    rows: RR_PAIRS.map(([i, j]) => {
+      const a = getTeam(g.teams[i]);
+      const b = getTeam(g.teams[j]);
+      return {
+        stage: `Group ${g.name}`,
+        group: g.name,
+        teamA: `${a.flag} ${a.name}`,
+        teamB: `${b.flag} ${b.name}`,
+        date: "TBA",
+        venue: "TBA",
+        status: "Scheduled" as const,
+      };
+    }),
+  }));
+}
+
+const ROUND_LABEL: Record<Round, string> = {
+  R32: "Round of 32",
+  R16: "Round of 16",
+  QF: "Quarter-final",
+  SF: "Semi-final",
+  Final: "Final",
+};
+
+export function buildKnockoutFixtures(): ScheduleRow[] {
+  return BRACKET_2026.map((m) => ({
+    stage: ROUND_LABEL[m.round] ?? m.round,
+    matchNo: m.no,
+    teamA: positionLabel(m.home),
+    teamB: positionLabel(m.away),
+    date: "TBA",
+    venue: "TBA",
+    status: "TBA" as const,
+  }));
+}
+
+const FINISHED = new Set(["FINISHED", "AWARDED", "FT", "AET", "PEN"]);
+const LIVE = new Set(["IN_PLAY", "PAUSED", "LIVE", "1H", "2H", "HT", "ET"]);
+const SCHEDULED = new Set(["SCHEDULED", "TIMED", "NS"]);
+
+function liveStatus(s: string): ScheduleRow["status"] {
+  if (FINISHED.has(s)) return "Finished";
+  if (LIVE.has(s)) return "Live";
+  if (SCHEDULED.has(s)) return "Scheduled";
+  return "Unknown";
+}
+
+function teamLabel(slug: string | null): string {
+  if (!slug) return "TBA";
+  try {
+    const t = getTeam(slug);
+    return `${t.flag} ${t.name}`;
+  } catch {
+    return "TBA";
+  }
+}
+
+export interface LiveScheduleRow extends ScheduleRow {
+  goals: string;
+}
+
+/** Map cached football-data.org fixtures → display rows (real dates/results). */
+export function mapLiveFixtures(fixtures: LiveFixture[]): LiveScheduleRow[] {
+  const rows: LiveScheduleRow[] = fixtures.map((f) => ({
+    stage: f.round || "Fixture",
+    teamA: teamLabel(f.homeSlug),
+    teamB: teamLabel(f.awaySlug),
+    date: f.date || "TBA",
+    venue: "TBA", // football-data.org match list does not include venue here
+    status: liveStatus(f.status),
+    goals:
+      typeof f.goalsHome === "number" && typeof f.goalsAway === "number"
+        ? `${f.goalsHome}–${f.goalsAway}`
+        : "",
+  }));
+  return rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}

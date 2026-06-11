@@ -377,7 +377,8 @@ The agent has a **deterministic tournament-state layer** so it never keeps offer
 - **MongoDB cache** (`team_state`, `live_fixtures`, `live_injuries`): fixtures/standings ~2h TTL, injuries ~8h. If the API is down, the **last known cached state** is used; with no cache and no key, the app shows **Demo** (all active, clearly labelled) and never fabricates an elimination.
 - **Transparency badge** on answers: `Tournament State: Live API / Cached / Demo / Unavailable`, last-updated time, source, and eliminated-team count. Also exposed at `GET /api/memory/status`.
 - **News stays article-only** — GNews/NewsAPI/SerpAPI provide injuries/squad context, never elimination.
-- Enable with **either** `API_FOOTBALL_KEY` (API-SPORTS; preferred when both set — includes injuries) **or** `FOOTBALL_DATA_API_KEY` (football-data.org; fixtures/results, no injuries on the free tier). Gating logic is covered by `npm run test:tournament` (25 checks).
+- Enable with **either** `API_FOOTBALL_KEY` (API-SPORTS; preferred when both set — includes injuries) **or** `FOOTBALL_DATA_API_KEY` (football-data.org; fixtures/results, no injuries on the free tier). Gating logic is covered by `npm run test:tournament`.
+- A **[`/schedule`](https://worldcup-oracle-agent.vercel.app/schedule)** page surfaces verified fixtures/live tournament-state data when available, with **TBA** labels instead of invented kickoff times or venues (drawn group pairings and the official knockout bracket are exact; dates/venues stay TBA until a verified source provides them).
 
 ---
 

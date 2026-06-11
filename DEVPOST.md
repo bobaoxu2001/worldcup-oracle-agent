@@ -112,7 +112,7 @@ So the agent never keeps predicting eliminated teams as champions, a **live tour
 - **Transparency**: a Tournament-State badge (`Live API / Cached / Demo / Unavailable`, last-updated, source, eliminated count) on answers and at `GET /api/memory/status`.
 - News providers stay **article/injury context only** — never the elimination source of truth.
 
-Covered by `npm run test:tournament` (25 checks).
+Covered by `npm run test:tournament`. A **`/schedule`** page surfaces verified fixtures/live tournament-state data when available, with **TBA** labels instead of invented details (drawn group pairings + official knockout bracket are exact; dates/venues stay TBA until verified).
 
 ---
 

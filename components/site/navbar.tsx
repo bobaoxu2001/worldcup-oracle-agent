@@ -26,6 +26,12 @@ export function Navbar() {
             Agent
           </Link>
           <Link
+            href="/schedule"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            Schedule
+          </Link>
+          <Link
             href="/news"
             className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
           >

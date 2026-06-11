@@ -20,6 +20,7 @@ import {
   demoSnapshot,
 } from "@/lib/live-sports/tournamentState";
 import { mapFdMatch } from "@/lib/live-sports/footballData";
+import { buildGroupFixtures, buildKnockoutFixtures, mapLiveFixtures } from "@/lib/schedule/buildSchedule";
 import type { TournamentStateSnapshot, LiveFixture } from "@/lib/live-sports/types";
 
 let passed = 0;
@@ -137,5 +138,20 @@ const fdGroupDraw = mapFdMatch({
 check("FD group draw → no winner flags, no elimination", fdGroupDraw.homeWinner === null && classifyTeams([fdGroupDraw]).every((t) => t.status !== "eliminated"));
 const fdScheduled = mapFdMatch({ status: "TIMED", stage: "LAST_16", homeTeam: { name: "Portugal", tla: "POR" }, awayTeam: { name: "Spain", tla: "ESP" }, score: { winner: null } });
 check("FD scheduled knockout → not finished, no elimination", fdScheduled.status !== "FT" && classifyTeams([fdScheduled]).every((t) => t.status !== "eliminated"));
+
+console.log("schedule builder (honest TBA, no invented dates):");
+const groups = buildGroupFixtures();
+check("12 groups built", groups.length === 12);
+check("each group has 6 round-robin fixtures (72 total)", groups.reduce((n, g) => n + g.rows.length, 0) === 72);
+check("group fixtures never invent a date/venue (all TBA)", groups.every((g) => g.rows.every((r) => r.date === "TBA" && r.venue === "TBA")));
+const ko = buildKnockoutFixtures();
+check("knockout fixtures use bracket slots + TBA kickoff", ko.length > 0 && ko.every((r) => r.date === "TBA" && r.venue === "TBA"));
+const liveRows = mapLiveFixtures([
+  { id: 1, round: "Round of 16", status: "FINISHED", homeSlug: "portugal", awaySlug: "spain", goalsHome: 1, goalsAway: 2, homeWinner: false, awayWinner: true, date: "2026-07-01T18:00:00Z" },
+  { id: 2, round: "Group A", status: "TIMED", homeSlug: "mexico", awaySlug: null, goalsHome: null, goalsAway: null, homeWinner: null, awayWinner: null, date: "2026-06-12T20:00:00Z" },
+]);
+check("live finished fixture → Finished + score", liveRows.some((r) => r.status === "Finished" && r.goals === "1–2"));
+check("live scheduled fixture → Scheduled", liveRows.some((r) => r.status === "Scheduled"));
+check("unmapped opponent shows TBA (not invented)", liveRows.some((r) => r.teamB === "TBA"));
 
 console.log(`\nAll ${passed} tournament-state checks passed.`);

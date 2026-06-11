@@ -239,6 +239,24 @@ async function readCache(): Promise<TournamentStateSnapshot | null> {
   }
 }
 
+/**
+ * Read-only accessor for cached live fixtures (football-data.org), for the
+ * Schedule page. NEVER calls the API — it only returns what a prior refresh
+ * already stored in MongoDB, so it's safe to call on every page load.
+ */
+export async function getCachedFixtures(): Promise<{ fixtures: LiveFixture[]; fetchedAt: string | null }> {
+  const db = await getMongoDb();
+  if (!db) return { fixtures: [], fetchedAt: null };
+  try {
+    const doc = await db
+      .collection<{ _id: string; fixtures?: LiveFixture[]; fetchedAt?: string }>(FIXTURES_COLLECTION)
+      .findOne({ _id: SNAPSHOT_ID });
+    return { fixtures: doc?.fixtures ?? [], fetchedAt: doc?.fetchedAt ?? null };
+  } catch {
+    return { fixtures: [], fetchedAt: null };
+  }
+}
+
 async function writeCache(
   snap: TournamentStateSnapshot,
   fixtures: LiveFixture[],
