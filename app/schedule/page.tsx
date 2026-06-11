@@ -163,7 +163,7 @@ export default async function SchedulePage() {
               <ul className="space-y-1.5">
                 {g.rows.map((r, i) => (
                   <li key={i} className="flex items-center justify-between gap-2 text-[13px]">
-                    <span className="truncate">
+                    <span className="min-w-0 truncate">
                       {r.teamA} <span className="text-muted-foreground">v</span> {r.teamB}
                     </span>
                     <span className="shrink-0 whitespace-nowrap text-right text-[11px] tabular-nums">
