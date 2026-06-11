@@ -18,6 +18,13 @@
  */
 
 import { predictMatch, getChampionProbabilities } from "@/lib/prediction-engine";
+import {
+  getTournamentState,
+  gateChampionOdds,
+  isEliminated,
+  eliminationNotice,
+  toView,
+} from "@/lib/live-sports/tournamentState";
 import { planQuery } from "./planner";
 import { teamRef, resolveTeams } from "./matchResolver";
 import { runSimulation } from "./simulator";
@@ -122,6 +129,21 @@ async function narrateOrFallback(
     return { text: r.text, enhanced: provider !== null, provider };
   }
   return { text: deterministic, enhanced: false, provider: null };
+}
+
+/**
+ * Return a DETERMINISTIC answer (no LLM authorship) — used when live tournament
+ * state has already decided the outcome (e.g. an eliminated team). For non-English
+ * the text is translated only (numbers/facts preserved); the LLM never overrides
+ * the elimination fact.
+ */
+async function deterministicAnswer(
+  english: string,
+  lang: LangCode
+): Promise<{ text: string; enhanced: boolean; provider: ActiveProvider | null }> {
+  if (lang === "en-US") return { text: english, enhanced: false, provider: null };
+  const r = await localizeText(english, lang);
+  return { text: r.text, enhanced: false, provider: null };
 }
 
 /** Build the normalized StructuredResult shell shared by the new intents. */
@@ -419,6 +441,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
   // ---- PATH ANALYSIS ------------------------------------------------------
   if (plan.intent === "path-analysis" && plan.teamSlugs.length >= 1) {
     const team = teamRef(plan.teamSlugs[0]);
+    const pState = await getTournamentState();
+    const pEliminated = isEliminated(team.slug, pState);
     const p = buildPathAnalysis(team);
     const structured = makeStructured({
       intentType: "PATH_ANALYSIS",
@@ -436,7 +460,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const steps = plan.planLabels.map((t, i) =>
       step(`path-${i}`, t, i === 0 ? `${team.name} · Group ${groupOf(team.slug).name}.` : "Done.")
     );
-    const { text, enhanced, provider } = await narrateOrFallback(structured, p.explanation, lang, query, plan.intent);
+    const { text, enhanced, provider } = pEliminated
+      ? await deterministicAnswer(`${eliminationNotice(team.slug, pState, "en-US")}\n\n${p.explanation}`, lang)
+      : await narrateOrFallback(structured, p.explanation, lang, query, plan.intent);
     const persisted = persist
       ? await savePrediction({
           userQuery: query,
@@ -471,12 +497,15 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
+      tournamentState: toView(pState),
     };
   }
 
   // ---- TEAM ANALYSIS ------------------------------------------------------
   if (plan.intent === "team-analysis" && plan.teamSlugs.length >= 1) {
     const team = teamRef(plan.teamSlugs[0]);
+    const taState = await getTournamentState();
+    const taEliminated = isEliminated(team.slug, taState);
     const { resolved } = await resolveTeamNews(team, 4);
     const a = buildTeamAnalysis(team, resolved.items);
     const structured = makeStructured({
@@ -494,7 +523,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const steps = plan.planLabels.map((t, i) =>
       step(`ta-${i}`, t, i === 0 ? `${team.flag} ${team.name}.` : "Done.")
     );
-    const { text, enhanced, provider } = await narrateOrFallback(structured, a.explanation, lang, query, plan.intent);
+    const { text, enhanced, provider } = taEliminated
+      ? await deterministicAnswer(`${eliminationNotice(team.slug, taState, "en-US")}\n\n${a.explanation}`, lang)
+      : await narrateOrFallback(structured, a.explanation, lang, query, plan.intent);
     const persisted = persist
       ? await savePrediction({
           userQuery: query,
@@ -527,6 +558,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       persisted,
       createdAt: createdAt.toISOString(),
       language: lang,
+      tournamentState: toView(taState),
     };
   }
 
@@ -654,8 +686,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
 
   // ---- CHAMPION ODDS ----------------------------------------------------
   if (plan.intent === "champion-odds" && plan.teamSlugs.length < 2) {
-    const champions = getChampionProbabilities();
+    // Deterministic tournament state gates the model: eliminated teams cannot win.
+    const tState = await getTournamentState();
+    const allChampions = getChampionProbabilities();
+    const { champions } = gateChampionOdds(allChampions, tState);
     const focusSlug = plan.teamSlugs[0];
+    const focusEliminated = focusSlug ? isEliminated(focusSlug, tState) : false;
     const answer: ChampionAnswer = {
       simulationsRun: 10000,
       contenders: champions.slice(0, 8).map((c) => ({
@@ -667,8 +703,15 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       })),
     };
 
+    const stateStepDetail =
+      tState.mode === "demo"
+        ? "No live tournament state configured — all teams treated as active (demo)."
+        : tState.mode === "unavailable"
+          ? "Live tournament state unavailable — no eliminations applied."
+          : `${tState.eliminatedCount} team(s) eliminated per ${tState.source}; their title odds set to 0.`;
     const steps: ReasoningStep[] = [
       step("plan", "Plan the analysis", `Intent: tournament-winner question. ${plan.planLabels[0]}.`),
+      step("state", "Check live tournament state", stateStepDetail),
       step(
         "data",
         "Load team data",
@@ -683,25 +726,47 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     ];
 
     let explanation = buildChampionExplanation(answer);
-    const focus = focusSlug ? champions.find((c) => c.slug === focusSlug) : undefined;
-    if (focus) {
-      explanation =
-        `${focus.flag} ${focus.name} win the 2026 World Cup in ${(focus.champion * 100).toFixed(
-          1
-        )}% of simulations (Elo ${focus.elo}).\n\n` + explanation;
+    if (focusSlug && focusEliminated) {
+      // Deterministic fact — prepended and NOT overridable by the LLM below.
+      explanation = `${eliminationNotice(focusSlug, tState, "en-US")}\n\n${explanation}`;
+    } else {
+      const focus = focusSlug ? champions.find((c) => c.slug === focusSlug) : undefined;
+      if (focus) {
+        explanation =
+          `${focus.flag} ${focus.name} win the 2026 World Cup in ${(focus.champion * 100).toFixed(
+            1
+          )}% of simulations (Elo ${focus.elo}).\n\n` + explanation;
+      }
+    }
+    if (tState.eliminatedCount > 0) {
+      explanation += `\n\n_Live tournament state: ${tState.eliminatedCount} eliminated team(s) removed from title contention (source: ${tState.source})._`;
     }
 
     const fanInsightEn = `🏆 ${answer.contenders[0].flag} ${answer.contenders[0].name} lead the title race at ${(
       answer.contenders[0].champion * 100
     ).toFixed(1)}% — but 10k sims say it's wide open.`;
 
-    const { text, enhanced, method, provider } = await finalizeNarrative(
-      explanation,
-      "Tournament title odds from a 10,000-run Monte Carlo simulation of the 2026 World Cup.",
-      lang,
-      query,
-      plan.intent
-    );
+    // If the focus team is eliminated, keep the answer deterministic (translate
+    // only for non-English) so the LLM can never "un-eliminate" a team.
+    let text: string;
+    let enhanced: boolean;
+    let method: "none" | "gemini" | "deepseek" | "template";
+    let provider: ActiveProvider | null;
+    if (focusEliminated) {
+      const loc = lang === "en-US" ? { text: explanation, method: "none" as const } : await localizeText(explanation, lang);
+      text = loc.text;
+      method = loc.method;
+      enhanced = false;
+      provider = null;
+    } else {
+      ({ text, enhanced, method, provider } = await finalizeNarrative(
+        explanation,
+        "Tournament title odds from a 10,000-run Monte Carlo simulation of the 2026 World Cup. Eliminated teams have already been removed deterministically.",
+        lang,
+        query,
+        plan.intent
+      ));
+    }
     const fanInsight = lang === "en-US" ? fanInsightEn : (await localizeText(fanInsightEn, lang)).text;
     const localizedSummary = lang === "en-US" ? undefined : buildChampionSummary(answer, lang);
 
@@ -741,6 +806,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       language: lang,
       localizedSummary,
       localizationMethod: method,
+      tournamentState: toView(tState),
     };
   }
 

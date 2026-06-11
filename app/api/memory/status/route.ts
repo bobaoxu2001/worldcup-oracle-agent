@@ -3,6 +3,8 @@ import { countPredictions, mongoConnected } from "@/lib/db/mongodb";
 import { getNewsStats, newsMode } from "@/lib/news/newsIngestor";
 import { llmConfigured } from "@/lib/llm/provider";
 import { geminiConfigured } from "@/lib/llm/gemini";
+import { getTournamentState } from "@/lib/live-sports/tournamentState";
+import { apiFootballConfigured } from "@/lib/live-sports/apiFootball";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,10 +17,11 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   try {
-    const [connected, preds, newsStats] = await Promise.all([
+    const [connected, preds, newsStats, tState] = await Promise.all([
       mongoConnected(),
       countPredictions(),
       getNewsStats(),
+      getTournamentState(),
     ]);
     const mode = newsMode();
     return NextResponse.json({
@@ -40,6 +43,14 @@ export async function GET() {
         deepseek: llmConfigured(), // low-cost default
         gemini: geminiConfigured(), // premium escalation + fallback
         defaultProvider: llmConfigured() ? "deepseek" : geminiConfigured() ? "gemini" : "none",
+      },
+      // Live tournament state (deterministic elimination source of truth).
+      tournamentState: {
+        configured: apiFootballConfigured(),
+        mode: tState.mode, // "live" | "cache" | "demo" | "unavailable"
+        source: tState.source,
+        fetchedAt: tState.fetchedAt,
+        eliminatedCount: tState.eliminatedCount,
       },
     });
   } catch (err) {

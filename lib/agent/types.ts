@@ -5,6 +5,7 @@
 
 import type { MatchPrediction } from "@/lib/types";
 import type { NewsCategory, NewsDirection, NewsImpact, NewsSource } from "@/lib/news/types";
+import type { TournamentStateView } from "@/lib/live-sports/types";
 
 /** What the planner decided the user is asking for. */
 export type AgentIntent =
@@ -203,6 +204,8 @@ export interface AgentResponse {
   localizedSummary?: string;
   /** How the narrative was localized: none (English) · gemini · deepseek · template. */
   localizationMethod?: "none" | "gemini" | "deepseek" | "template";
+  /** Live tournament-state badge (Live API / Cached / Demo, eliminated count). */
+  tournamentState?: TournamentStateView;
 }
 
 /** Internal: raw model bundle before narrative generation. */

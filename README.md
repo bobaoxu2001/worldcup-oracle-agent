@@ -362,6 +362,19 @@ A 6–9s timeout means a slow API can never stall the demo. The **Data Transpare
 
 ---
 
+## 📡 Live tournament state (no predicting eliminated teams)
+
+The agent has a **deterministic tournament-state layer** so it never keeps offering an eliminated team as a possible champion. It is fed by a **real sports data API (API-Football / API-SPORTS)** — fixtures, standings, results, injuries — normalized to the app's canonical team IDs and **cached aggressively in MongoDB** (free-tier friendly).
+
+- **Source of truth is data, not the LLM/news.** `lib/live-sports/*` classifies each team `active · qualified · eliminated · unknown`. Elimination is only inferred from **direct evidence** (a finished knockout loss); group-stage is never guessed (best-third maths), so the agent **never falsely eliminates** a team.
+- **Deterministic gating overrides the model.** Before champion/path/team analysis, eliminated teams are removed from title contention (champion probability → 0). Ask *"Can Portugal still win?"* after elimination and the answer is a hard **"No — already eliminated based on the latest tournament state"** — the LLM cannot override it.
+- **MongoDB cache** (`team_state`, `live_fixtures`, `live_injuries`): fixtures/standings ~2h TTL, injuries ~8h. If the API is down, the **last known cached state** is used; with no cache and no key, the app shows **Demo** (all active, clearly labelled) and never fabricates an elimination.
+- **Transparency badge** on answers: `Tournament State: Live API / Cached / Demo / Unavailable`, last-updated time, source, and eliminated-team count. Also exposed at `GET /api/memory/status`.
+- **News stays article-only** — GNews/NewsAPI/SerpAPI provide injuries/squad context, never elimination.
+- Enable with `API_FOOTBALL_KEY` (optional). Gating logic is covered by `npm run test:tournament` (18 checks).
+
+---
+
 ## 🗣️ Global Voice Mode
 
 Football is global — so the agent speaks five languages and listens too. A compact
@@ -416,7 +429,8 @@ Copy `.env.example` → `.env.local` and fill in only what you want:
 
 | Variable | Purpose | If missing |
 |----------|---------|------------|
-| `MONGODB_URI` | Agent memory + `team_news` (MongoDB Partner Track) | Falls back to in-memory store |
+| `MONGODB_URI` | Agent memory + `team_news` + live tournament-state cache | Falls back to in-memory store |
+| `API_FOOTBALL_KEY` | Live fixtures/standings/results/injuries → deterministic elimination | Demo mode (all teams active, never falsely eliminated) |
 | `MONGODB_DB` | Database name (default `worldcup_oracle`) | Uses default |
 | `AI_PROVIDER` | Selects the hybrid LLM provider (e.g. `deepseek`) | Deterministic generator |
 | `DEEPSEEK_API_KEY` | DeepSeek intent/narrative/localization (active LLM in prod) | Deterministic generator |

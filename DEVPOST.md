@@ -48,6 +48,7 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
   `planner → matchResolver → newsResolver → impactAnalyzer → predictionEngine → simulator → explanationGenerator → MongoDB memory`. The reasoning timeline shown to the user mirrors these steps.
 - **News intelligence** — `lib/news/*`: a multi-source provider abstraction (NewsAPI / GNews / SerpAPI / Google Custom Search), a deterministic keyword classifier, a MongoDB-backed store, and curated demo signals as a zero-key fallback.
 - **DeepSeek hybrid LLM layer** (`lib/llm/*`) for intent understanding, analyst narrative, and Chinese localization — the deterministic engine remains the single source of truth for all numbers and rules.
+- **Live tournament-state layer** (`lib/live-sports/*`) — API-Football fixtures/standings/injuries, MongoDB-cached, deterministically gating out eliminated teams (never the LLM/news).
 - **Everything fails soft** — no MongoDB, no DeepSeek/Gemini, no news key? The app still runs end-to-end.
 
 ---
@@ -97,6 +98,21 @@ WorldCup Oracle is **rules-aware**, not just a matchup model:
 - **Configurable discipline model** (`lib/prediction-engine/discipline.ts`) — yellow-card / red-card fair-play points and suspension thresholds power the suspension-risk read and the "do cards affect group ranking?" explainer.
 
 The agent can therefore **explain the rules** (best-third advancement, card/fair-play effects, tiebreakers) — in English or 中文 — not just output probabilities.
+
+---
+
+## 📡 Live tournament state (deterministic elimination)
+
+So the agent never keeps predicting eliminated teams as champions, a **live tournament-state layer** (`lib/live-sports/*`) is the deterministic source of truth — **not** the LLM or news headlines:
+
+- **Real sports data** via **API-Football / API-SPORTS** (fixtures, standings, results, injuries), normalized to canonical team IDs and **cached aggressively in MongoDB** (`team_state`, `live_fixtures`, `live_injuries`; ~2h fixtures / ~8h injuries TTL) to respect the free tier.
+- **Conservative classification** (`active · qualified · eliminated · unknown`): elimination only from a finished **knockout loss**; group stage is never guessed, so the agent **never falsely eliminates** a team.
+- **Deterministic gating overrides the model**: eliminated teams are dropped from champion/path/team analysis (title odds → 0). *"Can Portugal still win?"* after elimination returns a hard **"No — already eliminated"** the LLM cannot override.
+- **Fail-soft**: API down → last cached state; no key/cache → **Demo** (all active, clearly labelled). Never fabricates eliminations.
+- **Transparency**: a Tournament-State badge (`Live API / Cached / Demo / Unavailable`, last-updated, source, eliminated count) on answers and at `GET /api/memory/status`.
+- News providers stay **article/injury context only** — never the elimination source of truth.
+
+Covered by `npm run test:tournament` (18 checks).
 
 ---
 

@@ -26,6 +26,7 @@ import { DataTransparency } from "./data-transparency";
 import { IntentBadge } from "./intent-badge";
 import { FactorsCard } from "./factors-card";
 import { GroupTableCard } from "./group-table-card";
+import { TournamentStateBadge } from "./tournament-state-badge";
 import { cn } from "@/lib/utils";
 import type { AgentResponse, ReasoningStep } from "@/lib/agent/types";
 import type { StoredPrediction, PersistMode } from "@/lib/db/mongodb";
@@ -457,6 +458,8 @@ function AgentAnswer({
         <TeamNewsDigest view={teamNews} source={response.newsSource} provider={response.newsProvider} />
       )}
       {champions && <ChampionBoard c={champions} />}
+
+      {response.tournamentState && <TournamentStateBadge state={response.tournamentState} />}
 
       {(prediction || champions) && <DataTransparency response={response} />}
 
