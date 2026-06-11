@@ -46,6 +46,7 @@ check("path-to-final wording IS complex", assessComplexity("What is Brazil's pat
 check(">2 teams IS complex", assessComplexity("Argentina vs France vs Spain", { teamCount: 3 }) === true);
 check("low confidence IS complex", assessComplexity("hmm", { confidence: 20 }) === true);
 check("rules + prediction combined IS complex", assessComplexity("Given the tie-break rules, who wins the group and advances?") === true);
+check("team comparison with low win-prob confidence is NOT complex", assessComplexity("Compare Argentina and France", { intent: "team-comparison", teamCount: 2, confidence: 39 }) === false);
 
 console.log("provider selection — both keys present:");
 setKeys({ deepseek: true, gemini: true });

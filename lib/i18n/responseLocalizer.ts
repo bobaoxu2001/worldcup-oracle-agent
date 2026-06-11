@@ -33,22 +33,30 @@ export async function geminiTranslate(text: string, lang: LangCode): Promise<str
 }
 
 /**
- * Localize a narrative string. en → unchanged. Otherwise translate with Gemini
- * when configured, else DeepSeek when configured (same number-preserving
- * instructions), else keep the English text ("template" method).
+ * Localize a narrative string. en → unchanged. Cost-aware: routine localization
+ * prefers DeepSeek (low cost); complex queries pass `preferGemini` to use the
+ * premium provider. Either way falls back across providers, then to the English
+ * text ("template" method). Numbers are preserved by the prompt either way.
  */
 export async function localizeText(
   text: string,
-  lang: LangCode
+  lang: LangCode,
+  opts: { preferGemini?: boolean } = {}
 ): Promise<{ text: string; method: LocalizationMethod }> {
   if (lang === "en-US") return { text, method: "none" };
-  if (geminiConfigured()) {
+  const englishName = getLanguage(lang).englishName;
+
+  if (opts.preferGemini && geminiConfigured()) {
     const out = await geminiTranslate(text, lang);
     if (out) return { text: out, method: "gemini" };
   }
   if (llmConfigured()) {
-    const out = await llmTranslate(text, getLanguage(lang).englishName);
+    const out = await llmTranslate(text, englishName);
     if (out) return { text: out, method: "deepseek" };
+  }
+  if (geminiConfigured()) {
+    const out = await geminiTranslate(text, lang);
+    if (out) return { text: out, method: "gemini" };
   }
   return { text, method: "template" };
 }

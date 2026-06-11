@@ -43,6 +43,7 @@ import {
   generateNarrative,
   polishNarrative,
   generateClarification,
+  assessComplexity,
   llmConfigured,
   type ActiveProvider,
 } from "@/lib/llm/provider";
@@ -190,7 +191,8 @@ async function finalizeNarrative(
     const method = provider ?? "none";
     return { text, enhanced: provider !== null, method, provider };
   }
-  const r = await localizeText(english, lang);
+  // Non-English: cost-aware localization — premium (Gemini) only for complex queries.
+  const r = await localizeText(english, lang, { preferGemini: assessComplexity(query, { intent }) });
   const provider: ActiveProvider | null =
     r.method === "gemini" ? "gemini" : r.method === "deepseek" ? "deepseek" : null;
   return { text: r.text, enhanced: provider !== null, method: r.method, provider };

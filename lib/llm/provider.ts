@@ -59,7 +59,10 @@ export function assessComplexity(query: string, s: ComplexitySignals = {}): bool
   const q = query || "";
   if (s.intent && COMPLEX_INTENTS.has(s.intent)) return true; // path / group qualification
   if ((s.teamCount ?? 0) > 2) return true; // more than two teams
-  if (typeof s.confidence === "number" && s.confidence < 45) return true; // low deterministic confidence
+  // Low deterministic confidence escalates — EXCEPT team comparison, whose
+  // "confidence" is the (often <50%) head-to-head win probability, not a measure
+  // of classification/answer uncertainty.
+  if (typeof s.confidence === "number" && s.confidence < 45 && s.intent !== "team-comparison") return true;
   if (COMPLEX_QUERY_RE.test(q) || COMPLEX_ZH_RE.test(q)) return true; // bracket/path/third-place wording
   if (RULES_RE.test(q) && PREDICT_RE.test(q)) return true; // rules + prediction combined
   if (s.language === "zh-CN" && q.length > 40 && /(分析|详细|解释|为什么|说明|怎么)/.test(q)) return true; // long zh explanation
