@@ -153,7 +153,7 @@ export default async function SchedulePage() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map((g) => (
-            <div key={g.group} className="glass rounded-2xl p-4">
+            <div key={g.group} className="glass min-w-0 rounded-2xl p-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-bold">Group {g.group}</span>
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
