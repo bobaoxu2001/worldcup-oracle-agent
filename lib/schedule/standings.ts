@@ -9,7 +9,7 @@
  * difference → goals scored → name (stable display order).
  */
 
-import { getTeam } from "@/lib/seed/world-cup-2026-groups";
+import { getGroup, getTeam } from "@/lib/seed/world-cup-2026-groups";
 import type { GroupFixtures } from "./buildSchedule";
 
 export interface StandingRow {
@@ -54,7 +54,11 @@ function blankRow(slug: string): StandingRow {
 /** Standings for every group; groups without results have all-zero rows. */
 export function computeStandings(groups: GroupFixtures[]): GroupStanding[] {
   return groups.map((g) => {
-    const table = new Map<string, StandingRow>();
+    // Seed every team in the group up-front (canonical draw data), so each
+    // group always renders a full all-zero table even before any result.
+    const table = new Map<string, StandingRow>(
+      getGroup(g.group).teams.map((slug) => [slug, blankRow(slug)])
+    );
     let liveResults = 0;
     let manualResults = 0;
 
@@ -112,9 +116,4 @@ export function computeStandings(groups: GroupFixtures[]): GroupStanding[] {
     );
     return { group: g.group, rows, liveResults, manualResults };
   });
-}
-
-/** Only the groups that already have at least one counted result. */
-export function standingsWithResults(groups: GroupFixtures[]): GroupStanding[] {
-  return computeStandings(groups).filter((s) => s.liveResults + s.manualResults > 0);
 }
