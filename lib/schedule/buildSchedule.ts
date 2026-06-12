@@ -13,6 +13,7 @@
 
 import { GROUPS, getTeam } from "@/lib/seed/world-cup-2026-groups";
 import { BRACKET_2026, positionLabel, type Round } from "@/lib/prediction-engine/bracket-2026";
+import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
 import type { LiveFixture } from "@/lib/live-sports/types";
 
 export interface ScheduleRow {
@@ -29,6 +30,11 @@ export interface ScheduleRow {
   status: "Scheduled" | "Finished" | "Live" | "TBA" | "Unknown";
   /** Final score when a matched live fixture is finished, e.g. "1–2". */
   score?: string;
+  /** Structured goals (slugA's / slugB's) when a result is known — feeds standings. */
+  goalsA?: number;
+  goalsB?: number;
+  /** Where the result came from: verified live cache vs manual seed entry. */
+  resultSource?: "live" | "manual";
 }
 
 export interface GroupFixtures {
@@ -131,11 +137,59 @@ export function mergeLiveIntoGroups(
       const f = byPair.get([r.slugA, r.slugB].sort().join("|"));
       if (!f) return r;
       const status = liveStatus(f.status);
-      const score =
-        typeof f.goalsHome === "number" && typeof f.goalsAway === "number"
-          ? `${f.goalsHome}–${f.goalsAway}`
-          : undefined;
-      return { ...r, date: f.date || "TBA", status, score };
+      const hasGoals = typeof f.goalsHome === "number" && typeof f.goalsAway === "number";
+      // Orient goals to the row's slugA/slugB (the cached fixture may be flipped).
+      const flipped = f.homeSlug === r.slugB;
+      const goalsA = hasGoals ? (flipped ? f.goalsAway! : f.goalsHome!) : undefined;
+      const goalsB = hasGoals ? (flipped ? f.goalsHome! : f.goalsAway!) : undefined;
+      const score = hasGoals ? `${goalsA}–${goalsB}` : undefined;
+      return {
+        ...r,
+        date: f.date || "TBA",
+        status,
+        score,
+        goalsA,
+        goalsB,
+        resultSource: hasGoals ? ("live" as const) : undefined,
+      };
+    }),
+  }));
+}
+
+/**
+ * Merge MANUALLY ENTERED results (lib/seed/manual-match-results.ts) into the
+ * group pairings. Transparency rules:
+ *   • a pairing that already has a verified live result keeps it — a manual
+ *     entry NEVER overrides the football-data.org cache;
+ *   • manual results are tagged resultSource "manual" so every consumer
+ *     (schedule rows, standings) can label them honestly.
+ */
+export function mergeManualIntoGroups(groups: GroupFixtures[]): GroupFixtures[] {
+  if (!MANUAL_MATCH_RESULTS.length) return groups;
+  const byPair = new Map(
+    MANUAL_MATCH_RESULTS.map((m) => [[m.teamA, m.teamB].sort().join("|"), m])
+  );
+  return groups.map((g) => ({
+    group: g.group,
+    rows: g.rows.map((r) => {
+      if (!r.slugA || !r.slugB) return r;
+      if (r.resultSource === "live") return r; // verified live result wins
+      const m = byPair.get([r.slugA, r.slugB].sort().join("|"));
+      if (!m) return r;
+      const flipped = m.teamA === r.slugB;
+      const goalsA = flipped ? m.scoreB : m.scoreA;
+      const goalsB = flipped ? m.scoreA : m.scoreB;
+      return {
+        ...r,
+        // Keep a verified kickoff date from the live cache if we have one;
+        // the manual date only fills a TBA.
+        date: r.date !== "TBA" ? r.date : m.date || r.date,
+        status: "Finished" as const,
+        score: `${goalsA}–${goalsB}`,
+        goalsA,
+        goalsB,
+        resultSource: "manual" as const,
+      };
     }),
   }));
 }
@@ -160,6 +214,8 @@ export function mapLiveFixtures(fixtures: LiveFixture[]): LiveScheduleRow[] {
     stage: f.round || "Fixture",
     teamA: teamLabel(f.homeSlug),
     teamB: teamLabel(f.awaySlug),
+    slugA: f.homeSlug ?? undefined,
+    slugB: f.awaySlug ?? undefined,
     date: f.date || "TBA",
     venue: "TBA", // football-data.org match list does not include venue here
     status: liveStatus(f.status),

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newspaper } from "lucide-react";
 import { NewsBrowser } from "@/components/news/news-browser";
+import { DailyBrief } from "@/components/news/daily-brief";
 import { getNewsForTeam, TRACKED_TEAMS, newsProviderConfigured } from "@/lib/news/newsIngestor";
 import { teamRef } from "@/lib/agent/matchResolver";
 import type { NewsItemView } from "@/lib/agent/types";
@@ -57,6 +58,8 @@ export default async function NewsPage() {
           )}
         </p>
       </section>
+
+      <DailyBrief />
 
       <NewsBrowser
         teams={teams}

@@ -7,7 +7,15 @@ import { newsProviderConfigured } from "@/lib/news/newsIngestor";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string | string[] }>;
+}) {
+  // Deep-link support: /?q=… pre-submits a question (used by Schedule fixture
+  // rows and Daily Brief "Ask the Oracle" chips).
+  const { q } = await searchParams;
+  const initialQuery = typeof q === "string" && q.trim() ? q.trim().slice(0, 300) : undefined;
   const { items, source } = await getRecentPredictions(6);
   const gemini = geminiConfigured();
   const deepseek = llmConfigured();
@@ -43,7 +51,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <AgentChat initialRecent={{ items, source }} />
+      <AgentChat initialRecent={{ items, source }} initialQuery={initialQuery} />
     </div>
   );
 }

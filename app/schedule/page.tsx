@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { CalendarDays, Radio, Database, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, Radio, Database, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import {
   buildGroupFixtures,
   mergeLiveIntoGroups,
+  mergeManualIntoGroups,
   bracketColumns,
   mapLiveFixtures,
 } from "@/lib/schedule/buildSchedule";
+import { standingsWithResults } from "@/lib/schedule/standings";
 import { getCachedFixtures } from "@/lib/live-sports/tournamentState";
+import { getTeam } from "@/lib/seed/world-cup-2026-groups";
 import { fmtDatetime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -52,12 +56,35 @@ function fmtKickoff(iso: string): string {
   return hm === "00:00" ? date : `${date} · ${hm} UTC`;
 }
 
+/** Agent-page link that pre-submits a match question (slug → clean name). */
+function askHref(slugA: string, slugB: string): string {
+  const a = getTeam(slugA).name;
+  const b = getTeam(slugB).name;
+  return `/?q=${encodeURIComponent(`Who will win ${a} vs ${b}?`)}`;
+}
+
+/** Small "ask the agent about this match" affordance used on fixture rows. */
+function AskOracleLink({ slugA, slugB }: { slugA: string; slugB: string }) {
+  return (
+    <Link
+      href={askHref(slugA, slugB)}
+      title={`Ask the Oracle: ${getTeam(slugA).name} vs ${getTeam(slugB).name}`}
+      aria-label={`Ask the Oracle about ${getTeam(slugA).name} vs ${getTeam(slugB).name}`}
+      className="inline-flex shrink-0 items-center gap-1 rounded-full border border-neon/20 bg-neon/[0.04] px-2 py-0.5 text-[10px] font-semibold text-neon/90 transition hover:border-neon/50 hover:bg-neon/[0.12] hover:text-neon"
+    >
+      <Sparkles className="h-3 w-3" /> Ask
+    </Link>
+  );
+}
+
 export default async function SchedulePage() {
   const { fixtures, fetchedAt } = await getCachedFixtures();
   const live = fixtures.length ? mapLiveFixtures(fixtures) : [];
   // Drawn pairings, enriched with VERIFIED kickoff dates/results from the
-  // football-data.org cache where the same two teams match (else TBA).
-  const groups = mergeLiveIntoGroups(buildGroupFixtures(), fixtures);
+  // football-data.org cache where the same two teams match (else TBA), then
+  // with manually entered results (clearly labelled; live always wins).
+  const groups = mergeManualIntoGroups(mergeLiveIntoGroups(buildGroupFixtures(), fixtures));
+  const standings = standingsWithResults(groups);
   const bracket = bracketColumns();
 
   const updated = fetchedAt ? fmtDatetime(fetchedAt) : null;
@@ -126,7 +153,10 @@ export default async function SchedulePage() {
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{r.stage}</td>
                     <td className="px-3 py-2 font-medium">
-                      {r.teamA} <span className="text-muted-foreground">vs</span> {r.teamB}
+                      <span className="inline-flex items-center gap-2">
+                        {r.teamA} <span className="text-muted-foreground">vs</span> {r.teamB}
+                        {r.slugA && r.slugB && <AskOracleLink slugA={r.slugA} slugB={r.slugB} />}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 tabular-nums">{r.goals || "—"}</td>
                     <td className="px-3 py-2">
@@ -137,6 +167,75 @@ export default async function SchedulePage() {
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+
+      {/* Group standings — computed from known results only (live + manual) */}
+      {standings.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
+              <Trophy className="h-3.5 w-3.5" /> Group standings — from completed results
+            </h2>
+            {standings.some((s) => s.manualResults > 0) && (
+              <span className="chip text-[10px] text-amber-300/80">
+                includes manually entered results
+              </span>
+            )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {standings.map((s) => (
+              <div key={s.group} className="glass min-w-0 rounded-2xl p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-bold">Group {s.group}</span>
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {s.liveResults > 0 && `${s.liveResults} live`}
+                    {s.liveResults > 0 && s.manualResults > 0 && " · "}
+                    {s.manualResults > 0 && (
+                      <span className="text-amber-300/80">{s.manualResults} manual</span>
+                    )}{" "}
+                    result{s.liveResults + s.manualResults === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-[auto_1fr_repeat(4,minmax(0,auto))] items-center gap-x-2.5 gap-y-1 text-[13px]">
+                  <span />
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Team
+                  </span>
+                  {["P", "W·D·L", "GD", "Pts"].map((h) => (
+                    <span
+                      key={h}
+                      className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                    >
+                      {h}
+                    </span>
+                  ))}
+                  {s.rows.map((r, i) => (
+                    <div key={r.slug} className="contents">
+                      <span className="text-[11px] font-bold text-muted-foreground">{i + 1}</span>
+                      <span className={`min-w-0 truncate font-medium ${i < 2 ? "" : "text-muted-foreground"}`}>
+                        {r.flag} {r.name}
+                      </span>
+                      <span className="text-right tabular-nums text-muted-foreground">{r.played}</span>
+                      <span className="whitespace-nowrap text-right tabular-nums text-muted-foreground">
+                        {r.won}·{r.drawn}·{r.lost}
+                      </span>
+                      <span className="text-right tabular-nums text-muted-foreground">
+                        {r.goalDiff > 0 ? `+${r.goalDiff}` : r.goalDiff}
+                      </span>
+                      <span className="text-right font-bold tabular-nums text-neon">{r.points}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground/70">
+            Standings count only finished matches — verified results from the football-data.org
+            cache plus manually entered results (labelled, never overriding live data; edit{" "}
+            <code className="text-foreground/70">lib/seed/manual-match-results.ts</code>). Top 2
+            qualify directly; 8 of 12 third-placed teams also advance.
+          </p>
         </section>
       )}
 
@@ -160,10 +259,24 @@ export default async function SchedulePage() {
                     <span className="min-w-0 truncate">
                       {r.teamA} <span className="text-muted-foreground">v</span> {r.teamB}
                     </span>
-                    <span className="shrink-0 whitespace-nowrap text-right text-[11px] tabular-nums">
-                      {r.status === "Live" && <StatusChip status="Live" />}{" "}
+                    <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-right text-[11px] tabular-nums">
+                      {r.status === "Live" && <StatusChip status="Live" />}
                       {r.score && (
-                        <span className="font-bold text-foreground">{r.score} · </span>
+                        <span
+                          className="font-bold text-foreground"
+                          title={
+                            r.resultSource === "manual"
+                              ? "Manually entered result (seed file)"
+                              : "Verified result — football-data.org cache"
+                          }
+                        >
+                          {r.resultSource === "manual" && (
+                            <span className="mr-0.5 align-middle text-[9px] font-semibold uppercase text-amber-300/80">
+                              manual
+                            </span>
+                          )}{" "}
+                          {r.score} ·
+                        </span>
                       )}
                       <span
                         className={
@@ -172,6 +285,7 @@ export default async function SchedulePage() {
                       >
                         {fmtKickoff(r.date)}
                       </span>
+                      {r.slugA && r.slugB && <AskOracleLink slugA={r.slugA} slugB={r.slugB} />}
                     </span>
                   </li>
                 ))}

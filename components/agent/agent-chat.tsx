@@ -80,8 +80,11 @@ interface Turn {
 
 export function AgentChat({
   initialRecent,
+  initialQuery,
 }: {
   initialRecent: { items: StoredPrediction[]; source: PersistMode };
+  /** Deep-linked question (/?q=…) — auto-submitted once on mount. */
+  initialQuery?: string;
 }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -205,6 +208,15 @@ export function AgentChat({
     },
     [busy, lang, lastContextTeams, refreshRecent]
   );
+
+  // Deep-linked question (/?q=… from Schedule rows / Daily Brief chips):
+  // auto-submit exactly once on mount, through the normal submit() path.
+  const autoSubmitted = useRef(false);
+  useEffect(() => {
+    if (!initialQuery || autoSubmitted.current) return;
+    autoSubmitted.current = true;
+    submit(initialQuery);
+  }, [initialQuery, submit]);
 
   // ── Voice input (Web Speech API · native, no dependency) ──────────────────
   const startVoice = useCallback(() => {
