@@ -38,7 +38,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     group: "A",
     teamA: "south-korea",
     teamB: "czech-republic",
-    scoreA: 1,
+    scoreA: 2,
     scoreB: 1,
     date: "2026-06-12",
   },

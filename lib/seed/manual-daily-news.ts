@@ -47,17 +47,17 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     date: "2026-06-12",
     title: "Group A after Matchday 1: Mexico top, everything still open",
     summary:
-      "Mexico lead Group A on 3 points after the opening win; South Korea and Czech Republic share a point each, South Africa bottom on 0. Two rounds left — every team can still qualify.",
+      "Mexico and South Korea lead Group A on 3 points each after winning their openers; Czech Republic and South Africa are bottom on 0. Two rounds left — every team can still qualify.",
     tag: "Standings",
     relatedTeams: ["mexico", "south-korea", "czech-republic", "south-africa"],
     prompt: "Who will qualify from Group A?",
   },
   {
-    id: "2026-06-12-kor-cze-draw",
+    id: "2026-06-12-kor-cze",
     date: "2026-06-12",
-    title: "South Korea and Czech Republic split the points in a 1–1 draw",
+    title: "South Korea edge Czech Republic 2–1",
     summary:
-      "A cagey Group A opener ends level — both sides stay within reach of Mexico ahead of Matchday 2.",
+      "South Korea take all three points in their Group A opener, joining Mexico at the top ahead of Matchday 2.",
     tag: "Result",
     relatedTeams: ["south-korea", "czech-republic"],
     relatedMatch: { group: "A", teamA: "south-korea", teamB: "czech-republic" },
