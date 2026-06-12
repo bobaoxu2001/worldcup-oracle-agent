@@ -156,7 +156,7 @@ export default async function SchedulePage() {
                         result{s.liveResults + s.manualResults === 1 ? "" : "s"}
                       </>
                     ) : (
-                      "no results yet"
+                      "Awaiting results"
                     )}
                   </span>
                 </div>
