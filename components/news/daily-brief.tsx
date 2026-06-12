@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, Sparkles } from "lucide-react";
+import { ArrowRight, ClipboardList, Sparkles } from "lucide-react";
 import { getManualDailyNews, type ManualDailyNewsTag } from "@/lib/seed/manual-daily-news";
 import { getTeam } from "@/lib/seed/world-cup-2026-groups";
 
@@ -100,6 +100,66 @@ export function DailyBrief({ limit = 4 }: { limit?: number }) {
         <code className="text-foreground/70">lib/seed/manual-daily-news.ts</code>). Live
         source-attributed news continues below.
       </p>
+    </section>
+  );
+}
+
+/**
+ * Compact homepage variant — "Today's World Cup Brief". Same manual seed,
+ * same transparency labelling, trimmed to 3 tight cards so it sits above
+ * the Agent Chat without pushing it below the fold.
+ */
+export function DailyBriefCompact({ limit = 3 }: { limit?: number }) {
+  const items = getManualDailyNews(limit);
+  if (!items.length) return null;
+
+  return (
+    <section className="glass mb-8 rounded-2xl p-4">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <ClipboardList className="h-3.5 w-3.5 text-neon" />
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neon">
+          Today&apos;s World Cup Brief
+        </h2>
+        <span className="chip text-[10px] text-amber-300/80">curated · not live</span>
+        <Link
+          href="/news"
+          className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+        >
+          All briefs &amp; live news <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      <div className="grid gap-2.5 sm:grid-cols-3">
+        {items.map((it) => (
+          <article
+            key={it.id}
+            className="flex flex-col rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition hover:border-neon/20"
+          >
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <span
+                className={`inline-block rounded-full border px-2 py-0.5 text-[9px] font-semibold ${TAG_STYLE[it.tag]}`}
+              >
+                {it.tag}
+              </span>
+              <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
+                {fmtBriefDate(it.date)}
+              </span>
+            </div>
+            <p className="line-clamp-2 text-[13px] font-semibold leading-snug">{it.title}</p>
+            <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+              {it.summary}
+            </p>
+            {it.prompt && (
+              <Link
+                href={`/?q=${encodeURIComponent(it.prompt)}`}
+                className="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-neon/25 bg-neon/[0.06] px-2.5 py-1 text-[10px] font-semibold text-neon transition hover:border-neon/50 hover:bg-neon/[0.12]"
+              >
+                <Sparkles className="h-3 w-3" /> Ask Oracle
+              </Link>
+            )}
+          </article>
+        ))}
+      </div>
     </section>
   );
 }

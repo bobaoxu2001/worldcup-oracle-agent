@@ -1,4 +1,5 @@
 import { AgentChat } from "@/components/agent/agent-chat";
+import { DailyBriefCompact } from "@/components/news/daily-brief";
 import { getRecentPredictions } from "@/lib/db/mongodb";
 import { geminiConfigured } from "@/lib/llm/gemini";
 import { llmConfigured } from "@/lib/llm/provider";
@@ -50,6 +51,8 @@ export default async function Home({
           <Stat label={mongo ? "MongoDB memory" : "Memory fallback"} on={mongo} />
         </div>
       </section>
+
+      <DailyBriefCompact />
 
       <AgentChat initialRecent={{ items, source }} initialQuery={initialQuery} />
     </div>

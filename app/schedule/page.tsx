@@ -56,6 +56,15 @@ function fmtKickoff(iso: string): string {
   return hm === "00:00" ? date : `${date} · ${hm} UTC`;
 }
 
+/** Date-only display ("Jun 11") — used next to a final score, where the
+ *  kickoff time is no longer interesting and crowds narrow rows. */
+function fmtShortDate(iso: string): string {
+  if (!iso || iso === "TBA") return "TBA";
+  const d = new Date(iso);
+  if (isNaN(+d)) return "TBA";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
 /** Agent-page link that pre-submits a match question (slug → clean name). */
 function askHref(slugA: string, slugB: string): string {
   const a = getTeam(slugA).name;
@@ -283,7 +292,7 @@ export default async function SchedulePage() {
                           r.date === "TBA" ? "text-amber-300/70" : "font-medium text-muted-foreground"
                         }
                       >
-                        {fmtKickoff(r.date)}
+                        {r.score ? fmtShortDate(r.date) : fmtKickoff(r.date)}
                       </span>
                       {r.slugA && r.slugB && <AskOracleLink slugA={r.slugA} slugB={r.slugB} />}
                     </span>

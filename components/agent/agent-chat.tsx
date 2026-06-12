@@ -210,11 +210,13 @@ export function AgentChat({
   );
 
   // Deep-linked question (/?q=… from Schedule rows / Daily Brief chips):
-  // auto-submit exactly once on mount, through the normal submit() path.
-  const autoSubmitted = useRef(false);
+  // auto-submit through the normal submit() path. Tracking the last submitted
+  // query (not a boolean) lets a SECOND brief chip clicked from the homepage
+  // fire too, while never re-submitting the same query twice.
+  const lastAutoQuery = useRef<string | null>(null);
   useEffect(() => {
-    if (!initialQuery || autoSubmitted.current) return;
-    autoSubmitted.current = true;
+    if (!initialQuery || lastAutoQuery.current === initialQuery) return;
+    lastAutoQuery.current = initialQuery;
     submit(initialQuery);
   }, [initialQuery, submit]);
 
