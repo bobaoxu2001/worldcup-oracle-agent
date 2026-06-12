@@ -10,6 +10,14 @@ export {
 } from "./engine";
 export { ELO_RATINGS, getRating, HOME_ADVANTAGE } from "./ratings";
 export {
+  computeRatingUpdates,
+  getUpdatedRating,
+  getResultDelta,
+  ratingUpdatesMeta,
+  type CompletedResult,
+  type RatingUpdates,
+} from "./ratingUpdates";
+export {
   matchProb,
   sampleMatch,
   expectedScore,

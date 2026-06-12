@@ -65,6 +65,8 @@ export interface ModelFactor {
 /** Per-team Elo transparency: base → capped adjustments → adjusted rating. */
 export interface EloBreakdown {
   base: number;
+  /** K=60 Elo delta accumulated from completed tournament results. */
+  completedResultsAdjustment?: number;
   squadStabilityAdjustment: number; // capped Squad Stability Signal
   verifiedNewsAdjustment: number; // capped verified-news signal (±25 max)
   adjusted: number; // base + adjustments (what the goal model uses)

@@ -12,6 +12,7 @@
     "validate:bracket": "tsx scripts/validate-bracket.ts",
     "test:routing": "tsx scripts/test-llm-routing.ts",
     "test:tournament": "tsx scripts/test-tournament-state.ts",
+    "test:ratings": "tsx scripts/test-rating-updates.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {

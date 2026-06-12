@@ -1,10 +1,12 @@
-import { Trophy, Target, AlertTriangle, Gauge } from "lucide-react";
+import { Trophy, Target, AlertTriangle, Gauge, Zap } from "lucide-react";
 import { ProbabilityBars } from "./probability-bars";
+import { ratingUpdatesMeta } from "@/lib/prediction-engine/ratingUpdates";
 import { cn } from "@/lib/utils";
 import type { PredictionResult } from "@/lib/agent/types";
 
 /** The headline prediction result card. */
 export function PredictionCard({ p }: { p: PredictionResult }) {
+  const { resultsUsed } = ratingUpdatesMeta();
   return (
     <div className="glass glass-hover rounded-2xl p-5">
       {/* matchup header */}
@@ -43,6 +45,14 @@ export function PredictionCard({ p }: { p: PredictionResult }) {
           value={`${(p.upsetProbability * 100).toFixed(0)}%`}
         />
       </div>
+
+      {resultsUsed > 0 && (
+        <p className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
+          <Zap className="h-3 w-3 text-neon/70" />
+          Live Elo — ratings updated from {resultsUsed} completed result
+          {resultsUsed === 1 ? "" : "s"}
+        </p>
+      )}
     </div>
   );
 }

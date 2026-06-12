@@ -10,7 +10,7 @@
  */
 
 import { TEAMS, getTeam } from "@/lib/seed/world-cup-2026-groups";
-import { getRating } from "@/lib/prediction-engine/ratings";
+import { getUpdatedRating } from "@/lib/prediction-engine/ratingUpdates";
 import type { TeamRef } from "./types";
 
 /** Extra casual aliases → slug. Canonical names/codes are matched automatically. */
@@ -186,7 +186,9 @@ for (const [alias, slug] of Object.entries(ALIASES)) {
 
 export function teamRef(slug: string): TeamRef {
   const t = getTeam(slug);
-  return { slug: t.slug, name: t.name, flag: t.flag, elo: getRating(slug) };
+  // Live Elo (base calibration + completed-result updates) so the agent's
+  // simulator and scenario deltas start from the same rating as predictMatch.
+  return { slug: t.slug, name: t.name, flag: t.flag, elo: getUpdatedRating(slug) };
 }
 
 /**

@@ -17,7 +17,7 @@
 import {
   simulateGroup,
   getChampionOddsFor,
-  getRating,
+  getUpdatedRating,
 } from "@/lib/prediction-engine";
 import { expectedGoals } from "@/lib/prediction-engine/elo";
 import { matchProb } from "@/lib/prediction-engine/elo";
@@ -38,21 +38,21 @@ const pct = (x: number, digits = 0) => `${(x * 100).toFixed(digits)}%`;
 
 /** Median Elo across the 48 qualified teams (attack/defense proxy baseline). */
 function medianElo(): number {
-  const elos = GROUPS.flatMap((g) => g.teams).map((t) => getRating(t)).sort((a, b) => a - b);
+  const elos = GROUPS.flatMap((g) => g.teams).map((t) => getUpdatedRating(t)).sort((a, b) => a - b);
   return elos[Math.floor(elos.length / 2)];
 }
 
 /** Elo rank of a team among the 48 (1 = strongest). */
 function eloRank(slug: string): number {
   const elos = GROUPS.flatMap((g) => g.teams)
-    .map((t) => ({ t, e: getRating(t) }))
+    .map((t) => ({ t, e: getUpdatedRating(t) }))
     .sort((a, b) => b.e - a.e);
   return elos.findIndex((x) => x.t === slug) + 1;
 }
 
 /** Attack/defense proxies: expected goals for/against vs a median-strength team. */
 function strengthProfile(slug: string) {
-  const elo = getRating(slug);
+  const elo = getUpdatedRating(slug);
   const med = medianElo();
   return {
     elo,
@@ -167,7 +167,7 @@ function strongestIn(groups: GroupLetter[], excludeSlug: string) {
     if (!grp) continue;
     for (const slug of grp.teams) {
       if (slug === excludeSlug) continue;
-      const elo = getRating(slug);
+      const elo = getUpdatedRating(slug);
       if (!best || elo > best.elo) {
         const t = getTeam(slug);
         best = { name: t.name, flag: t.flag, elo };

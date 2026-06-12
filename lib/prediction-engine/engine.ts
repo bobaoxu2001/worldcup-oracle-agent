@@ -17,8 +17,9 @@
  * This is the statistical core the WorldCup Oracle Agent reasons over.
  */
 
-import { matchProb, sampleMatch, scorelineGrid, mulberry32 } from "./elo";
+import { matchProb, sampleMatch, scorelineGrid, mulberry32, K_FACTOR_WC } from "./elo";
 import { getRating, HOME_ADVANTAGE } from "./ratings";
+import { getUpdatedRating, getResultDelta, ratingUpdatesMeta } from "./ratingUpdates";
 import {
   GROUPS,
   HOST_SLUGS,
@@ -104,6 +105,18 @@ function buildFactors(
     });
   }
 
+  const dA = getResultDelta(aSlug);
+  const dB = getResultDelta(bSlug);
+  if (dA !== 0 || dB !== 0) {
+    const fmt = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+    const { resultsUsed } = ratingUpdatesMeta();
+    factors.push({
+      label: "Live Elo update",
+      detail: `Ratings adjusted from ${resultsUsed} completed result${resultsUsed === 1 ? "" : "s"} (K=${K_FACTOR_WC} Elo update): ${a.name} ${fmt(dA)}, ${b.name} ${fmt(dB)} on top of the May 2026 calibration.`,
+      weight: "low",
+    });
+  }
+
   factors.push({
     label: "Expected goals (Dixon-Coles)",
     detail: `Model projects ${p.expectedGoalsA.toFixed(2)} xG for ${a.name} and ${p.expectedGoalsB.toFixed(2)} for ${b.name}, with a low-score draw correction (ρ = −0.13).`,
@@ -128,8 +141,11 @@ export function predictMatch(
 ): MatchPrediction {
   const a = getTeam(teamASlug);
   const b = getTeam(teamBSlug);
-  const eloA = getRating(teamASlug);
-  const eloB = getRating(teamBSlug);
+  const baseEloA = getRating(teamASlug);
+  const baseEloB = getRating(teamBSlug);
+  // Live Elo: base May-2026 calibration + K=60 updates from completed results.
+  const eloA = getUpdatedRating(teamASlug);
+  const eloB = getUpdatedRating(teamBSlug);
   const hb = homeBonus(teamASlug, teamBSlug);
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
@@ -180,13 +196,15 @@ export function predictMatch(
     eloB: effEloB,
     eloBreakdown: {
       a: {
-        base: eloA,
+        base: baseEloA,
+        completedResultsAdjustment: eloA - baseEloA,
         squadStabilityAdjustment: 0,
         verifiedNewsAdjustment: 0,
         adjusted: effEloA,
       },
       b: {
-        base: eloB,
+        base: baseEloB,
+        completedResultsAdjustment: eloB - baseEloB,
         squadStabilityAdjustment: 0,
         verifiedNewsAdjustment: 0,
         adjusted: effEloB,
@@ -277,7 +295,7 @@ function rankAcrossGroups(rows: Standing[]): Standing[] {
       y.points - x.points ||
       y.gd - x.gd ||
       y.gf - x.gf ||
-      getRating(y.slug) - getRating(x.slug) ||
+      getUpdatedRating(y.slug) - getUpdatedRating(x.slug) ||
       (x.slug < y.slug ? -1 : 1)
   );
 }
@@ -340,7 +358,7 @@ function rankWithinGroup(
           mt[y].p - mt[x].p ||
           mt[y].gd - mt[x].gd ||
           mt[y].gf - mt[x].gf ||
-          getRating(y) - getRating(x) || // fair-play/lots approximation
+          getUpdatedRating(y) - getUpdatedRating(x) || // fair-play/lots approximation
           (x < y ? -1 : 1)
       );
     }
@@ -372,8 +390,8 @@ function playGroupOnce(
     const A = group.teams[i];
     const B = group.teams[j];
     const { goalsA, goalsB } = sampleMatch(
-      getRating(A),
-      getRating(B),
+      getUpdatedRating(A),
+      getUpdatedRating(B),
       homeBonus(A, B),
       true,
       rng
@@ -422,7 +440,7 @@ export function simulateGroup(groupName: string, sims = 20000): GroupSimRow[] {
         slug,
         name: t.name,
         flag: t.flag,
-        elo: getRating(slug),
+        elo: getUpdatedRating(slug),
         winGroup: agg[slug].first / sims,
         advance: agg[slug].top2 / sims,
         expectedPoints: agg[slug].pts / sims,
@@ -501,8 +519,8 @@ export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
         reach[away][0]++;
       }
       const { goalsA, goalsB } = sampleMatch(
-        getRating(home),
-        getRating(away),
+        getUpdatedRating(home),
+        getUpdatedRating(away),
         homeBonus(home, away),
         false, // knockout — no draws
         rng
@@ -521,7 +539,7 @@ export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
         slug,
         name: t.name,
         flag: t.flag,
-        elo: getRating(slug),
+        elo: getUpdatedRating(slug),
         roundOf32: r[0] / sims,
         roundOf16: r[1] / sims,
         quarterFinal: r[2] / sims,
