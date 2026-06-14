@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Schedule · WorldCup Oracle Agent",
   description:
-    "World Cup 2026 group stage schedule — drawn pairings with standings that update from completed, manually entered results, plus the official knockout bracket.",
+    "World Cup 2026 group stage schedule — drawn pairings with standings that update from verified cached results or labelled manual entries, plus the official knockout bracket.",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -104,14 +104,14 @@ export default async function SchedulePage() {
           <CalendarDays className="h-5 w-5 text-neon" />
           <h1 className="text-2xl font-black tracking-tight sm:text-3xl">World Cup 2026 Schedule</h1>
           <span className="chip text-[10px] text-amber-300/80">
-            <Database className="h-3 w-3" /> drawn pairings · manual results
+            <Database className="h-3 w-3" /> drawn pairings · labelled results
           </span>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Group tables update from completed results. Results are entered manually (no live sports
-          API is configured) and updated as matches finish. Kickoff times and venues aren&apos;t in
-          the bundled draw data, so they show as <strong>TBA</strong> until a verified source
-          provides them.
+          Group tables update from completed results. Verified cached live fixtures are used when
+          available; otherwise completed scores can be added through labelled manual seed entries.
+          Kickoff times and venues aren&apos;t in the bundled draw data, so they stay <strong>TBA</strong>
+          until a verified source provides them.
         </p>
       </header>
 
