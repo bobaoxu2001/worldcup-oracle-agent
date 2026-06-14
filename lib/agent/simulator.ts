@@ -10,7 +10,7 @@
  */
 
 import { sampleMatch, mulberry32 } from "@/lib/prediction-engine/elo";
-import { getRating, HOME_ADVANTAGE } from "@/lib/prediction-engine/ratings";
+import { HOME_ADVANTAGE } from "@/lib/prediction-engine/ratings";
 import { HOST_SLUGS } from "@/lib/seed/world-cup-2026-groups";
 import type { SimulationResult, TeamRef } from "./types";
 

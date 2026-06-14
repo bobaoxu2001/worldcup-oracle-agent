@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Schedule · WorldCup Oracle Agent",
   description:
-    "World Cup 2026 group stage schedule — drawn pairings with standings that update from completed and manually entered demo results, plus the official knockout bracket.",
+    "World Cup 2026 group stage schedule — drawn pairings with standings that update from completed, manually entered results, plus the official knockout bracket.",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -104,13 +104,14 @@ export default async function SchedulePage() {
           <CalendarDays className="h-5 w-5 text-neon" />
           <h1 className="text-2xl font-black tracking-tight sm:text-3xl">World Cup 2026 Schedule</h1>
           <span className="chip text-[10px] text-amber-300/80">
-            <Database className="h-3 w-3" /> drawn pairings · demo results
+            <Database className="h-3 w-3" /> drawn pairings · manual results
           </span>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Group tables update from completed results. Demo results can be manually edited for
-          reliable hackathon storytelling. Kickoff times and venues aren&apos;t in the bundled draw
-          data, so they show as <strong>TBA</strong> until a verified source provides them.
+          Group tables update from completed results. Results are entered manually (no live sports
+          API is configured) and updated as matches finish. Kickoff times and venues aren&apos;t in
+          the bundled draw data, so they show as <strong>TBA</strong> until a verified source
+          provides them.
         </p>
       </header>
 
@@ -120,7 +121,7 @@ export default async function SchedulePage() {
         <span>
           Schedule data is shown only when available from verified seed data or the cached
           tournament-state results. <strong>TBA</strong> means the app is not inventing official
-          fixture details. Manually entered demo results are always labelled{" "}
+          fixture details. Manually entered results are always labelled{" "}
           <strong>MANUAL</strong> and never override verified cached results
           {updated ? <> · cache last updated {updated}</> : null}.
         </span>
@@ -134,7 +135,7 @@ export default async function SchedulePage() {
           </h2>
           {anyManual && (
             <span className="chip text-[10px] text-amber-300/80">
-              includes manually entered demo results
+              includes manually entered results
             </span>
           )}
         </div>
@@ -209,7 +210,7 @@ export default async function SchedulePage() {
                             className="font-bold text-foreground"
                             title={
                               r.resultSource === "manual"
-                                ? "Manually entered demo result (seed file)"
+                                ? "Manually entered result (seed file)"
                                 : "Verified result — tournament-state cache"
                             }
                           >
@@ -239,7 +240,7 @@ export default async function SchedulePage() {
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground/70">
           Standings count only finished matches — verified cached results plus manually entered
-          demo results (labelled, never overriding verified data; edit{" "}
+          results (labelled, never overriding verified data; edit{" "}
           <code className="text-foreground/70">lib/seed/manual-match-results.ts</code>). Top 2
           qualify directly; 8 of 12 third-placed teams also advance.
         </p>

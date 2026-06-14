@@ -168,7 +168,9 @@ const merged = mergeLiveIntoGroups(buildGroupFixtures(), [
 const ga = merged.find((g) => g.group === "A")!;
 const matched = ga.rows.find((r) => r.date !== "TBA");
 check("cached fixture date merges into the drawn pairing (either team order)", !!matched && matched.date === "2026-06-11T19:00:00Z");
-check("merged finished fixture carries score + Finished", matched?.score === "0–2" && matched?.status === "Finished");
+// Row is mexico (slugA) v south-africa (slugB); the cached fixture has SA 0, MEX 2,
+// so oriented to the row it reads "2–0" (Mexico 2, South Africa 0).
+check("merged finished fixture carries score + Finished", matched?.score === "2–0" && matched?.status === "Finished");
 check("pairings without a cached fixture stay TBA", ga.rows.filter((r) => r.date === "TBA").length === 5);
 const cols = bracketColumns();
 check("bracket has 5 round columns R32→Final", cols.length === 5 && cols[0].round === "Round of 32" && cols[4].round === "Final");
