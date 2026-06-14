@@ -1,9 +1,11 @@
 /**
  * Manually entered match results — the EDITABLE results layer.
  *
- * Edit this file to record group-stage results by hand (e.g. for the
- * hackathon demo narrative). These feed the Group Standings on /schedule
- * and the score shown next to the drawn pairing.
+ * Edit this file to record group-stage results by hand. The current entries are
+ * the REAL World Cup 2026 group-stage outcomes as they are played (sourced from
+ * public match reports), kept in this manual layer because no live sports API
+ * key is configured. They feed the Group Standings on /schedule, the score shown
+ * next to each drawn pairing, and the post-match Elo updates.
  *
  * Transparency rules (enforced in lib/schedule/buildSchedule.ts):
  *   • A verified live result from the football-data.org cache ALWAYS wins
@@ -12,6 +14,7 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
+ * Last updated: 2026-06-14 (all finished matches through 13 June).
  */
 
 export interface ManualMatchResult {
@@ -25,6 +28,7 @@ export interface ManualMatchResult {
 }
 
 export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
+  // 11 June — Group A opens the tournament
   {
     group: "A",
     teamA: "mexico",
@@ -40,6 +44,57 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     teamB: "czech-republic",
     scoreA: 2,
     scoreB: 1,
+    date: "2026-06-11",
+    note: "South Korea came from behind",
+  },
+  // 12 June
+  {
+    group: "B",
+    teamA: "canada",
+    teamB: "bosnia-and-herzegovina",
+    scoreA: 1,
+    scoreB: 1,
     date: "2026-06-12",
+  },
+  {
+    group: "D",
+    teamA: "usa",
+    teamB: "paraguay",
+    scoreA: 4,
+    scoreB: 1,
+    date: "2026-06-12",
+  },
+  // 13 June
+  {
+    group: "B",
+    teamA: "qatar",
+    teamB: "switzerland",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-13",
+  },
+  {
+    group: "C",
+    teamA: "brazil",
+    teamB: "morocco",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-13",
+  },
+  {
+    group: "C",
+    teamA: "scotland",
+    teamB: "haiti",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-06-13",
+  },
+  {
+    group: "D",
+    teamA: "australia",
+    teamB: "turkey",
+    scoreA: 2,
+    scoreB: 0,
+    date: "2026-06-13",
   },
 ];
