@@ -3,9 +3,10 @@
  *
  * Edit this file to record group-stage results by hand. The current entries are
  * the REAL World Cup 2026 group-stage outcomes as they are played (sourced from
- * public match reports), kept in this manual layer because no live sports API
- * key is configured. They feed the Group Standings on /schedule, the score shown
- * next to each drawn pairing, and the post-match Elo updates.
+ * public match reports), entered through this labelled manual layer. They feed
+ * the Group Standings on /schedule, the score shown next to each drawn pairing,
+ * and the post-match Elo updates — but a verified cached live result for the same
+ * pairing always takes precedence (see the transparency rules below).
  *
  * Transparency rules (enforced in lib/schedule/buildSchedule.ts):
  *   • A verified live result from the football-data.org cache ALWAYS wins

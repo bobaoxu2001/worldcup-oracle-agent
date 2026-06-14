@@ -13,7 +13,7 @@
  * Results are applied in date order, each on top of the deltas accumulated so
  * far. No goal-difference multiplier — the rest of the model doesn't use one.
  *
- * Source of truth is the manual demo results seed (the same editable layer the
+ * Source of truth is the manual results seed (the same editable layer the
  * schedule standings use). Verified cached fixtures are NOT read here because
  * this module must stay synchronous for the closed-form engine; if a cached
  * live result ever duplicates a manual pairing, remove the manual entry.
