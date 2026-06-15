@@ -3,6 +3,10 @@ import { refreshNews, TRACKED_TEAMS } from "@/lib/news/newsIngestor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Full refresh paces ~10 teams behind GNews rate limits (~30s+), so give the
+// cron headroom past the short default function timeout. 60s is the Hobby max;
+// Pro/Enterprise can raise this further.
+export const maxDuration = 60;
 
 /**
  * Daily news refresh endpoint.
