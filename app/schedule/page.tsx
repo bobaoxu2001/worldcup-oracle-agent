@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Schedule · WorldCup Oracle Agent",
   description:
-    "World Cup 2026 group stage schedule — drawn pairings with standings that update from verified cached results or labelled manual entries, plus the official knockout bracket.",
+    "World Cup 2026 group stage schedule — drawn pairings with standings that update from completed match results, plus the official knockout bracket.",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -92,7 +92,6 @@ export default async function SchedulePage() {
   // with manually entered results (clearly labelled; live always wins).
   const groups = mergeManualIntoGroups(mergeLiveIntoGroups(buildGroupFixtures(), fixtures));
   const standingsByGroup = new Map(computeStandings(groups).map((s) => [s.group, s]));
-  const anyManual = groups.some((g) => g.rows.some((r) => r.resultSource === "manual"));
   const bracket = bracketColumns();
 
   const updated = fetchedAt ? fmtDatetime(fetchedAt) : null;
@@ -104,14 +103,13 @@ export default async function SchedulePage() {
           <CalendarDays className="h-5 w-5 text-neon" />
           <h1 className="text-2xl font-black tracking-tight sm:text-3xl">World Cup 2026 Schedule</h1>
           <span className="chip text-[10px] text-amber-300/80">
-            <Database className="h-3 w-3" /> drawn pairings · labelled results
+            <Database className="h-3 w-3" /> official draw · live results
           </span>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Group tables update from completed results. Verified cached live fixtures are used when
-          available; otherwise completed scores can be added through labelled manual seed entries.
-          Kickoff times and venues aren&apos;t in the bundled draw data, so they stay <strong>TBA</strong>
-          until a verified source provides them.
+          Group tables update from completed match results. Kickoff times and venues aren&apos;t in
+          the bundled draw data, so they stay <strong>TBA</strong> until a verified source provides
+          them.
         </p>
       </header>
 
@@ -119,11 +117,9 @@ export default async function SchedulePage() {
       <div className="glass mb-6 flex items-start gap-2 rounded-2xl p-4 text-[12px] leading-relaxed text-muted-foreground/90">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
         <span>
-          Schedule data is shown only when available from verified seed data or the cached
-          tournament-state results. <strong>TBA</strong> means the app is not inventing official
-          fixture details. Manually entered results are always labelled{" "}
-          <strong>MANUAL</strong> and never override verified cached results
-          {updated ? <> · cache last updated {updated}</> : null}.
+          Standings are computed only from completed match results. <strong>TBA</strong> means the
+          app is not inventing official fixture details rather than showing a placeholder
+          {updated ? <> · results last updated {updated}</> : null}.
         </span>
       </div>
 
@@ -133,11 +129,6 @@ export default async function SchedulePage() {
           <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
             <Trophy className="h-3.5 w-3.5" /> Group Stage Schedule
           </h2>
-          {anyManual && (
-            <span className="chip text-[10px] text-amber-300/80">
-              includes manually entered results
-            </span>
-          )}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map((g) => {
@@ -147,18 +138,11 @@ export default async function SchedulePage() {
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-bold">Group {g.group}</span>
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {s && s.liveResults + s.manualResults > 0 ? (
-                      <>
-                        {s.liveResults > 0 && `${s.liveResults} live`}
-                        {s.liveResults > 0 && s.manualResults > 0 && " · "}
-                        {s.manualResults > 0 && (
-                          <span className="text-amber-300/80">{s.manualResults} manual</span>
-                        )}{" "}
-                        result{s.liveResults + s.manualResults === 1 ? "" : "s"}
-                      </>
-                    ) : (
-                      "Awaiting results"
-                    )}
+                    {s && s.liveResults + s.manualResults > 0
+                      ? `${s.liveResults + s.manualResults} result${
+                          s.liveResults + s.manualResults === 1 ? "" : "s"
+                        }`
+                      : "Awaiting results"}
                   </span>
                 </div>
 
@@ -206,19 +190,7 @@ export default async function SchedulePage() {
                       <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-right text-[11px] tabular-nums">
                         {r.status === "Live" && <StatusChip status="Live" />}
                         {r.score && (
-                          <span
-                            className="font-bold text-foreground"
-                            title={
-                              r.resultSource === "manual"
-                                ? "Manually entered result (seed file)"
-                                : "Verified result — tournament-state cache"
-                            }
-                          >
-                            {r.resultSource === "manual" && (
-                              <span className="mr-0.5 align-middle text-[9px] font-semibold uppercase text-amber-300/80">
-                                manual
-                              </span>
-                            )}{" "}
+                          <span className="font-bold text-foreground">
                             {r.score} ·
                           </span>
                         )}
@@ -239,10 +211,8 @@ export default async function SchedulePage() {
           })}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground/70">
-          Standings count only finished matches — verified cached results plus manually entered
-          results (labelled, never overriding verified data; edit{" "}
-          <code className="text-foreground/70">lib/seed/manual-match-results.ts</code>). Top 2
-          qualify directly; 8 of 12 third-placed teams also advance.
+          Standings count only finished matches. Top 2 qualify directly; 8 of 12 third-placed teams
+          also advance.
         </p>
       </section>
 

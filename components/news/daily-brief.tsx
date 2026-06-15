@@ -30,9 +30,8 @@ function teamChip(slug: string): string | null {
 }
 
 /**
- * Manually curated Daily Brief — the editor-controlled narrative layer that
- * sits ABOVE the live GNews browser. Always labelled "manually curated" so
- * it is never mistaken for live data.
+ * Daily Brief — the editor-controlled narrative layer that sits ABOVE the live
+ * GNews browser. Content is maintained in lib/seed/manual-daily-news.ts.
  */
 export function DailyBrief({ limit = 4 }: { limit?: number }) {
   const items = getManualDailyNews(limit);
@@ -46,9 +45,6 @@ export function DailyBrief({ limit = 4 }: { limit?: number }) {
         <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-neon">
           Daily Brief — {fmtBriefDate(latestDate)}
         </h2>
-        <span className="chip ml-auto text-[10px] text-amber-300/80">
-          Manually curated · not a live feed
-        </span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -96,18 +92,16 @@ export function DailyBrief({ limit = 4 }: { limit?: number }) {
       </div>
 
       <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground/60">
-        Editorial summary maintained by the team (edit{" "}
-        <code className="text-foreground/70">lib/seed/manual-daily-news.ts</code>). Live
-        source-attributed news continues below.
+        Editorial brief, updated daily. Source-attributed news continues below.
       </p>
     </section>
   );
 }
 
 /**
- * Compact homepage variant — "Today's World Cup Brief". Same manual seed,
- * same transparency labelling, trimmed to 3 tight cards so it sits above
- * the Agent Chat without pushing it below the fold.
+ * Compact homepage variant — "Today's World Cup Brief". Same seed source,
+ * trimmed to 3 tight cards so it sits above the Agent Chat without pushing
+ * it below the fold.
  */
 export function DailyBriefCompact({ limit = 3 }: { limit?: number }) {
   const items = getManualDailyNews(limit);
@@ -120,7 +114,6 @@ export function DailyBriefCompact({ limit = 3 }: { limit?: number }) {
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neon">
           Today&apos;s World Cup Brief
         </h2>
-        <span className="chip text-[10px] text-amber-300/80">curated · not live</span>
         <Link
           href="/news"
           className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"

@@ -678,7 +678,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     const digest = buildTeamNewsDigest(view, source);
     const narrated = await finalizeNarrative(
       digest,
-      `Latest team-news digest for ${team.name}. Keep facts and any 'demo data' caveat intact.`,
+      `Latest team-news digest for ${team.name}. Keep facts intact.${
+        source === "demo"
+          ? " Keep the 'demo data' caveat intact."
+          : " This team news is live (real sourced articles); do NOT add any 'demo data' or 'sample data' caveat."
+      }`,
       lang,
       query,
       plan.intent
@@ -1047,7 +1051,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     explanation,
     `News-aware match prediction: ${teamA.name} vs ${teamB.name}.${
       scenario ? " This is a what-if scenario re-analysis." : ""
-    } A capped news-signal layer adjusted the probabilities; keep all numbers and the 'demo data' caveat intact.`,
+    } A capped news-signal layer adjusted the probabilities; keep all numbers intact.${
+      newsImpact.source === "demo"
+        ? " Keep the 'demo data' caveat intact."
+        : " The team news is live (real sourced articles); do NOT add any 'demo data' or 'sample data' caveat."
+    }`,
     lang,
     query,
     plan.intent
