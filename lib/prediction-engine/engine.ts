@@ -21,6 +21,12 @@ import { matchProb, sampleMatch, scorelineGrid, mulberry32, K_FACTOR_WC } from "
 import { getRating, HOME_ADVANTAGE } from "./ratings";
 import { getUpdatedRating, getResultDelta, ratingUpdatesMeta } from "./ratingUpdates";
 import {
+  getEffectiveRating,
+  getAvailabilityDelta,
+  getAvailabilityAdjustments,
+} from "./availabilityAdjustments";
+import { getConfederationDelta } from "./confederationForm";
+import {
   GROUPS,
   HOST_SLUGS,
   getTeam,
@@ -117,6 +123,38 @@ function buildFactors(
     });
   }
 
+  const availA = getAvailabilityDelta(aSlug);
+  const availB = getAvailabilityDelta(bSlug);
+  if (availA !== 0 || availB !== 0) {
+    const fmt = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+    const names = (slug: string) =>
+      getAvailabilityAdjustments(slug)
+        .map((x) => x.player)
+        .join(", ");
+    const parts: string[] = [];
+    if (availA !== 0) parts.push(`${a.name} ${fmt(availA)} (${names(aSlug)})`);
+    if (availB !== 0) parts.push(`${b.name} ${fmt(availB)} (${names(bSlug)})`);
+    factors.push({
+      label: "Squad availability",
+      detail: `Capped Elo adjustment for confirmed injuries / withdrawals — ${parts.join("; ")}. A transparent, manually-sourced squad-news signal, not a precise medical model.`,
+      weight: Math.max(Math.abs(availA), Math.abs(availB)) >= 25 ? "medium" : "low",
+    });
+  }
+
+  const formA = getConfederationDelta(aSlug);
+  const formB = getConfederationDelta(bSlug);
+  if (formA !== 0 || formB !== 0) {
+    const fmt = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+    const parts: string[] = [];
+    if (formA !== 0) parts.push(`${a.name} (${getTeam(aSlug).confederation}) ${fmt(formA)}`);
+    if (formB !== 0) parts.push(`${b.name} (${getTeam(bSlug).confederation}) ${fmt(formB)}`);
+    factors.push({
+      label: "Confederation form",
+      detail: `Capped, shrunk Elo nudge from how each side's confederation has performed vs expectation so far this tournament — ${parts.join("; ")}. A speculative tournament-form prior on a small sample, not a calibrated finding.`,
+      weight: Math.max(Math.abs(formA), Math.abs(formB)) >= 15 ? "medium" : "low",
+    });
+  }
+
   factors.push({
     label: "Expected goals (Dixon-Coles)",
     detail: `Model projects ${p.expectedGoalsA.toFixed(2)} xG for ${a.name} and ${p.expectedGoalsB.toFixed(2)} for ${b.name}, with a low-score draw correction (ρ = −0.13).`,
@@ -143,9 +181,18 @@ export function predictMatch(
   const b = getTeam(teamBSlug);
   const baseEloA = getRating(teamASlug);
   const baseEloB = getRating(teamBSlug);
-  // Live Elo: base May-2026 calibration + K=60 updates from completed results.
-  const eloA = getUpdatedRating(teamASlug);
-  const eloB = getUpdatedRating(teamBSlug);
+  // Completed-result deltas (base May-2026 calibration + K=60 result updates).
+  const resultEloA = getUpdatedRating(teamASlug);
+  const resultEloB = getUpdatedRating(teamBSlug);
+  // Capped squad-availability signal (confirmed injuries / withdrawals).
+  const availA = getAvailabilityDelta(teamASlug);
+  const availB = getAvailabilityDelta(teamBSlug);
+  // Capped confederation tournament-form signal (region over/under-performing).
+  const formA = getConfederationDelta(teamASlug);
+  const formB = getConfederationDelta(teamBSlug);
+  // Effective Elo the model simulates with = results + availability + form.
+  const eloA = resultEloA + availA + formA;
+  const eloB = resultEloB + availB + formB;
   const hb = homeBonus(teamASlug, teamBSlug);
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
@@ -197,16 +244,18 @@ export function predictMatch(
     eloBreakdown: {
       a: {
         base: baseEloA,
-        completedResultsAdjustment: eloA - baseEloA,
-        squadStabilityAdjustment: 0,
+        completedResultsAdjustment: resultEloA - baseEloA,
+        squadStabilityAdjustment: availA,
         verifiedNewsAdjustment: 0,
+        tournamentFormAdjustment: formA,
         adjusted: effEloA,
       },
       b: {
         base: baseEloB,
-        completedResultsAdjustment: eloB - baseEloB,
-        squadStabilityAdjustment: 0,
+        completedResultsAdjustment: resultEloB - baseEloB,
+        squadStabilityAdjustment: availB,
         verifiedNewsAdjustment: 0,
+        tournamentFormAdjustment: formB,
         adjusted: effEloB,
       },
     },
@@ -295,7 +344,7 @@ function rankAcrossGroups(rows: Standing[]): Standing[] {
       y.points - x.points ||
       y.gd - x.gd ||
       y.gf - x.gf ||
-      getUpdatedRating(y.slug) - getUpdatedRating(x.slug) ||
+      getEffectiveRating(y.slug) - getEffectiveRating(x.slug) ||
       (x.slug < y.slug ? -1 : 1)
   );
 }
@@ -358,7 +407,7 @@ function rankWithinGroup(
           mt[y].p - mt[x].p ||
           mt[y].gd - mt[x].gd ||
           mt[y].gf - mt[x].gf ||
-          getUpdatedRating(y) - getUpdatedRating(x) || // fair-play/lots approximation
+          getEffectiveRating(y) - getEffectiveRating(x) || // fair-play/lots approximation
           (x < y ? -1 : 1)
       );
     }
@@ -390,8 +439,8 @@ function playGroupOnce(
     const A = group.teams[i];
     const B = group.teams[j];
     const { goalsA, goalsB } = sampleMatch(
-      getUpdatedRating(A),
-      getUpdatedRating(B),
+      getEffectiveRating(A),
+      getEffectiveRating(B),
       homeBonus(A, B),
       true,
       rng
@@ -440,7 +489,7 @@ export function simulateGroup(groupName: string, sims = 20000): GroupSimRow[] {
         slug,
         name: t.name,
         flag: t.flag,
-        elo: getUpdatedRating(slug),
+        elo: getEffectiveRating(slug),
         winGroup: agg[slug].first / sims,
         advance: agg[slug].top2 / sims,
         expectedPoints: agg[slug].pts / sims,
@@ -519,8 +568,8 @@ export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
         reach[away][0]++;
       }
       const { goalsA, goalsB } = sampleMatch(
-        getUpdatedRating(home),
-        getUpdatedRating(away),
+        getEffectiveRating(home),
+        getEffectiveRating(away),
         homeBonus(home, away),
         false, // knockout — no draws
         rng
@@ -539,7 +588,7 @@ export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
         slug,
         name: t.name,
         flag: t.flag,
-        elo: getUpdatedRating(slug),
+        elo: getEffectiveRating(slug),
         roundOf32: r[0] / sims,
         roundOf16: r[1] / sims,
         quarterFinal: r[2] / sims,

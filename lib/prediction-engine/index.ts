@@ -18,6 +18,24 @@ export {
   type RatingUpdates,
 } from "./ratingUpdates";
 export {
+  AVAILABILITY_ADJUSTMENTS,
+  SQUAD_STABILITY_CAP,
+  getAvailabilityAdjustments,
+  getAvailabilityDelta,
+  getEffectiveRating,
+  availabilityMeta,
+  type AvailabilityAdjustment,
+} from "./availabilityAdjustments";
+export {
+  FORM_SENSITIVITY,
+  FORM_SHRINK_PRIOR,
+  FORM_CAP,
+  computeConfederationForm,
+  getConfederationDelta,
+  confederationFormMeta,
+  type ConfederationFormRow,
+} from "./confederationForm";
+export {
   matchProb,
   sampleMatch,
   expectedScore,

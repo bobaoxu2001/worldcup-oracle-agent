@@ -15,7 +15,8 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-14 (all finished matches through 13 June).
+ * Last updated: 2026-06-15 (all finished matches through 14 June; Groups E & F
+ * opened on 14 June. Groups G & H open on 15 June and are not yet final.).
  */
 
 export interface ManualMatchResult {
@@ -97,5 +98,41 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 2,
     scoreB: 0,
     date: "2026-06-13",
+  },
+  // 14 June — Groups E & F open
+  {
+    group: "E",
+    teamA: "germany",
+    teamB: "curacao",
+    scoreA: 7,
+    scoreB: 1,
+    date: "2026-06-14",
+    note: "Germany run riot on their opener",
+  },
+  {
+    group: "E",
+    teamA: "ivory-coast",
+    teamB: "ecuador",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-06-14",
+    note: "Ivory Coast edge Ecuador",
+  },
+  {
+    group: "F",
+    teamA: "netherlands",
+    teamB: "japan",
+    scoreA: 2,
+    scoreB: 2,
+    date: "2026-06-14",
+    note: "Japan twice peg back the Netherlands",
+  },
+  {
+    group: "F",
+    teamA: "sweden",
+    teamB: "tunisia",
+    scoreA: 5,
+    scoreB: 1,
+    date: "2026-06-14",
   },
 ];

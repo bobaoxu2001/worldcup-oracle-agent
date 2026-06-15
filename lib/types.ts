@@ -69,6 +69,8 @@ export interface EloBreakdown {
   completedResultsAdjustment?: number;
   squadStabilityAdjustment: number; // capped Squad Stability Signal
   verifiedNewsAdjustment: number; // capped verified-news signal (±25 max)
+  /** Capped, shrunk confederation tournament-form signal (±20 max). */
+  tournamentFormAdjustment?: number;
   adjusted: number; // base + adjustments (what the goal model uses)
 }
 

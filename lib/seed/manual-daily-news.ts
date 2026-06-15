@@ -14,7 +14,7 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-14 (results through 13 June; 14 June fixtures previewed).
+ * Last updated: 2026-06-15 (results through 14 June; Groups G & H previewed).
  */
 
 export type ManualDailyNewsTag =
@@ -44,16 +44,82 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
-  // ── 14 June — Groups E & F open (previews; not yet played) ──
+  // ── 15 June — Groups G & H open (previews; not yet played) ──
   {
-    id: "2026-06-14-daily-brief",
-    date: "2026-06-14",
-    title: "Groups E and F kick off: Germany and the Netherlands begin",
+    id: "2026-06-15-daily-brief",
+    date: "2026-06-15",
+    title: "Groups G and H complete the opening round",
     summary:
-      "Eight more nations start their tournament today. In Group E, Germany face Curaçao and Ivory Coast meet Ecuador; in Group F, the Netherlands take on Japan and Sweden play Tunisia.",
+      "The last eight nations begin today. In Group G, Belgium face New Zealand and Egypt meet Iran; in Group H, Spain take on Cape Verde and Uruguay play Saudi Arabia. After today every one of the 48 teams will have played once.",
     tag: "Match Preview",
+    relatedTeams: ["belgium", "spain", "uruguay", "iran"],
+    prompt: "Who will qualify from Group H?",
+  },
+
+  // ── 14 June — Groups E & F open their campaigns ──
+  {
+    id: "2026-06-14-groups-ef-done",
+    date: "2026-06-14",
+    title: "Groups E & F open: Germany thrash Curaçao, Japan hold the Netherlands",
+    summary:
+      "Germany made a statement with a 7–1 rout of Curaçao, while Sweden put five past Tunisia. In Group F, Japan twice came from behind to earn a 2–2 draw with the Netherlands, and Ivory Coast edged Ecuador 1–0.",
+    tag: "Standings",
     relatedTeams: ["germany", "netherlands", "japan", "sweden"],
+    prompt: "Did Japan's draw with the Netherlands change Group F?",
+  },
+  {
+    id: "2026-06-14-injury-watch",
+    date: "2026-06-14",
+    title: "Injury watch: Japan missing Mitoma & Endo; Germany without Karl",
+    summary:
+      "Japan opened without three notable names — winger Kaoru Mitoma (hamstring, left out of the squad), captain Wataru Endo (foot injury, withdrew and retired from the national team) and Takumi Minamino (long-term ACL). Germany are without Lennart Karl (torn muscle), with Kai Havertz reported to miss the early fixtures. The Oracle has trimmed Japan's squad-availability Elo and applied a small reduction to Germany.",
+    tag: "Injury",
+    relatedTeams: ["japan", "germany"],
+    prompt: "How do the injuries affect Japan's chances?",
+  },
+  {
+    id: "2026-06-14-ger-cuw",
+    date: "2026-06-14",
+    title: "Germany 7–1 Curaçao",
+    summary:
+      "Germany open Group E in emphatic style, hitting seven past tournament debutants Curaçao at a sold-out stadium.",
+    tag: "Result",
+    relatedTeams: ["germany", "curacao"],
+    relatedMatch: { group: "E", teamA: "germany", teamB: "curacao" },
+    prompt: "How far can Germany go in the tournament?",
+  },
+  {
+    id: "2026-06-14-ned-jpn",
+    date: "2026-06-14",
+    title: "Netherlands 2–2 Japan",
+    summary:
+      "Japan twice hit back — through Nakamura and a late Kamada strike — to share the points with the Netherlands in a thrilling Group F opener.",
+    tag: "Result",
+    relatedTeams: ["netherlands", "japan"],
+    relatedMatch: { group: "F", teamA: "netherlands", teamB: "japan" },
+    prompt: "Compare Netherlands and Japan",
+  },
+  {
+    id: "2026-06-14-swe-tun",
+    date: "2026-06-14",
+    title: "Sweden 5–1 Tunisia",
+    summary:
+      "Sweden make a flying start in Group F, with Isak and Gyökeres among the scorers in a 5–1 win over Tunisia.",
+    tag: "Result",
+    relatedTeams: ["sweden", "tunisia"],
+    relatedMatch: { group: "F", teamA: "sweden", teamB: "tunisia" },
     prompt: "Who will qualify from Group F?",
+  },
+  {
+    id: "2026-06-14-civ-ecu",
+    date: "2026-06-14",
+    title: "Ivory Coast 1–0 Ecuador",
+    summary:
+      "Ivory Coast take all three points in Group E with a narrow 1–0 win over Ecuador.",
+    tag: "Result",
+    relatedTeams: ["ivory-coast", "ecuador"],
+    relatedMatch: { group: "E", teamA: "ivory-coast", teamB: "ecuador" },
+    prompt: "Who will qualify from Group E?",
   },
 
   // ── 13 June — Groups B, C, D complete their opening round ──

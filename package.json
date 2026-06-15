@@ -13,6 +13,8 @@
     "test:routing": "tsx scripts/test-llm-routing.ts",
     "test:tournament": "tsx scripts/test-tournament-state.ts",
     "test:ratings": "tsx scripts/test-rating-updates.ts",
+    "test:availability": "tsx scripts/test-availability-adjustments.ts",
+    "test:form": "tsx scripts/test-confederation-form.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {
