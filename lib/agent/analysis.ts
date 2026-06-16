@@ -18,6 +18,7 @@ import {
   simulateGroup,
   getChampionOddsFor,
   getEffectiveRating,
+  getTacticalMatchup,
 } from "@/lib/prediction-engine";
 import { expectedGoals } from "@/lib/prediction-engine/elo";
 import { matchProb } from "@/lib/prediction-engine/elo";
@@ -397,7 +398,11 @@ export function buildTeamComparison(a: TeamRef, b: TeamRef) {
   const pb = strengthProfile(b.slug);
   const oa = getChampionOddsFor(a.slug);
   const ob = getChampionOddsFor(b.slug);
-  const neutral = matchProb(pa.elo, pb.elo, 0);
+  // Fold in the per-fixture tactical matchup so this head-to-head line agrees
+  // with the main prediction for style-clash fixtures (e.g. a low block vs a
+  // possession side). Team-level proxies (rank/attack/defense) stay unchanged.
+  const tac = getTacticalMatchup(a.slug, b.slug);
+  const neutral = matchProb(pa.elo + tac.a, pb.elo + tac.b, 0);
   const stronger = pa.elo === pb.elo ? null : pa.elo > pb.elo ? a : b;
 
   const row = (label: string, va: string, vb: string) => `• **${label}:** ${a.name} ${va} · ${b.name} ${vb}`;

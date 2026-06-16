@@ -54,11 +54,11 @@ const draw = computeRatingUpdates([
 ]);
 check("draw → higher-Elo side loses points", draw.deltas["south-korea"] < 0 && draw.deltas["czech-republic"] > 0);
 
-// 4. Untouched team: updated rating equals base. (Spain — Group H, not yet played.)
+// 4. Untouched team: updated rating equals base. (England — Group L, opens 17 June.)
 check(
   "untouched team rating unchanged",
-  getUpdatedRating("spain") === getRating("spain"),
-  `Spain ${getRating("spain")}`
+  getUpdatedRating("england") === getRating("england"),
+  `England ${getRating("england")}`
 );
 
 // --- Applied (seed) checks ------------------------------------------------

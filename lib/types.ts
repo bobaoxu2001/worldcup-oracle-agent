@@ -71,6 +71,8 @@ export interface EloBreakdown {
   verifiedNewsAdjustment: number; // capped verified-news signal (±25 max)
   /** Capped, shrunk confederation tournament-form signal (±20 max). */
   tournamentFormAdjustment?: number;
+  /** Per-fixture tactical style-clash nudge (±30 max); opponent-dependent. */
+  tacticalMatchupAdjustment?: number;
   adjusted: number; // base + adjustments (what the goal model uses)
 }
 

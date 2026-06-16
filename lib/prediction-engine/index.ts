@@ -20,12 +20,27 @@ export {
 export {
   AVAILABILITY_ADJUSTMENTS,
   SQUAD_STABILITY_CAP,
+  VALUE_TO_ELO,
+  ROLE_WEIGHTS,
+  entryDelta,
   getAvailabilityAdjustments,
   getAvailabilityDelta,
   getEffectiveRating,
   availabilityMeta,
   type AvailabilityAdjustment,
+  type PlayerRole,
 } from "./availabilityAdjustments";
+export {
+  TEAM_STYLES,
+  NEUTRAL_STYLE,
+  TACTICAL_CLASH_WEIGHT,
+  TACTICAL_CAP,
+  getStyle,
+  getTacticalMatchup,
+  tacticalMatchupMeta,
+  type TacticalStyle,
+  type TacticalMatchup,
+} from "./tacticalMatchups";
 export {
   FORM_SENSITIVITY,
   FORM_SHRINK_PRIOR,

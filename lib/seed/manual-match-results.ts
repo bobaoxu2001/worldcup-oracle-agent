@@ -15,8 +15,9 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-15 (all finished matches through 14 June; Groups E & F
- * opened on 14 June. Groups G & H open on 15 June and are not yet final.).
+ * Last updated: 2026-06-16 (all finished matches through 15 June; Groups G & H
+ * opened on 15 June — a "four draws" day. Groups I & J open 15:00/18:00 ET on
+ * 16 June and have not kicked off yet.).
  */
 
 export interface ManualMatchResult {
@@ -134,5 +135,44 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 5,
     scoreB: 1,
     date: "2026-06-14",
+  },
+  // 15 June — Groups G & H open. All four games drawn (favourites all dropped
+  // points): a notable "wild Monday" the model under-weighted (see the tactical-
+  // matchup + value-weighted-injury layers added 16 June).
+  {
+    group: "G",
+    teamA: "belgium",
+    teamB: "egypt",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-15",
+    note: "Ashour put Egypt ahead; a Lukaku-sparked own goal levelled it (ESPN)",
+  },
+  {
+    group: "G",
+    teamA: "iran",
+    teamB: "new-zealand",
+    scoreA: 2,
+    scoreB: 2,
+    date: "2026-06-15",
+    note: "Elijah Just brace for NZ; Rezaeian + Mohebbi pegged it back (Al Jazeera)",
+  },
+  {
+    group: "H",
+    teamA: "spain",
+    teamB: "cape-verde",
+    scoreA: 0,
+    scoreB: 0,
+    date: "2026-06-15",
+    note: "Debutants' low block + keeper Vozinha hold Spain (27 shots) — historic point (ESPN)",
+  },
+  {
+    group: "H",
+    teamA: "saudi-arabia",
+    teamB: "uruguay",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-15",
+    note: "Al-Amri 40'; Maxi Araújo levelled late. Uruguay missing Araújo/Giménez at CB (Sky)",
   },
 ];

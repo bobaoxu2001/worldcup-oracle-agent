@@ -26,6 +26,7 @@ import {
   getAvailabilityAdjustments,
 } from "./availabilityAdjustments";
 import { getConfederationDelta } from "./confederationForm";
+import { getTacticalMatchup } from "./tacticalMatchups";
 import {
   GROUPS,
   HOST_SLUGS,
@@ -58,6 +59,20 @@ function homeBonus(teamA: string, teamB: string): number {
   if (HOST_SLUGS.has(teamA) && !HOST_SLUGS.has(teamB)) return HOME_ADVANTAGE;
   if (HOST_SLUGS.has(teamB) && !HOST_SLUGS.has(teamA)) return -HOME_ADVANTAGE;
   return 0;
+}
+
+/**
+ * The ratings the goal model uses for a SPECIFIC fixture: each side's standalone
+ * effective rating PLUS the per-fixture tactical style-clash nudge (which is
+ * opponent-dependent and therefore cannot live in getEffectiveRating). Used by
+ * predictMatch and every Monte Carlo match sample so group/title odds reflect it.
+ */
+function matchupRatings(aSlug: string, bSlug: string): { eloA: number; eloB: number } {
+  const tac = getTacticalMatchup(aSlug, bSlug);
+  return {
+    eloA: getEffectiveRating(aSlug) + tac.a,
+    eloB: getEffectiveRating(bSlug) + tac.b,
+  };
 }
 
 function confidenceFrom(topProb: number): {
@@ -155,6 +170,16 @@ function buildFactors(
     });
   }
 
+  const tac = getTacticalMatchup(aSlug, bSlug);
+  if (tac.active) {
+    const mag = Math.max(Math.abs(tac.a), Math.abs(tac.b));
+    factors.push({
+      label: "Tactical matchup (playstyle)",
+      detail: `Style clash, not just strength: ${tac.summary} A capped, scouting-style prior — a disciplined low block can frustrate a side that dominates the ball but lacks a clean way through it.`,
+      weight: mag >= 20 ? "high" : mag >= 10 ? "medium" : "low",
+    });
+  }
+
   factors.push({
     label: "Expected goals (Dixon-Coles)",
     detail: `Model projects ${p.expectedGoalsA.toFixed(2)} xG for ${a.name} and ${p.expectedGoalsB.toFixed(2)} for ${b.name}, with a low-score draw correction (ρ = −0.13).`,
@@ -190,9 +215,12 @@ export function predictMatch(
   // Capped confederation tournament-form signal (region over/under-performing).
   const formA = getConfederationDelta(teamASlug);
   const formB = getConfederationDelta(teamBSlug);
-  // Effective Elo the model simulates with = results + availability + form.
-  const eloA = resultEloA + availA + formA;
-  const eloB = resultEloB + availB + formB;
+  // Per-fixture tactical style-clash nudge (opponent-dependent, zero-sum).
+  const tac = getTacticalMatchup(teamASlug, teamBSlug);
+  // Effective Elo the model simulates with = results + availability + form +
+  // the fixture's tactical matchup.
+  const eloA = resultEloA + availA + formA + tac.a;
+  const eloB = resultEloB + availB + formB + tac.b;
   const hb = homeBonus(teamASlug, teamBSlug);
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
@@ -248,6 +276,7 @@ export function predictMatch(
         squadStabilityAdjustment: availA,
         verifiedNewsAdjustment: 0,
         tournamentFormAdjustment: formA,
+        tacticalMatchupAdjustment: tac.a,
         adjusted: effEloA,
       },
       b: {
@@ -256,6 +285,7 @@ export function predictMatch(
         squadStabilityAdjustment: availB,
         verifiedNewsAdjustment: 0,
         tournamentFormAdjustment: formB,
+        tacticalMatchupAdjustment: tac.b,
         adjusted: effEloB,
       },
     },
@@ -438,9 +468,10 @@ function playGroupOnce(
   for (const [i, j] of pairs) {
     const A = group.teams[i];
     const B = group.teams[j];
+    const { eloA, eloB } = matchupRatings(A, B);
     const { goalsA, goalsB } = sampleMatch(
-      getEffectiveRating(A),
-      getEffectiveRating(B),
+      eloA,
+      eloB,
       homeBonus(A, B),
       true,
       rng
@@ -567,9 +598,10 @@ export function simulateTournament(sims = TOURNAMENT_SIMS): TournamentResult {
         reach[home][0]++;
         reach[away][0]++;
       }
+      const { eloA, eloB } = matchupRatings(home, away);
       const { goalsA, goalsB } = sampleMatch(
-        getEffectiveRating(home),
-        getEffectiveRating(away),
+        eloA,
+        eloB,
         homeBonus(home, away),
         false, // knockout — no draws
         rng

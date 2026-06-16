@@ -941,9 +941,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     eloOverrideA: scenario ? eloA : undefined,
     eloOverrideB: scenario ? eloB : undefined,
   });
+  // Simulate with the SAME ratings the prediction used (prediction.eloA/eloB
+  // already fold in the scenario override OR the per-fixture tactical matchup),
+  // so the "we ran 10,000 sims" view stays consistent with the headline odds.
   const simulation = runSimulation(teamA, teamB, {
-    eloA: scenario ? eloA : undefined,
-    eloB: scenario ? eloB : undefined,
+    eloA: prediction.eloA,
+    eloB: prediction.eloB,
   });
 
   const bundle: PredictionBundle = { prediction, teamA, teamB, simulation };
