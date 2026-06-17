@@ -35,8 +35,18 @@
 import { groupOf } from "@/lib/seed/world-cup-2026-groups";
 import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
 
-/** Max relative inflation of the draw probability (pure opener, group match). */
-export const GROUP_DRAW_BOOST = 0.28;
+/**
+ * Max relative inflation of the draw probability (pure opener, group match).
+ * FITTED, not guessed: a walk-forward grid search over every completed match
+ * (`npm run evolve`) minimises log-loss as this rises. On the CURRENT sample —
+ * 20 matchday-1 openers, which draw ~40% — the fit keeps climbing to the top of
+ * the search grid, so chasing the exact optimum would over-fit an all-openers
+ * round. We set 0.33: it captures nearly all of the log-loss gain, while the
+ * 42% ceiling + opener taper hold the AVERAGE group draw prediction near the
+ * long-run WC group rate (~30%). Re-run evolve once matchdays 2–3 land (fewer
+ * draws expected as teams must chase points) and re-fit toward that.
+ */
+export const GROUP_DRAW_BOOST = 0.33;
 /** Hard ceiling on the post-adjustment draw probability. */
 export const DRAW_CEIL = 0.42;
 

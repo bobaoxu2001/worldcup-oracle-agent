@@ -15,6 +15,7 @@ import {
 } from "../lib/prediction-engine/availabilityAdjustments";
 import { getUpdatedRating, getResultDelta } from "../lib/prediction-engine/ratingUpdates";
 import { getConfederationDelta } from "../lib/prediction-engine/confederationForm";
+import { GROUPS } from "../lib/seed/world-cup-2026-groups";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -59,16 +60,21 @@ const de = getAvailabilityDelta("germany");
 check("Germany availability delta is negative", de < 0, `Δ=${de}`);
 check("Japan is hit harder than Germany", jp < de, `JP ${jp} < DE ${de}`);
 
-// 3. A team with no injuries and no completed result yet (Norway open on 16
-//    June): zero availability delta, zero result delta, and its effective
-//    rating is just base + its confederation's form nudge.
-check("injury-free team (Norway) has zero availability delta", getAvailabilityDelta("norway") === 0);
-check("Norway has no completed-result delta yet", getResultDelta("norway") === 0);
-check(
-  "Norway effective = base + confederation form (no injuries/results)",
-  getEffectiveRating("norway") === getUpdatedRating("norway") + getConfederationDelta("norway"),
-  `NOR ${getEffectiveRating("norway")} = ${getUpdatedRating("norway")} + ${getConfederationDelta("norway")} (form)`
+// 3. Decomposition on an untouched team — picked DYNAMICALLY so the check does
+//    not go stale as results land each matchday: any team with no injuries and
+//    no completed-result delta should have effective = base + confederation form.
+const allSlugs = GROUPS.flatMap((g) => g.teams);
+const untouched = allSlugs.find(
+  (s) => getAvailabilityDelta(s) === 0 && getResultDelta(s) === 0
 );
+check("an injury-free, not-yet-played team exists to test", !!untouched, untouched ?? "none");
+if (untouched) {
+  check(
+    `${untouched} effective = base + confederation form (no injuries/results)`,
+    getEffectiveRating(untouched) === getUpdatedRating(untouched) + getConfederationDelta(untouched),
+    `${getEffectiveRating(untouched)} = ${getUpdatedRating(untouched)} + ${getConfederationDelta(untouched)} (form)`
+  );
+}
 
 // 4. Effective rating = results + availability + confederation form.
 check(

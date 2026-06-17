@@ -18,6 +18,7 @@
     "test:draw": "tsx scripts/test-draw-propensity.ts",
     "test:form": "tsx scripts/test-confederation-form.ts",
     "backtest": "tsx scripts/backtest.ts",
+    "evolve": "tsx scripts/evolve.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {

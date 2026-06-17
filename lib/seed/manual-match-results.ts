@@ -15,9 +15,9 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-16 (all finished matches through 15 June; Groups G & H
- * opened on 15 June — a "four draws" day. Groups I & J open 15:00/18:00 ET on
- * 16 June and have not kicked off yet.).
+ * Last updated: 2026-06-17 (all finished matches through 16 June; Groups I & J
+ * opened 16 June — favourites all won decisively, the mirror image of 15 June's
+ * four draws. Groups K & L open 17 June and have not kicked off yet.).
  */
 
 export interface ManualMatchResult {
@@ -174,5 +174,43 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 1,
     date: "2026-06-15",
     note: "Al-Amri 40'; Maxi Araújo levelled late. Uruguay missing Araújo/Giménez at CB (Sky)",
+  },
+  // 16 June — Groups I & J open. Favourites all won decisively (the mirror
+  // image of 15 June's four draws — a reminder the draw cluster was partly noise).
+  {
+    group: "I",
+    teamA: "france",
+    teamB: "senegal",
+    scoreA: 3,
+    scoreB: 1,
+    date: "2026-06-16",
+    note: "Mbappé brace (now France's all-time top scorer) + Barcola; Senegal late consolation (ESPN)",
+  },
+  {
+    group: "I",
+    teamA: "iraq",
+    teamB: "norway",
+    scoreA: 1,
+    scoreB: 4,
+    date: "2026-06-16",
+    note: "Haaland brace; Norway cruise (Al Jazeera/NBC)",
+  },
+  {
+    group: "J",
+    teamA: "argentina",
+    teamB: "algeria",
+    scoreA: 3,
+    scoreB: 0,
+    date: "2026-06-16",
+    note: "Messi first World Cup hat-trick, equals Klose milestone talk (NBC)",
+  },
+  {
+    group: "J",
+    teamA: "austria",
+    teamB: "jordan",
+    scoreA: 3,
+    scoreB: 1,
+    date: "2026-06-16",
+    note: "Olwan's historic first WC goal for Jordan; Austria pull away late inc. VAR pen (ESPN)",
   },
 ];

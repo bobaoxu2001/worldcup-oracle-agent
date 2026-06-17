@@ -11,6 +11,7 @@ import {
 } from "../lib/prediction-engine/ratingUpdates";
 import { getRating } from "../lib/prediction-engine/ratings";
 import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
+import { GROUPS } from "../lib/seed/world-cup-2026-groups";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -54,12 +55,18 @@ const draw = computeRatingUpdates([
 ]);
 check("draw → higher-Elo side loses points", draw.deltas["south-korea"] < 0 && draw.deltas["czech-republic"] > 0);
 
-// 4. Untouched team: updated rating equals base. (England — Group L, opens 17 June.)
-check(
-  "untouched team rating unchanged",
-  getUpdatedRating("england") === getRating("england"),
-  `England ${getRating("england")}`
-);
+// 4. Untouched team: updated rating equals base. Picked dynamically (the team
+//    whose group has not opened yet) so it never goes stale as results land.
+const played = new Set(MANUAL_MATCH_RESULTS.flatMap((m) => [m.teamA, m.teamB]));
+const unplayed = GROUPS.flatMap((g) => g.teams).find((s) => !played.has(s));
+check("an untouched (not-yet-played) team exists to test", !!unplayed, unplayed ?? "none");
+if (unplayed) {
+  check(
+    `untouched team rating unchanged (${unplayed})`,
+    getUpdatedRating(unplayed) === getRating(unplayed),
+    `${unplayed} ${getRating(unplayed)}`
+  );
+}
 
 // --- Applied (seed) checks ------------------------------------------------
 
