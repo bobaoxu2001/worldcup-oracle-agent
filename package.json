@@ -15,7 +15,9 @@
     "test:ratings": "tsx scripts/test-rating-updates.ts",
     "test:availability": "tsx scripts/test-availability-adjustments.ts",
     "test:tactical": "tsx scripts/test-tactical-matchups.ts",
+    "test:draw": "tsx scripts/test-draw-propensity.ts",
     "test:form": "tsx scripts/test-confederation-form.ts",
+    "backtest": "tsx scripts/backtest.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {

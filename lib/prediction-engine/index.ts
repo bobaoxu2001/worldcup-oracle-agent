@@ -42,6 +42,16 @@ export {
   type TacticalMatchup,
 } from "./tacticalMatchups";
 export {
+  GROUP_DRAW_BOOST,
+  DRAW_CEIL,
+  isGroupFixture,
+  drawMultiplierFor,
+  inflateDraw,
+  applyDrawPropensity,
+  drawPropensityMeta,
+  type DrawAdjusted,
+} from "./drawPropensity";
+export {
   FORM_SENSITIVITY,
   FORM_SHRINK_PRIOR,
   FORM_CAP,

@@ -27,6 +27,7 @@ import {
 } from "./availabilityAdjustments";
 import { getConfederationDelta } from "./confederationForm";
 import { getTacticalMatchup } from "./tacticalMatchups";
+import { applyDrawPropensity } from "./drawPropensity";
 import {
   GROUPS,
   HOST_SLUGS,
@@ -186,7 +187,16 @@ function buildFactors(
     weight: "medium",
   });
 
-  const drawPct = Math.round(p.draw * 100);
+  const dp = applyDrawPropensity(p, aSlug, bSlug);
+  if (dp.applied) {
+    factors.push({
+      label: "Group-stage draw propensity",
+      detail: `World Cup group openers draw far more often than raw Elo implies (the 11–15 June openers drew 50%, vs a ~23% model baseline). The draw is nudged +${Math.round(dp.boost * 100)} pts (to ${Math.round(dp.draw * 100)}%) for this group fixture, with both win probabilities shrunk proportionally — the favourite is unchanged. A small, capped correction toward the historical WC group draw rate, strongest for matchday-1 openers.`,
+      weight: dp.boost >= 0.05 ? "medium" : "low",
+    });
+  }
+
+  const drawPct = Math.round(dp.draw * 100);
   factors.push({
     label: "Draw likelihood",
     detail: `Model puts the draw at ${drawPct}% — ${drawPct >= 26 ? "elevated, this projects as a tight, low-margin game" : "moderate, one side is expected to take control"}.`,
@@ -229,9 +239,16 @@ export function predictMatch(
   const effEloB = options.eloOverrideB ?? eloB;
 
   const p = matchProb(effEloA, effEloB, hb);
-  const topProb = Math.max(p.winA, p.draw, p.winB);
+  // Group-stage draw-propensity correction (openers draw more than raw Elo
+  // says) — adds mass to the DRAW only, shrinking both wins proportionally so
+  // the favourite is unchanged. No-op for non-group / cross-group fixtures.
+  const dp = applyDrawPropensity(p, teamASlug, teamBSlug);
+  const winA = dp.winA;
+  const draw = dp.draw;
+  const winB = dp.winB;
+  const topProb = Math.max(winA, draw, winB);
   const { level, score } = confidenceFrom(topProb);
-  const upsetRisk = upsetFrom(p.winA, p.winB);
+  const upsetRisk = upsetFrom(winA, winB);
 
   // Most-likely scoreline from the Dixon-Coles grid.
   const grid = scorelineGrid(effEloA, effEloB, hb);
@@ -246,20 +263,20 @@ export function predictMatch(
   const factors = buildFactors(teamASlug, teamBSlug, eloA, eloB, hb, p);
 
   const favName =
-    p.winA > p.winB ? a.name : p.winB > p.winA ? b.name : "Neither side";
-  const favProb = Math.max(p.winA, p.winB);
+    winA > winB ? a.name : winB > winA ? b.name : "Neither side";
+  const favProb = Math.max(winA, winB);
   const modelSummary =
     favProb >= 0.5
       ? `${favName} favoured at ${(favProb * 100).toFixed(0)}% — ${level.toLowerCase()} model confidence.`
-      : `Finely balanced — ${favName} a slight ${(favProb * 100).toFixed(0)}% favourite, ${(p.draw * 100).toFixed(0)}% draw.`;
+      : `Finely balanced — ${favName} a slight ${(favProb * 100).toFixed(0)}% favourite, ${(draw * 100).toFixed(0)}% draw.`;
 
   const prediction: MatchPrediction = {
     matchId,
     teamA: teamASlug,
     teamB: teamBSlug,
-    teamAWinProbability: p.winA,
-    drawProbability: p.draw,
-    teamBWinProbability: p.winB,
+    teamAWinProbability: winA,
+    drawProbability: draw,
+    teamBWinProbability: winB,
     expectedGoalsA: p.expectedGoalsA,
     expectedGoalsB: p.expectedGoalsB,
     expectedScore,

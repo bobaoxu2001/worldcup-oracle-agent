@@ -11,6 +11,7 @@
 
 import { sampleMatch, mulberry32 } from "@/lib/prediction-engine/elo";
 import { HOME_ADVANTAGE } from "@/lib/prediction-engine/ratings";
+import { applyDrawPropensity } from "@/lib/prediction-engine/drawPropensity";
 import { HOST_SLUGS } from "@/lib/seed/world-cup-2026-groups";
 import type { SimulationResult, TeamRef } from "./types";
 
@@ -61,9 +62,17 @@ export function runSimulation(
     .sort((x, y) => y.share - x.share)
     .slice(0, 5);
 
-  const teamAWin = aWins / sims;
-  const drawShare = draws / sims;
-  const teamBWin = bWins / sims;
+  // Raw sampled shares, then the SAME group-stage draw correction the
+  // closed-form prediction applies, so the two views stay consistent (the
+  // goal tally / most-likely scoreline below stay raw — they are goal-level).
+  const adj = applyDrawPropensity(
+    { winA: aWins / sims, draw: draws / sims, winB: bWins / sims },
+    teamA.slug,
+    teamB.slug
+  );
+  const teamAWin = adj.winA;
+  const drawShare = adj.draw;
+  const teamBWin = adj.winB;
   // Upset = the pre-match underdog (lower Elo) winning outright.
   const upsetProbability = eloA >= eloB ? teamBWin : teamAWin;
 
