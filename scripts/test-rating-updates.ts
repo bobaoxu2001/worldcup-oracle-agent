@@ -84,10 +84,22 @@ for (const slug of ["mexico", "south-africa", "south-korea", "czech-republic"]) 
   );
 }
 check("seed has completed results", meta.resultsUsed === MANUAL_MATCH_RESULTS.length);
-check("Mexico rating increased", getResultDelta("mexico") > 0);
-check("South Africa rating decreased", getResultDelta("south-africa") < 0);
-check("South Korea rating increased", getResultDelta("south-korea") > 0);
-check("Czech Republic rating decreased", getResultDelta("czech-republic") < 0);
+
+// Directional checks derived DYNAMICALLY from each team's actual record (not
+// hardcoded names), so they stay valid as more matchdays land: a team with only
+// wins must have gained rating; a team with only losses must have lost rating.
+const record: Record<string, { w: number; l: number; d: number }> = {};
+for (const m of MANUAL_MATCH_RESULTS) {
+  const aWin = m.scoreA > m.scoreB, bWin = m.scoreB > m.scoreA;
+  for (const [t, win, loss] of [[m.teamA, aWin, bWin], [m.teamB, bWin, aWin]] as const) {
+    (record[t] ??= { w: 0, l: 0, d: 0 });
+    if (win) record[t].w++; else if (loss) record[t].l++; else record[t].d++;
+  }
+}
+const perfectWinner = Object.keys(record).find((t) => record[t].w > 0 && record[t].l === 0 && record[t].d === 0);
+const winlessLoser = Object.keys(record).find((t) => record[t].l > 0 && record[t].w === 0 && record[t].d === 0);
+if (perfectWinner) check(`an all-wins team gained rating (${perfectWinner})`, getResultDelta(perfectWinner) > 0, `Δ ${getResultDelta(perfectWinner)}`);
+if (winlessLoser) check(`an all-losses team lost rating (${winlessLoser})`, getResultDelta(winlessLoser) < 0, `Δ ${getResultDelta(winlessLoser)}`);
 
 console.log(failures === 0 ? "\nAll rating-update checks passed." : `\n${failures} check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);
