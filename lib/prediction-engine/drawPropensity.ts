@@ -34,6 +34,7 @@
 
 import { groupOf } from "@/lib/seed/world-cup-2026-groups";
 import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
+import { getStyle } from "./tacticalMatchups";
 
 /**
  * Max relative inflation of the draw probability (pure opener, group match).
@@ -50,6 +51,33 @@ export const GROUP_DRAW_BOOST = 0.33;
 /** Hard ceiling on the post-adjustment draw probability. */
 export const DRAW_CEIL = 0.42;
 
+/**
+ * KILL-INDEX DAMPENER (V5.1 lesson, added 18 June).
+ *
+ * The 17 June England 4-2 Croatia rout exposed the limit of a flat draw boost:
+ * a "resistant" underdog (Croatia: experience, midfield control) was still
+ * dismantled because the favourite had ELITE kill power (Kane, set-pieces,
+ * width). Inflating the draw the same amount for England as for a blunt,
+ * possession-heavy favourite over-weights the draw exactly where it is least
+ * likely. The broader matchday-1/2 data agrees: the lethal-attack favourites
+ * (France, Argentina, England) WON, while the held favourites (Spain, Belgium,
+ * Portugal, Brazil) were the cagey/possession types.
+ *
+ * So we shrink the draw boost by the FAVOURITE'S kill index — its tactical
+ * `breakdown` rating (0–5). To avoid double-counting the tactical-matchup Elo
+ * nudge (which already rewards a low-block clash) and to stay conservative on a
+ * thin sample, the dampener fires ONLY for ELITE attacks (breakdown ≥ 4), and
+ * never removes more than (1 − KILL_DAMP_FLOOR) of the boost — group games are
+ * genuinely cagier, so even a lethal favourite keeps part of the cushion.
+ *
+ * A capped scouting-style prior, not a fitted constant; re-fit as data grows.
+ */
+export const KILL_INDEX_DAMP = 0.5;
+/** Floor on the boost-retained fraction (a lethal favourite keeps ≥ this much). */
+export const KILL_DAMP_FLOOR = 0.4;
+/** Kill index (breakdown) at/below which no dampening applies. */
+export const KILL_DAMP_THRESHOLD = 3;
+
 /** Teams with at least one completed result on file (proxy for "has played"). */
 const PLAYED_TEAMS = new Set<string>(
   MANUAL_MATCH_RESULTS.flatMap((m) => [m.teamA, m.teamB])
@@ -65,15 +93,32 @@ export function isGroupFixture(aSlug: string, bSlug: string): boolean {
 }
 
 /**
- * Draw multiplier from the matchup type and how many of the two sides have
- * already played. Non-group → 1 (no change). Group → tapered by opener-ness:
- * neither played (matchday-1 opener) gets the full boost; it shrinks as results
- * accumulate.
+ * Boost-retained fraction given the favourite's kill index (tactical breakdown).
+ * 1 for ordinary favourites; shrinks (down to KILL_DAMP_FLOOR) once the
+ * favourite has an ELITE attack (breakdown ≥ KILL_DAMP_THRESHOLD+1), which is
+ * less likely to be held to a draw.
  */
-export function drawMultiplierFor(isGroup: boolean, playedCount: number): number {
+export function killDampFactor(favKillIndex: number): number {
+  const excess = Math.max(0, favKillIndex - KILL_DAMP_THRESHOLD);
+  return Math.max(KILL_DAMP_FLOOR, 1 - KILL_INDEX_DAMP * excess);
+}
+
+/**
+ * Draw multiplier from the matchup type, how many of the two sides have already
+ * played, and the FAVOURITE'S kill index. Non-group → 1 (no change). Group →
+ * the boost is tapered by opener-ness (neither played gets the full boost; it
+ * shrinks as results accumulate) AND dampened by the favourite's kill index
+ * (an elite attack is less likely to be held). `favKillIndex` defaults to the
+ * neutral 2 so legacy callers get the undampened behaviour.
+ */
+export function drawMultiplierFor(
+  isGroup: boolean,
+  playedCount: number,
+  favKillIndex = 2
+): number {
   if (!isGroup) return 1;
   const w = playedCount <= 0 ? 1.0 : playedCount === 1 ? 0.6 : 0.4;
-  return 1 + GROUP_DRAW_BOOST * w;
+  return 1 + GROUP_DRAW_BOOST * w * killDampFactor(favKillIndex);
 }
 
 export interface InflatedProb {
@@ -131,7 +176,10 @@ export function applyDrawPropensity(
 ): DrawAdjusted {
   const isGroup = isGroupFixture(aSlug, bSlug);
   const playedCount = (PLAYED_TEAMS.has(aSlug) ? 1 : 0) + (PLAYED_TEAMS.has(bSlug) ? 1 : 0);
-  const mult = drawMultiplierFor(isGroup, playedCount);
+  // The favourite (higher pre-adjustment win prob) supplies the kill index that
+  // dampens the boost — a lethal attack is less likely to be held to a draw.
+  const favKillIndex = (p.winA >= p.winB ? getStyle(aSlug) : getStyle(bSlug)).breakdown;
+  const mult = drawMultiplierFor(isGroup, playedCount, favKillIndex);
   const r = inflateDraw(p.winA, p.draw, p.winB, mult);
   return { winA: r.winA, draw: r.draw, winB: r.winB, boost: r.boost, applied: r.applied, mult };
 }

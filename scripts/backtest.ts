@@ -21,7 +21,7 @@ import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
 import { getRating, HOME_ADVANTAGE } from "../lib/prediction-engine/ratings";
 import { computeRatingUpdates } from "../lib/prediction-engine/ratingUpdates";
 import { getAvailabilityDelta } from "../lib/prediction-engine/availabilityAdjustments";
-import { getTacticalMatchup } from "../lib/prediction-engine/tacticalMatchups";
+import { getTacticalMatchup, getStyle } from "../lib/prediction-engine/tacticalMatchups";
 import { drawMultiplierFor, inflateDraw, isGroupFixture } from "../lib/prediction-engine/drawPropensity";
 import { matchProb, expectedScore } from "../lib/prediction-engine/elo";
 import { HOST_SLUGS, getTeam } from "../lib/seed/world-cup-2026-groups";
@@ -48,7 +48,7 @@ function confedDeltas(results: typeof MANUAL_MATCH_RESULTS): Record<string, numb
 
 interface Agg { brier: number; logloss: number; hits: number; drawPred: number; }
 const mk = (): Agg => ({ brier: 0, logloss: 0, hits: 0, drawPred: 0 });
-const VARIANTS = ["unif", "base", "old", "full", "full+draw"] as const;
+const VARIANTS = ["unif", "base", "old", "full", "drawFlat", "full+draw"] as const;
 const V: Record<string, Agg> = Object.fromEntries(VARIANTS.map((k) => [k, mk()]));
 
 const all = [...MANUAL_MATCH_RESULTS].sort((x, y) => (x.date || "").localeCompare(y.date || ""));
@@ -63,7 +63,7 @@ for (const m of all) {
   // Walk-forward played count for the draw multiplier.
   const playedSet = new Set(priors.flatMap((r) => [r.teamA, r.teamB]));
   const playedCount = (playedSet.has(m.teamA) ? 1 : 0) + (playedSet.has(m.teamB) ? 1 : 0);
-  const drawMult = drawMultiplierFor(isGroupFixture(m.teamA, m.teamB), playedCount);
+  const isGroup = isGroupFixture(m.teamA, m.teamB);
 
   const baseA = getRating(m.teamA), baseB = getRating(m.teamB);
   const oldA = baseA + (dl[m.teamA] || 0) + (cd[conf(m.teamA)] || 0);
@@ -74,10 +74,17 @@ for (const m of all) {
   const pBase = matchProb(baseA, baseB, bonus);
   const pOld = matchProb(oldA, oldB, bonus);
   const pFull = matchProb(fullA, fullB, bonus);
-  const pDraw = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMult);
+  // drawFlat = flat opener-weighted boost; full+draw = + kill-index dampener
+  // (the favourite's tactical breakdown shrinks the boost for elite attacks).
+  const favKill = (pFull.winA >= pFull.winB ? getStyle(m.teamA) : getStyle(m.teamB)).breakdown;
+  const drawMultFlat = drawMultiplierFor(isGroup, playedCount);
+  const drawMultDamped = drawMultiplierFor(isGroup, playedCount, favKill);
+  const pDrawFlat = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMultFlat);
+  const pDraw = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMultDamped);
   const probs: Record<string, { winA: number; draw: number; winB: number }> = {
     unif: { winA: 1 / 3, draw: 1 / 3, winB: 1 / 3 },
     base: pBase, old: pOld, full: pFull,
+    drawFlat: { winA: pDrawFlat.winA, draw: pDrawFlat.draw, winB: pDrawFlat.winB },
     "full+draw": { winA: pDraw.winA, draw: pDraw.draw, winB: pDraw.winB },
   };
 

@@ -55,17 +55,23 @@ const draw = computeRatingUpdates([
 ]);
 check("draw → higher-Elo side loses points", draw.deltas["south-korea"] < 0 && draw.deltas["czech-republic"] > 0);
 
-// 4. Untouched team: updated rating equals base. Picked dynamically (the team
-//    whose group has not opened yet) so it never goes stale as results land.
+// 4. Result-learning only ever moves teams that have actually PLAYED. Stated as
+//    an invariant (not "find an unplayed team") so it stays valid even once every
+//    group has opened and no untouched team is left — and still catches the bug
+//    it guards against (a team with no results getting a nonzero delta).
 const played = new Set(MANUAL_MATCH_RESULTS.flatMap((m) => [m.teamA, m.teamB]));
-const unplayed = GROUPS.flatMap((g) => g.teams).find((s) => !played.has(s));
-check("an untouched (not-yet-played) team exists to test", !!unplayed, unplayed ?? "none");
+const allTeams = GROUPS.flatMap((g) => g.teams);
+const ghosts = allTeams.filter((s) => !played.has(s) && getResultDelta(s) !== 0);
+check("no unplayed team has a result delta (staleness guard)", ghosts.length === 0, ghosts.join(", ") || "none");
+const unplayed = allTeams.find((s) => !played.has(s));
 if (unplayed) {
   check(
     `untouched team rating unchanged (${unplayed})`,
     getUpdatedRating(unplayed) === getRating(unplayed),
     `${unplayed} ${getRating(unplayed)}`
   );
+} else {
+  console.log("ℹ️  every group has opened — no untouched team remains (invariant above still holds)");
 }
 
 // --- Applied (seed) checks ------------------------------------------------

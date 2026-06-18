@@ -60,19 +60,19 @@ const de = getAvailabilityDelta("germany");
 check("Germany availability delta is negative", de < 0, `Δ=${de}`);
 check("Japan is hit harder than Germany", jp < de, `JP ${jp} < DE ${de}`);
 
-// 3. Decomposition on an untouched team — picked DYNAMICALLY so the check does
-//    not go stale as results land each matchday: any team with no injuries and
-//    no completed-result delta should have effective = base + confederation form.
+// 3. Decomposition on an INJURY-FREE team — picked DYNAMICALLY so the check does
+//    not go stale as results land each matchday. For any team with no injuries,
+//    the availability layer adds nothing, so effective = updated (base+results)
+//    + confederation form. (No longer requires a not-yet-played team, since every
+//    group has now opened — getUpdatedRating already carries the result delta.)
 const allSlugs = GROUPS.flatMap((g) => g.teams);
-const untouched = allSlugs.find(
-  (s) => getAvailabilityDelta(s) === 0 && getResultDelta(s) === 0
-);
-check("an injury-free, not-yet-played team exists to test", !!untouched, untouched ?? "none");
-if (untouched) {
+const injuryFree = allSlugs.find((s) => getAvailabilityDelta(s) === 0);
+check("an injury-free team exists to test", !!injuryFree, injuryFree ?? "none");
+if (injuryFree) {
   check(
-    `${untouched} effective = base + confederation form (no injuries/results)`,
-    getEffectiveRating(untouched) === getUpdatedRating(untouched) + getConfederationDelta(untouched),
-    `${getEffectiveRating(untouched)} = ${getUpdatedRating(untouched)} + ${getConfederationDelta(untouched)} (form)`
+    `${injuryFree} effective = updated + confederation form (no injuries)`,
+    getEffectiveRating(injuryFree) === getUpdatedRating(injuryFree) + getConfederationDelta(injuryFree),
+    `${getEffectiveRating(injuryFree)} = ${getUpdatedRating(injuryFree)} + ${getConfederationDelta(injuryFree)} (form)`
   );
 }
 

@@ -7,8 +7,11 @@
 import {
   GROUP_DRAW_BOOST,
   DRAW_CEIL,
+  KILL_DAMP_FLOOR,
+  KILL_DAMP_THRESHOLD,
   isGroupFixture,
   drawMultiplierFor,
+  killDampFactor,
   inflateDraw,
   applyDrawPropensity,
 } from "../lib/prediction-engine/drawPropensity";
@@ -31,6 +34,14 @@ const mOne = drawMultiplierFor(true, 1);
 const mBoth = drawMultiplierFor(true, 2);
 check("opener gets the full boost", approx(mOpener, 1 + GROUP_DRAW_BOOST), `×${mOpener.toFixed(3)}`);
 check("boost tapers as teams play", mOpener > mOne && mOne > mBoth && mBoth > 1, `${mOpener.toFixed(2)} > ${mOne.toFixed(2)} > ${mBoth.toFixed(2)}`);
+
+// Kill-index dampener: ordinary favourites unaffected; elite attacks (breakdown
+// ≥ threshold+1) get a smaller boost, floored so the cushion is never erased.
+check("kill damp leaves ordinary favourites alone", approx(killDampFactor(KILL_DAMP_THRESHOLD), 1));
+check("kill damp shrinks the boost for an elite attack", killDampFactor(4) < 1, `×${killDampFactor(4).toFixed(2)}`);
+check("kill damp never falls below the floor", killDampFactor(5) >= KILL_DAMP_FLOOR - 1e-9, `floor=${KILL_DAMP_FLOOR}`);
+const mEliteFav = drawMultiplierFor(true, 0, 4);
+check("elite-kill favourite's opener boost is dampened vs flat", mEliteFav < mOpener && mEliteFav > 1, `${mEliteFav.toFixed(3)} < ${mOpener.toFixed(3)}`);
 
 // 3. inflateDraw: draw rises, wins shrink proportionally, sum stays 1, favourite preserved.
 const r = inflateDraw(0.55, 0.25, 0.20, mOpener);

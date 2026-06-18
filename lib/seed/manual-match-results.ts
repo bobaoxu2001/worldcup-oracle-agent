@@ -15,9 +15,10 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-17 (all finished matches through 16 June; Groups I & J
- * opened 16 June — favourites all won decisively, the mirror image of 15 June's
- * four draws. Groups K & L open 17 June and have not kicked off yet.).
+ * Last updated: 2026-06-18 (all finished matches through 17 June; Groups K & L
+ * opened 17 June: Portugal held 1-1 by DR Congo, Colombia 3-1 Uzbekistan,
+ * England 4-2 Croatia, Ghana 1-0 Panama. The England rout of a "resistant"
+ * Croatia motivated the high-kill draw dampener in drawPropensity.ts).
  */
 
 export interface ManualMatchResult {
@@ -212,5 +213,42 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 1,
     date: "2026-06-16",
     note: "Olwan's historic first WC goal for Jordan; Austria pull away late inc. VAR pen (ESPN)",
+  },
+  // 17 June — Groups K & L open.
+  {
+    group: "K",
+    teamA: "portugal",
+    teamB: "dr-congo",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-17",
+    note: "Ronaldo blank (0 in 10 WC group games); DR Congo's resistance + transition earn a point. Portugal missing Rúben Dias (NBC/ESPN)",
+  },
+  {
+    group: "K",
+    teamA: "uzbekistan",
+    teamB: "colombia",
+    scoreA: 1,
+    scoreB: 3,
+    date: "2026-06-17",
+    note: "Colombia's individual quality too much for the debutants (NBC)",
+  },
+  {
+    group: "L",
+    teamA: "england",
+    teamB: "croatia",
+    scoreA: 4,
+    scoreB: 2,
+    date: "2026-06-17",
+    note: "Kane brace (2 pens), Bellingham, Rashford; Baturina + Musa for Croatia. High-kill favourite broke the resistance (ESPN)",
+  },
+  {
+    group: "L",
+    teamA: "ghana",
+    teamB: "panama",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-06-17",
+    note: "Late winner; Ghana edge it despite missing Kudus/Salisu (whole tournament) + Partey (denied entry, this match) — the 'Ghana small win' script (NBC)",
   },
 ];
