@@ -52,6 +52,14 @@ export {
   type DrawAdjusted,
 } from "./drawPropensity";
 export {
+  classifyMatchType,
+  COINFLIP_FAV_CEIL,
+  ELITE_KILL,
+  BLUNT_KILL,
+  ELITE_RESISTANCE,
+  type MatchTypeInput,
+} from "./matchType";
+export {
   PRE_MATCH_INTEL,
   INTEL_CAP,
   intelEloImpact,

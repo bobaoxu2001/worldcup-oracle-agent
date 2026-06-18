@@ -26,7 +26,8 @@ import {
   getAvailabilityAdjustments,
 } from "./availabilityAdjustments";
 import { getConfederationDelta } from "./confederationForm";
-import { getTacticalMatchup } from "./tacticalMatchups";
+import { getTacticalMatchup, getStyle } from "./tacticalMatchups";
+import { classifyMatchType } from "./matchType";
 import { applyDrawPropensity } from "./drawPropensity";
 import {
   getIntelDelta,
@@ -300,6 +301,20 @@ export function predictMatch(
   const favName =
     winA > winB ? a.name : winB > winA ? b.name : "Neither side";
   const favProb = Math.max(winA, winB);
+
+  // V5.1 match-type label — reads the favourite's Kill Index (tactical breakdown)
+  // and the underdog's Resistance (tactical lowBlock) to name the fixture's shape.
+  const favIsA = winA >= winB;
+  const matchType = classifyMatchType({
+    favWin: Math.max(winA, winB),
+    draw,
+    dogWin: Math.min(winA, winB),
+    favKillIndex: getStyle(favIsA ? teamASlug : teamBSlug).breakdown,
+    dogResistance: getStyle(favIsA ? teamBSlug : teamASlug).lowBlock,
+    favName: favIsA ? a.name : b.name,
+    dogName: favIsA ? b.name : a.name,
+  });
+
   const modelSummary =
     favProb >= 0.5
       ? `${favName} favoured at ${(favProb * 100).toFixed(0)}% — ${level.toLowerCase()} model confidence.`
@@ -345,6 +360,7 @@ export function predictMatch(
     },
     topScorelines,
     factors,
+    matchType,
     modelSummary,
     fullReport: "",
   };

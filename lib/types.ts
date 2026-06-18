@@ -52,8 +52,20 @@ export interface MatchPrediction {
   topScorelines: { score: string; prob: number }[];
   /** Human-readable model factors (drivers behind the numbers). */
   factors: ModelFactor[];
+  /** V5.1 match-type classification (Fade / Trust / Narrow / Coin-flip). */
+  matchType?: MatchTypeClassification;
   modelSummary: string; // short free-preview line
   fullReport: string; // full AI-generated explanation (premium)
+}
+
+/** V5.1 match archetype, derived from the favourite's edge, kill power and the underdog's resistance. */
+export type MatchTypeCode = "A" | "B" | "C" | "D";
+export interface MatchTypeClassification {
+  code: MatchTypeCode;
+  /** e.g. "Trust Favourite". */
+  label: string;
+  /** One-line why, referencing the signals that drove it. */
+  rationale: string;
 }
 
 export interface ModelFactor {
