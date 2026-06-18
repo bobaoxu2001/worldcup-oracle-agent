@@ -29,6 +29,12 @@ import { getConfederationDelta } from "./confederationForm";
 import { getTacticalMatchup } from "./tacticalMatchups";
 import { applyDrawPropensity } from "./drawPropensity";
 import {
+  getIntelDelta,
+  getConfirmedIntel,
+  getIntelUncertainty,
+  intelEloImpact,
+} from "./preMatchIntelligence";
+import {
   GROUPS,
   HOST_SLUGS,
   getTeam,
@@ -71,8 +77,8 @@ function homeBonus(teamA: string, teamB: string): number {
 function matchupRatings(aSlug: string, bSlug: string): { eloA: number; eloB: number } {
   const tac = getTacticalMatchup(aSlug, bSlug);
   return {
-    eloA: getEffectiveRating(aSlug) + tac.a,
-    eloB: getEffectiveRating(bSlug) + tac.b,
+    eloA: getEffectiveRating(aSlug) + tac.a + getIntelDelta(aSlug, bSlug),
+    eloB: getEffectiveRating(bSlug) + tac.b + getIntelDelta(bSlug, aSlug),
   };
 }
 
@@ -181,6 +187,28 @@ function buildFactors(
     });
   }
 
+  // Pre-match intelligence — list every CONFIRMED, sourced item with its Elo
+  // delta (the spec requires each intelligence factor's delta be visible).
+  const confirmedIntel = [
+    ...getConfirmedIntel(aSlug, bSlug),
+    ...getConfirmedIntel(bSlug, aSlug),
+  ];
+  if (confirmedIntel.length > 0) {
+    const lines = confirmedIntel
+      .map((e) => {
+        const d = intelEloImpact(e);
+        const who = e.team === aSlug ? a.name : b.name;
+        return `${who} ${d > 0 ? "+" : ""}${d} Elo — ${e.summary} [${e.sourceName}]`;
+      })
+      .join(" · ");
+    const maxMag = Math.max(...confirmedIntel.map((e) => Math.abs(intelEloImpact(e))));
+    factors.push({
+      label: "Pre-match intelligence (confirmed)",
+      detail: `Capped, sourced match-day news folded into the rating: ${lines}. Rumours/opinions are excluded here — they only adjust the confidence score.`,
+      weight: maxMag >= 8 ? "high" : maxMag >= 4 ? "medium" : "low",
+    });
+  }
+
   factors.push({
     label: "Expected goals (Dixon-Coles)",
     detail: `Model projects ${p.expectedGoalsA.toFixed(2)} xG for ${a.name} and ${p.expectedGoalsB.toFixed(2)} for ${b.name}, with a low-score draw correction (ρ = −0.13).`,
@@ -227,10 +255,13 @@ export function predictMatch(
   const formB = getConfederationDelta(teamBSlug);
   // Per-fixture tactical style-clash nudge (opponent-dependent, zero-sum).
   const tac = getTacticalMatchup(teamASlug, teamBSlug);
+  // Per-fixture CONFIRMED pre-match intelligence (capped; rumours move nothing).
+  const intelA = getIntelDelta(teamASlug, teamBSlug);
+  const intelB = getIntelDelta(teamBSlug, teamASlug);
   // Effective Elo the model simulates with = results + availability + form +
-  // the fixture's tactical matchup.
-  const eloA = resultEloA + availA + formA + tac.a;
-  const eloB = resultEloB + availB + formB + tac.b;
+  // the fixture's tactical matchup + confirmed pre-match intelligence.
+  const eloA = resultEloA + availA + formA + tac.a + intelA;
+  const eloB = resultEloB + availB + formB + tac.b + intelB;
   const hb = homeBonus(teamASlug, teamBSlug);
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
@@ -247,7 +278,11 @@ export function predictMatch(
   const draw = dp.draw;
   const winB = dp.winB;
   const topProb = Math.max(winA, draw, winB);
-  const { level, score } = confidenceFrom(topProb);
+  const conf = confidenceFrom(topProb);
+  const level = conf.level;
+  // Rumours / opinions never move a probability, but they widen our uncertainty,
+  // so a noisy fixture reports a slightly lower confidence score.
+  const score = Math.round(conf.score * getIntelUncertainty(teamASlug, teamBSlug));
   const upsetRisk = upsetFrom(winA, winB);
 
   // Most-likely scoreline from the Dixon-Coles grid.
@@ -294,6 +329,7 @@ export function predictMatch(
         verifiedNewsAdjustment: 0,
         tournamentFormAdjustment: formA,
         tacticalMatchupAdjustment: tac.a,
+        intelligenceAdjustment: intelA,
         adjusted: effEloA,
       },
       b: {
@@ -303,6 +339,7 @@ export function predictMatch(
         verifiedNewsAdjustment: 0,
         tournamentFormAdjustment: formB,
         tacticalMatchupAdjustment: tac.b,
+        intelligenceAdjustment: intelB,
         adjusted: effEloB,
       },
     },

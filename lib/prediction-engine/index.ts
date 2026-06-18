@@ -52,6 +52,20 @@ export {
   type DrawAdjusted,
 } from "./drawPropensity";
 export {
+  PRE_MATCH_INTEL,
+  INTEL_CAP,
+  intelEloImpact,
+  getFixtureIntel,
+  getIntelDelta,
+  getConfirmedIntel,
+  getIntelUncertainty,
+  preMatchIntelligenceMeta,
+  intelTeamName,
+  type PreMatchIntel,
+  type IntelStatus,
+  type IntelType,
+} from "./preMatchIntelligence";
+export {
   FORM_SENSITIVITY,
   FORM_SHRINK_PRIOR,
   FORM_CAP,

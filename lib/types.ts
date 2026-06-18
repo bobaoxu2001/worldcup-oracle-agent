@@ -73,6 +73,8 @@ export interface EloBreakdown {
   tournamentFormAdjustment?: number;
   /** Per-fixture tactical style-clash nudge (±30 max); opponent-dependent. */
   tacticalMatchupAdjustment?: number;
+  /** Per-fixture confirmed pre-match intelligence (±35 max); opponent-dependent. */
+  intelligenceAdjustment?: number;
   adjusted: number; // base + adjustments (what the goal model uses)
 }
 

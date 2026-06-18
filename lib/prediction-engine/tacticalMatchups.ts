@@ -89,6 +89,8 @@ export const TEAM_STYLES: Record<string, TacticalStyle> = {
   tunisia: { lowBlock: 3, breakdown: 2, note: "Disciplined low block, limited creativity." },
   "saudi-arabia": { lowBlock: 3, breakdown: 2, note: "Deep block + counters; held Uruguay 1-1." },
   "south-korea": { lowBlock: 3, breakdown: 3, note: "Energetic press/block, transition threat." },
+  "bosnia-and-herzegovina": { lowBlock: 3, breakdown: 2, note: "Resilient and hard to beat but blunt up front (Džeko benched); held Canada 1-1." },
+  panama: { lowBlock: 3, breakdown: 2, note: "Organised, physical, disciplined — built to frustrate." },
   australia: { lowBlock: 3, breakdown: 2, note: "Physical, compact, set-piece reliant." },
   iraq: { lowBlock: 3, breakdown: 2, note: "Compact defensive block." },
   jordan: { lowBlock: 3, breakdown: 2, note: "Deep block, counterattacking." },
@@ -107,6 +109,7 @@ export const TEAM_STYLES: Record<string, TacticalStyle> = {
   netherlands: { lowBlock: 2, breakdown: 3, note: "Possession-based, decent variety." },
   belgium: { lowBlock: 2, breakdown: 3, note: "Creative core but was blunted by Egypt's block in the opener." },
   colombia: { lowBlock: 2, breakdown: 3, note: "Possession + creativity through the lines." },
+  mexico: { lowBlock: 2, breakdown: 3, note: "Possession-based press, especially at home; not a low-block side." },
 };
 
 export function getStyle(slug: string): TacticalStyle {

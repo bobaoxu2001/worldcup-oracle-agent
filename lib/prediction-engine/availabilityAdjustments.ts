@@ -203,6 +203,47 @@ export const AVAILABILITY_ADJUSTMENTS: AvailabilityAdjustment[] = [
     source: "Bolavip / cryptobriefing",
     date: "2026-06-15",
   },
+
+  // ── Ghana (TOURNAMENT-LONG absences — apply to every Ghana match) ────────
+  // NB: match-SPECIFIC items (e.g. Partey denied entry to Canada for the Panama
+  // game only) live in preMatchIntelligence.ts, not here, so they expire.
+  {
+    team: "ghana",
+    player: "Mohammed Kudus",
+    marketValueOut: 60,
+    replacementValue: 12,
+    role: "attack",
+    fractionOut: 1, // quad injury + rehab setback — out of the whole tournament
+    reason:
+      "Best attacker ruled out of the tournament (quadriceps injury) — a big hole the thin bench can't replace; affects all Ghana games",
+    source: "ESPN / Graphic Online",
+    date: "2026-06-01",
+  },
+  {
+    team: "ghana",
+    player: "Mohammed Salisu",
+    marketValueOut: 22,
+    replacementValue: 8,
+    role: "defense",
+    fractionOut: 1, // also out of the tournament through injury
+    reason: "First-choice centre-back out of the tournament through injury — weakens the back line for all group games",
+    source: "Graphic Online",
+    date: "2026-06-01",
+  },
+
+  // ── England (TOURNAMENT-LONG) ───────────────────────────────────────────
+  {
+    team: "england",
+    player: "Tino Livramento",
+    marketValueOut: 38,
+    replacementValue: 25,
+    role: "defense",
+    fractionOut: 1, // ruled out of the whole tournament (calf); Chalobah called up
+    reason:
+      "Versatile full-back out for the tournament (calf) — thins England's full-back depth; small net hit given the strong replacement pool (Chalobah in)",
+    source: "Goal / Reuters",
+    date: "2026-06-16",
+  },
 ];
 
 /** All availability entries on file for a team (newest dates first). */
