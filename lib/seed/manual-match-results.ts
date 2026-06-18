@@ -15,12 +15,11 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-18 (through the early/mid 18 June matchday-2 games:
- * Czechia 1-0 South Africa, Switzerland 1-1 Bosnia, Canada 1-1 Qatar. The two
- * favourites the match-type classifier tagged "Fade Favourite" — Switzerland &
- * Canada — were both held to draws. Mexico–South Korea kicks off late and is
- * not yet recorded. The 17 June England 4-2 rout motivated the high-kill draw
- * dampener in drawPropensity.ts).
+ * Last updated: 2026-06-18 (all finished matches through 17 June; Groups K & L
+ * opened 17 June: Portugal 1-1 DR Congo, Colombia 3-1 Uzbekistan, England 4-2
+ * Croatia, Ghana 1-0 Panama. The 17 June England 4-2 rout of a "resistant"
+ * Croatia motivated the high-kill draw dampener in drawPropensity.ts. The 18
+ * June matchday-2 games have NOT been played yet — record them once final.)
  */
 
 export interface ManualMatchResult {
@@ -252,34 +251,5 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 0,
     date: "2026-06-17",
     note: "Late winner; Ghana edge it despite missing Kudus/Salisu (whole tournament) + Partey (denied entry, this match) — the 'Ghana small win' script (NBC)",
-  },
-  // 18 June — matchday 2 for Groups A & B. (Mexico–South Korea kicks off late,
-  // not yet played.) Both favourites the model tagged "Fade Favourite" were held.
-  {
-    group: "A",
-    teamA: "czech-republic",
-    teamB: "south-africa",
-    scoreA: 1,
-    scoreB: 0,
-    date: "2026-06-18",
-    note: "Krejčí winner (Coufal assist); South Africa — down suspended Zwane & Sithole — lose again and are all but out. The model's narrow-favourite read (ESPN)",
-  },
-  {
-    group: "B",
-    teamA: "switzerland",
-    teamB: "bosnia-and-herzegovina",
-    scoreA: 1,
-    scoreB: 1,
-    date: "2026-06-18",
-    note: "Embolo opener cancelled by Lukić — the model's 'Fade Favourite' call lands: Switzerland favoured but blunt vs Bosnia's resilient block (ESPN)",
-  },
-  {
-    group: "B",
-    teamA: "canada",
-    teamB: "qatar",
-    scoreA: 1,
-    scoreB: 1,
-    date: "2026-06-18",
-    note: "Larin for Canada; Qatar's deep block holds for a 2nd straight 1-1. Davies still absent — another 'Fade Favourite' draw (FOX/ESPN)",
   },
 ];
