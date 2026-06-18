@@ -181,19 +181,14 @@ export const PRE_MATCH_INTEL: PreMatchIntel[] = [
   },
 
   // ── 18 Jun · Czechia vs South Africa (Group A, matchday 2) ──────────────
+  // NB: Zwane's ban is a 3-match suspension (multi-game), so it lives in the
+  // squad-availability layer (applies to all SA group games), not here. Only the
+  // single-match Sithole ban is match-specific.
   {
     matchId: "czech-republic-vs-south-africa", team: "south-africa", opponent: "czech-republic",
     type: "availability", status: "confirmed",
-    summary: "Themba Zwane suspended — FIFA confirmed a one-match ban after his red card vs Mexico (SA finished with nine). South Africa's main creator is missing.",
-    impactDirection: "negative", deltaAttack: -6, confidence: 0.95,
-    sourceName: "AfricaSoccer (FIFA confirmed) / ESPN", sourceUrl: "https://africasoccer.com/world-cup-2026-zwane-and-sithole-ruled-out-for-czech-clash-as-fifa-confirms-one-match-bans-after-mexico-red-cards/",
-    publishedAt: "2026-06-16", expiresAfterMatch: true,
-  },
-  {
-    matchId: "czech-republic-vs-south-africa", team: "south-africa", opponent: "czech-republic",
-    type: "availability", status: "confirmed",
-    summary: "Sphephelo Sithole also suspended — FIFA-confirmed one-match ban (second SA red card vs Mexico), a further enforced reshuffle.",
-    impactDirection: "negative", deltaElo: -3, confidence: 0.95,
+    summary: "Sphephelo Sithole suspended — FIFA-confirmed one-match ban (second SA red card vs Mexico). A further midfield reshuffle on top of Zwane's longer ban.",
+    impactDirection: "negative", deltaElo: -4, confidence: 0.95,
     sourceName: "AfricaSoccer (FIFA confirmed)", sourceUrl: "https://africasoccer.com/world-cup-2026-zwane-and-sithole-ruled-out-for-czech-clash-as-fifa-confirms-one-match-bans-after-mexico-red-cards/",
     publishedAt: "2026-06-16", expiresAfterMatch: true,
   },

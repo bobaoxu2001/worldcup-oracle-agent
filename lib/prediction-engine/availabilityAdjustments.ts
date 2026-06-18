@@ -231,6 +231,17 @@ export const AVAILABILITY_ADJUSTMENTS: AvailabilityAdjustment[] = [
     date: "2026-06-01",
   },
 
+  // ── South Africa (MULTI-MATCH suspension — V5.1.2 squad condition) ───────
+  {
+    team: "south-africa",
+    player: "Themba Zwane",
+    delta: -8, // FIFA 3-match ban (red card vs Mexico) — main creator out for the rest of the group
+    reason:
+      "Main creator hit with a 3-match ban (red vs Mexico) — spans the rest of the group; the spine is depleted (compounds the single-match Sithole ban handled in the intel layer)",
+    source: "AfricaSoccer (FIFA confirmed)",
+    date: "2026-06-16",
+  },
+
   // ── England (TOURNAMENT-LONG) ───────────────────────────────────────────
   {
     team: "england",
