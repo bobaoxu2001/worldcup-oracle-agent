@@ -18,6 +18,7 @@
     "test:draw": "tsx scripts/test-draw-propensity.ts",
     "test:intel": "tsx scripts/test-pre-match-intel.ts",
     "test:matchtype": "tsx scripts/test-match-type.ts",
+    "test:bounce": "tsx scripts/test-bounce-back.ts",
     "test:form": "tsx scripts/test-confederation-form.ts",
     "backtest": "tsx scripts/backtest.ts",
     "evolve": "tsx scripts/evolve.ts",

@@ -87,6 +87,8 @@ export interface EloBreakdown {
   tacticalMatchupAdjustment?: number;
   /** Per-fixture confirmed pre-match intelligence (±35 max); opponent-dependent. */
   intelligenceAdjustment?: number;
+  /** Round-2 bounce-back: motivation/reversion for a stumbled quality side vs a weaker foe (0–25). */
+  bounceBackAdjustment?: number;
   adjusted: number; // base + adjustments (what the goal model uses)
 }
 

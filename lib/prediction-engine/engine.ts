@@ -35,6 +35,7 @@ import {
   getIntelUncertainty,
   intelEloImpact,
 } from "./preMatchIntelligence";
+import { getBounceBack } from "./bounceBack";
 import {
   GROUPS,
   HOST_SLUGS,
@@ -78,8 +79,8 @@ function homeBonus(teamA: string, teamB: string): number {
 function matchupRatings(aSlug: string, bSlug: string): { eloA: number; eloB: number } {
   const tac = getTacticalMatchup(aSlug, bSlug);
   return {
-    eloA: getEffectiveRating(aSlug) + tac.a + getIntelDelta(aSlug, bSlug),
-    eloB: getEffectiveRating(bSlug) + tac.b + getIntelDelta(bSlug, aSlug),
+    eloA: getEffectiveRating(aSlug) + tac.a + getIntelDelta(aSlug, bSlug) + getBounceBack(aSlug, bSlug),
+    eloB: getEffectiveRating(bSlug) + tac.b + getIntelDelta(bSlug, aSlug) + getBounceBack(bSlug, aSlug),
   };
 }
 
@@ -210,6 +211,19 @@ function buildFactors(
     });
   }
 
+  // Round-2 bounce-back — a stumbled quality side coming out firing vs a weaker foe.
+  const bounceForA = getBounceBack(aSlug, bSlug);
+  const bounceForB = getBounceBack(bSlug, aSlug);
+  if (bounceForA > 0 || bounceForB > 0) {
+    const who = bounceForA >= bounceForB ? a.name : b.name;
+    const mag = Math.max(bounceForA, bounceForB);
+    factors.push({
+      label: "Round-2 bounce-back (motivation)",
+      detail: `${who} dropped points it was favoured to win in round 1; as a quality side now facing a clearly weaker opponent, part of that single-game over-penalty reverts and a motivation kicker is added (+${mag} Elo, capped) — expect them to come out for the kill, not coast.`,
+      weight: mag >= 18 ? "high" : mag >= 10 ? "medium" : "low",
+    });
+  }
+
   factors.push({
     label: "Expected goals (Dixon-Coles)",
     detail: `Model projects ${p.expectedGoalsA.toFixed(2)} xG for ${a.name} and ${p.expectedGoalsB.toFixed(2)} for ${b.name}, with a low-score draw correction (ρ = −0.13).`,
@@ -259,10 +273,13 @@ export function predictMatch(
   // Per-fixture CONFIRMED pre-match intelligence (capped; rumours move nothing).
   const intelA = getIntelDelta(teamASlug, teamBSlug);
   const intelB = getIntelDelta(teamBSlug, teamASlug);
+  // Round-2 bounce-back: a stumbled quality side coming out firing vs a weaker foe.
+  const bounceA = getBounceBack(teamASlug, teamBSlug);
+  const bounceB = getBounceBack(teamBSlug, teamASlug);
   // Effective Elo the model simulates with = results + availability + form +
-  // the fixture's tactical matchup + confirmed pre-match intelligence.
-  const eloA = resultEloA + availA + formA + tac.a + intelA;
-  const eloB = resultEloB + availB + formB + tac.b + intelB;
+  // the fixture's tactical matchup + confirmed pre-match intelligence + bounce-back.
+  const eloA = resultEloA + availA + formA + tac.a + intelA + bounceA;
+  const eloB = resultEloB + availB + formB + tac.b + intelB + bounceB;
   const hb = homeBonus(teamASlug, teamBSlug);
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
@@ -345,6 +362,7 @@ export function predictMatch(
         tournamentFormAdjustment: formA,
         tacticalMatchupAdjustment: tac.a,
         intelligenceAdjustment: intelA,
+        bounceBackAdjustment: bounceA,
         adjusted: effEloA,
       },
       b: {
@@ -355,6 +373,7 @@ export function predictMatch(
         tournamentFormAdjustment: formB,
         tacticalMatchupAdjustment: tac.b,
         intelligenceAdjustment: intelB,
+        bounceBackAdjustment: bounceB,
         adjusted: effEloB,
       },
     },

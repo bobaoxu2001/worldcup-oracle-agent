@@ -52,6 +52,14 @@ export {
   type DrawAdjusted,
 } from "./drawPropensity";
 export {
+  getBounceBack,
+  bounceBackDelta,
+  bounceBackMeta,
+  QUALITY_FLOOR,
+  GAP_FLOOR,
+  BOUNCE_CAP,
+} from "./bounceBack";
+export {
   classifyMatchType,
   COINFLIP_FAV_CEIL,
   ELITE_KILL,

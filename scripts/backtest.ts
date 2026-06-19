@@ -23,6 +23,7 @@ import { computeRatingUpdates } from "../lib/prediction-engine/ratingUpdates";
 import { getAvailabilityDelta } from "../lib/prediction-engine/availabilityAdjustments";
 import { getTacticalMatchup, getStyle } from "../lib/prediction-engine/tacticalMatchups";
 import { drawMultiplierFor, inflateDraw, isGroupFixture } from "../lib/prediction-engine/drawPropensity";
+import { bounceBackDelta } from "../lib/prediction-engine/bounceBack";
 import { matchProb, expectedScore } from "../lib/prediction-engine/elo";
 import { HOST_SLUGS, getTeam } from "../lib/seed/world-cup-2026-groups";
 
@@ -68,8 +69,14 @@ for (const m of all) {
   const baseA = getRating(m.teamA), baseB = getRating(m.teamB);
   const oldA = baseA + (dl[m.teamA] || 0) + (cd[conf(m.teamA)] || 0);
   const oldB = baseB + (dl[m.teamB] || 0) + (cd[conf(m.teamB)] || 0);
-  const fullA = oldA + getAvailabilityDelta(m.teamA) + tac.a;
-  const fullB = oldB + getAvailabilityDelta(m.teamB) + tac.b;
+  // Walk-forward bounce-back: uses each side's prior-results delta + the effective
+  // gap. Fires only for stumbled quality favourites (so only from round 2 on).
+  const effA = oldA + getAvailabilityDelta(m.teamA);
+  const effB = oldB + getAvailabilityDelta(m.teamB);
+  const bounceA = bounceBackDelta(baseA, dl[m.teamA] || 0, effA - effB, isGroup);
+  const bounceB = bounceBackDelta(baseB, dl[m.teamB] || 0, effB - effA, isGroup);
+  const fullA = effA + tac.a + bounceA;
+  const fullB = effB + tac.b + bounceB;
 
   const pBase = matchProb(baseA, baseB, bonus);
   const pOld = matchProb(oldA, oldB, bonus);
