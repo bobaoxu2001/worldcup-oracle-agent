@@ -132,6 +132,7 @@ export const TEAM_STYLES: Record<string, TacticalStyle> = {
   sweden: { lowBlock: 2, breakdown: 3, note: "V5.1.2: ruthless finishing in the 5-1 vs Tunisia." },
   austria: { lowBlock: 2, breakdown: 3, note: "V5.1.2: pressing + execution in the 3-1 vs Jordan." },
   netherlands: { lowBlock: 2, breakdown: 3, note: "Possession-based; defensive control wobbled in the 2-2 vs Japan." },
+  canada: { lowBlock: 2, breakdown: 3, note: "Real attacking threat (Davies/David/Larin/Buchanan) — a host side that pushes, not a low block; rated up with Davies fit." },
   colombia: { lowBlock: 2, breakdown: 3, note: "Possession + creativity; quality told late in the 3-1 vs Uzbekistan, though the game stayed alive until then." },
   mexico: { lowBlock: 2, breakdown: 3, note: "Possession-based press, especially at home; not a low-block side." },
 };
