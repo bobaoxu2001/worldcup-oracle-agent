@@ -15,11 +15,11 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-18 (all finished matches through 17 June; Groups K & L
- * opened 17 June: Portugal 1-1 DR Congo, Colombia 3-1 Uzbekistan, England 4-2
- * Croatia, Ghana 1-0 Panama. The 17 June England 4-2 rout of a "resistant"
- * Croatia motivated the high-kill draw dampener in drawPropensity.ts. The 18
- * June matchday-2 games have NOT been played yet — record them once final.)
+ * Last updated: 2026-06-18 (through 18 June matchday-2, Groups A & B: Czechia
+ * 1-1 South Africa, Mexico 1-0 South Korea, Switzerland 4-1 Bosnia, Canada 6-0
+ * Qatar. Strong out-of-sample validation of V5.1.2: the bounce-back favourites
+ * (Switzerland, Canada) routed weaker foes, the finishing-trimmed Czechia
+ * couldn't kill the game, and the narrow-win Mexico edged it 1-0.)
  */
 
 export interface ManualMatchResult {
@@ -251,5 +251,42 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 0,
     date: "2026-06-17",
     note: "Late winner; Ghana edge it despite missing Kudus/Salisu (whole tournament) + Partey (denied entry, this match) — the 'Ghana small win' script (NBC)",
+  },
+  // 18 June — matchday 2, Groups A & B.
+  {
+    group: "A",
+    teamA: "czech-republic",
+    teamB: "south-africa",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-18",
+    note: "Sadilek 6'; Mokoena 83' pen. Czechia made the chances but couldn't finish — the V5.1.2 'Finishing Reality'; SA's verified resistance grabs a point despite the Zwane/Sithole bans (FIFA/Sky)",
+  },
+  {
+    group: "A",
+    teamA: "mexico",
+    teamB: "south-korea",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-06-18",
+    note: "Romo 50' (GK blunder). Mexico top Group A and are first to qualify — a narrow win, matching the 'Favourite Wins Narrow' read (ESPN/CBS)",
+  },
+  {
+    group: "B",
+    teamA: "switzerland",
+    teamB: "bosnia-and-herzegovina",
+    scoreA: 4,
+    scoreB: 1,
+    date: "2026-06-18",
+    note: "Manzambi brace + Vargas + Xhaka pen. Stumbled-favourite bounce-back validated — Switzerland ran riot late, though 3 goals came after Bosnia's 80' red card (Muharemovic) (Opta/GMA)",
+  },
+  {
+    group: "B",
+    teamA: "canada",
+    teamB: "qatar",
+    scoreA: 6,
+    scoreB: 0,
+    date: "2026-06-18",
+    note: "Jonathan David hat-trick + Larin + Saliba + OG. Canada's first-ever WC win and the 'killing spree' call — Qatar reduced to 9 men (two reds) (ESPN/CBC/Globalnews)",
   },
 ];
