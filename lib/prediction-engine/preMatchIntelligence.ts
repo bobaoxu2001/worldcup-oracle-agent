@@ -231,10 +231,10 @@ export const PRE_MATCH_INTEL: PreMatchIntel[] = [
   {
     matchId: "canada-vs-qatar", team: "canada", opponent: "qatar",
     type: "availability", status: "confirmed",
-    summary: "Alphonso Davies DOUBTFUL, not officially ruled out — back in boots but on return-to-play protocols and 'highly unlikely' for Qatar (hamstring, 6 May). Modelled PROBABILISTICALLY at ~25% available, so only ~75% of his full-out impact is applied (he is Canada's best attacker / left-side transition engine). Expected back for later games — match-specific.",
-    impactDirection: "negative", deltaAttack: -12, availabilityProb: 0.25, confidence: 0.7,
-    sourceName: "ESPN / CBC (15 Jun)", sourceUrl: "https://www.espn.com/soccer/story/_/id/49076456/alphonso-davies-injury-canada-world-cup-qatar",
-    publishedAt: "2026-06-15", expiresAfterMatch: true,
+    summary: "Alphonso Davies now EXPECTED TO FEATURE vs Qatar (updated read — treated as available). Modelled at ~85% available, so only a small residual of his full-out impact is applied for return-from-injury sharpness (hamstring, 6 May) — he is Canada's best attacker / left-side transition engine. Match-specific.",
+    impactDirection: "negative", deltaAttack: -12, availabilityProb: 0.85, confidence: 0.6,
+    sourceName: "ESPN / CBC (15 Jun) + updated availability read", sourceUrl: "https://www.espn.com/soccer/story/_/id/49076456/alphonso-davies-injury-canada-world-cup-qatar",
+    publishedAt: "2026-06-18", expiresAfterMatch: true,
   },
   {
     matchId: "canada-vs-qatar", team: "qatar", opponent: "canada",
