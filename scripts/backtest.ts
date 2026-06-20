@@ -158,6 +158,20 @@ for (const k of VARIANTS) {
 }
 console.log("(RPS is the ordinal-aware headline metric — see file header.)");
 
+// ── Skill vs the uniform 1/3 baseline (live full+draw model) ─────────────────
+// Skill score = 1 − model/reference; >0 means the model beats a no-information
+// 1/3-1/3-1/3 forecast. The ratio is sample-size invariant, so no /N is needed.
+{
+  const m = V["full+draw"], ref = V["unif"];
+  const bss = 1 - m.brier / ref.brier;
+  const rpss = 1 - m.rps / ref.rps;
+  const llCut = (1 - m.logloss / ref.logloss) * 100;
+  console.log("\nSkill vs uniform 1/3 baseline (higher = better):");
+  console.log(`  Brier Skill Score: ${bss.toFixed(3)}`);
+  console.log(`  RPS Skill Score:   ${rpss.toFixed(3)}`);
+  console.log(`  LogLoss:           ${(m.logloss / N).toFixed(3)} vs ${(ref.logloss / N).toFixed(3)} uniform (${llCut.toFixed(0)}% lower)`);
+}
+
 // ── Calibration / reliability of the live (full+draw) model ──────────────────
 // Bin the pooled outcome probabilities and compare mean predicted prob to the
 // observed frequency in each bin. Close columns ⇒ well-calibrated probabilities.
