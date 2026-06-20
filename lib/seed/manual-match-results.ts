@@ -15,13 +15,14 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-20 (now also through the CONFIRMED Brazil 3-0 Haiti
- * matchday-2 Group C game — final in Philadelphia, all three goals before the
- * break: Cunha 23' & 36', Vinícius Júnior 45'+3'. The last outstanding
- * matchday-2 game, Türkiye v Paraguay (00:00 ET / 03:00 UTC kickoff), was still
- * in progress at the time of this update and is deliberately NOT recorded until
- * a final score is confirmed; we never enter an in-progress or predicted score.
- * Earlier 19 June: Morocco 1-0 Scotland, USA 2-0 Australia. Through 18 June
+ * Last updated: 2026-06-20 (19 June matchday-2 is now COMPLETE — the final
+ * outstanding game, Türkiye 0-1 Paraguay, is confirmed: Galarza 2', and 10-man
+ * Paraguay held on after Almirón's red. The full 19 June set: Morocco 1-0
+ * Scotland, USA 2-0 Australia, Brazil 3-0 Haiti, Türkiye 0-1 Paraguay. The
+ * 20 June matchday-2 games (Groups E & F: Germany v Ivory Coast, Ecuador v
+ * Curaçao, Netherlands v Sweden, Tunisia v Japan) had NOT been confirmed final
+ * in any authoritative source at update time and are deliberately NOT recorded
+ * yet — we never enter an in-progress or predicted score. Through 18 June
  * matchday-2 Groups A & B — Czechia 1-1 South Africa, Mexico 1-0 South Korea,
  * Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
  */
@@ -293,9 +294,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     date: "2026-06-18",
     note: "Jonathan David hat-trick + Larin + Saliba + OG. Canada's first-ever WC win and the 'killing spree' call — Qatar reduced to 9 men (two reds) (ESPN/CBC/Globalnews)",
   },
-  // 19 June — matchday 2, Groups C & D. Brazil v Haiti is now confirmed final;
-  // Türkiye v Paraguay kicked off at 00:00 ET (still in progress at update time)
-  // and is deliberately NOT recorded yet (see file header).
+  // 19 June — matchday 2, Groups C & D (now COMPLETE: all four games confirmed).
   {
     group: "C",
     teamA: "scotland",
@@ -322,5 +321,14 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 0,
     date: "2026-06-19",
     note: "Cunha 23' & 36', Vinícius Júnior 45'+3' — all three before half-time. Brazil bounce back from the 1-1 vs Morocco with a comfortable win to reach 4 pts and go top of Group C on goal difference (+3 vs Morocco's +1); the 'stumbled quality side cashes in vs a weaker foe' bounce-back read (ESPN/NBC).",
+  },
+  {
+    group: "D",
+    teamA: "turkey",
+    teamB: "paraguay",
+    scoreA: 0,
+    scoreB: 1,
+    date: "2026-06-19",
+    note: "Galarza 2' (fastest goal of the tournament). Paraguay played most of the match a man down after Almirón's first-half red but held on; Türkiye wasteful. Paraguay climb to 3 pts (level with Australia); Türkiye stay on 0 and are nearly out (ESPN/FIFA/Yahoo)",
   },
 ];

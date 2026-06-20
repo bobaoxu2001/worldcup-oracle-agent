@@ -14,9 +14,9 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-20 (matchday-2 results now include the confirmed Brazil
- * 3–0 Haiti game; only Türkiye–Paraguay, which kicked off after midnight ET,
- * was still in progress and is not yet reported).
+ * Last updated: 2026-06-20 (19 June matchday-2 is complete: Brazil 3–0 Haiti
+ * and the now-confirmed Türkiye 0–1 Paraguay added. The 20 June Group E & F
+ * games were not yet final in any authoritative source and are not reported yet.)
  */
 
 export type ManualDailyNewsTag =
@@ -46,7 +46,18 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
-  // ── 19 June — matchday 2 for Groups C & D ──
+  // ── 19 June — matchday 2 for Groups C & D (now complete) ──
+  {
+    id: "2026-06-19-tur-par",
+    date: "2026-06-19",
+    title: "Paraguay 1–0 Türkiye — 10-man Albirroja stun the Crescent-Stars",
+    summary:
+      "Matías Galarza struck after 65 seconds — the fastest goal of the tournament so far — and Paraguay made it count despite Miguel Almirón's first-half red card, defending for almost an hour a man down to seal a 1–0 win in Santa Clara. Paraguay climb to three points and back into contention in Group D, while a wasteful Türkiye stay on zero and are all but eliminated.",
+    tag: "Result",
+    relatedTeams: ["paraguay", "turkey"],
+    relatedMatch: { group: "D", teamA: "turkey", teamB: "paraguay" },
+    prompt: "Who will qualify from Group D?",
+  },
   {
     id: "2026-06-19-bra-hai",
     date: "2026-06-19",
@@ -61,12 +72,12 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
   {
     id: "2026-06-19-matchday2-cd",
     date: "2026-06-19",
-    title: "Matchday 2: Brazil hit back, Morocco edge Scotland, USA cruise",
+    title: "Matchday 2: Brazil hit back, Morocco edge Scotland, USA cruise, Paraguay revive",
     summary:
-      "The second round of group games reached Groups C and D. Brazil bounced back from their opening draw with a 3–0 win over Haiti to top Group C on goal difference, while Morocco beat Scotland 1–0 through an early Ismael Saibari goal to stay level on four points. In Group D, co-hosts the United States beat Australia 2–0 (a Burgess own goal and an Alex Freeman strike) to make it two wins from two and reach the knockout round. Türkiye v Paraguay kicked off after midnight ET.",
+      "Groups C and D completed their second round. Brazil bounced back from their opening draw with a 3–0 win over Haiti to top Group C on goal difference, while Morocco beat Scotland 1–0 through an early Ismael Saibari goal to stay level on four points. In Group D, co-hosts the United States beat Australia 2–0 to reach the knockout round, and 10-man Paraguay shocked Türkiye 1–0 to reopen the race for second place.",
     tag: "Standings",
-    relatedTeams: ["brazil", "morocco", "usa", "australia"],
-    prompt: "Who will qualify from Group C?",
+    relatedTeams: ["brazil", "morocco", "usa", "paraguay"],
+    prompt: "Who will qualify from Group D?",
   },
   {
     id: "2026-06-19-sco-mar",
