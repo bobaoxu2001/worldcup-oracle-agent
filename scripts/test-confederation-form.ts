@@ -10,7 +10,7 @@ import {
   getConfederationDelta,
   confederationFormMeta,
 } from "../lib/prediction-engine/confederationForm";
-import { getTeam } from "../lib/seed/world-cup-2026-groups";
+import { getTeam, TEAMS } from "../lib/seed/world-cup-2026-groups";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -20,11 +20,42 @@ function check(name: string, cond: boolean, detail = "") {
 
 const rows = computeConfederationForm();
 
-// 1. The data confirms the qualitative read: AFC over-, CONMEBOL under-performing.
-check("AFC residual is positive (Asian teams over-performing)", rows["AFC"]?.avgResidual > 0, `avg=${rows["AFC"]?.avgResidual.toFixed(3)}`);
-check("CONMEBOL residual is negative (South America under-performing)", rows["CONMEBOL"]?.avgResidual < 0, `avg=${rows["CONMEBOL"]?.avgResidual.toFixed(3)}`);
-check("AFC delta is a positive nudge", getConfederationDelta("japan") > 0, `Δ=${getConfederationDelta("japan")}`);
-check("CONMEBOL delta is a negative nudge", getConfederationDelta("argentina") < 0, `Δ=${getConfederationDelta("argentina")}`);
+// 1. The layer's CONTRACT is data-driven: the nudge direction must follow the
+//    measured form, whichever region happens to be hot. WHICH confederation is
+//    over/under-performing changes as results land (early it was AFC; by 19 June
+//    it is CAF up, CONMEBOL down), so we assert the mechanism, not a snapshot —
+//    a deliberately durable test (see the model-update workflow).
+const ordered = Object.values(rows).sort((a, b) => b.avgResidual - a.avgResidual);
+const top = ordered[0]; // most over-performing confederation this tournament
+const bottom = ordered[ordered.length - 1]; // most under-performing
+const teamIn = (conf: string) => TEAMS.find((t) => t.confederation === conf)!.slug;
+
+check(
+  "no confederation is nudged against its own form (sign(delta) never opposes sign(avgResidual))",
+  Object.values(rows).every(
+    (r) => r.delta === 0 || r.avgResidual === 0 || Math.sign(r.delta) === Math.sign(r.avgResidual)
+  )
+);
+check(
+  `the most over-performing confederation (${top.confederation}) gets a non-negative nudge`,
+  top.delta >= 0,
+  `Δ=${top.delta}, avgResidual=${top.avgResidual.toFixed(3)}`
+);
+check(
+  `the most under-performing confederation (${bottom.confederation}) gets a non-positive nudge`,
+  bottom.delta <= 0,
+  `Δ=${bottom.delta}, avgResidual=${bottom.avgResidual.toFixed(3)}`
+);
+check(
+  "delta ordering is preserved (over-performer ≥ under-performer)",
+  top.delta >= bottom.delta,
+  `${top.confederation} ${top.delta} ≥ ${bottom.confederation} ${bottom.delta}`
+);
+check(
+  `a team inherits its confederation's nudge (${top.confederation} → non-negative)`,
+  getConfederationDelta(teamIn(top.confederation)) >= 0,
+  `Δ=${getConfederationDelta(teamIn(top.confederation))}`
+);
 
 // 2. Teams in the same confederation share the delta (it's a regional prior).
 check(

@@ -94,7 +94,19 @@ export default async function SchedulePage() {
   const standingsByGroup = new Map(computeStandings(groups).map((s) => [s.group, s]));
   const bracket = bracketColumns();
 
-  const updated = fetchedAt ? fmtDatetime(fetchedAt) : null;
+  // Freshness label is driven by the data actually on screen: the most recent
+  // completed-result date in the standings (manual OR verified live). This can't
+  // go stale while results exist. The live-cache fetch time is shown separately
+  // and clearly scoped, so the two sources are never conflated.
+  const finishedDates = groups
+    .flatMap((g) => g.rows)
+    .filter((r) => r.status === "Finished" && r.date !== "TBA")
+    .map((r) => r.date)
+    .sort();
+  const resultsThrough = finishedDates.length
+    ? fmtShortDate(finishedDates[finishedDates.length - 1])
+    : null;
+  const liveCacheAt = fetchedAt ? fmtDatetime(fetchedAt) : null;
 
   return (
     <div className="container py-8 md:py-12">
@@ -119,7 +131,8 @@ export default async function SchedulePage() {
         <span>
           Standings are computed only from completed match results. <strong>TBA</strong> means the
           app is not inventing official fixture details rather than showing a placeholder
-          {updated ? <> · results last updated {updated}</> : null}.
+          {resultsThrough ? <> · results through {resultsThrough}</> : null}
+          {liveCacheAt ? <> · live cache refreshed {liveCacheAt}</> : null}.
         </span>
       </div>
 

@@ -12,9 +12,18 @@
  *   full       — + value-weighted injuries + tactical matchup
  *   full+draw  — + group-stage draw-propensity correction (opener-weighted)
  *
- * Metrics: multiclass Brier (↓), log-loss (↓), top-pick accuracy, and the
- * average predicted draw probability vs the actual draw rate. A uniform 1/3
- * baseline is included as a sanity floor.
+ * Metrics: multiclass Brier (↓), the Ranked Probability Score / RPS (↓),
+ * log-loss (↓), top-pick accuracy, and the average predicted draw probability vs
+ * the actual draw rate. A uniform 1/3 baseline is included as a sanity floor.
+ *
+ * RPS is the football-forecasting standard (Constantinou & Fenton, 2012): unlike
+ * Brier and log-loss it respects the ORDER of a 1X2 market (home → draw → away),
+ * so a confident home call that ends in a draw is penalised less than the same
+ * call ending in an away win. It is the headline accuracy number here.
+ *
+ * A reliability/calibration table for the live (full+draw) model is printed last:
+ * every outcome probability is pooled and binned, so we can see whether, e.g.,
+ * outcomes the model calls "70%" actually happen ~70% of the time.
  */
 
 import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
@@ -47,10 +56,24 @@ function confedDeltas(results: typeof MANUAL_MATCH_RESULTS): Record<string, numb
   return out;
 }
 
-interface Agg { brier: number; logloss: number; hits: number; drawPred: number; }
-const mk = (): Agg => ({ brier: 0, logloss: 0, hits: 0, drawPred: 0 });
+interface Agg { brier: number; rps: number; logloss: number; hits: number; drawPred: number; }
+const mk = (): Agg => ({ brier: 0, rps: 0, logloss: 0, hits: 0, drawPred: 0 });
 const VARIANTS = ["unif", "base", "old", "full", "drawFlat", "full+draw"] as const;
 const V: Record<string, Agg> = Object.fromEntries(VARIANTS.map((k) => [k, mk()]));
+
+/**
+ * Ranked Probability Score for an ordered 3-outcome market [winA, draw, winB].
+ * RPS = (1/(r-1)) · Σ_{i<r} ( Σ_{j≤i}(p_j − e_j) )², r = 3 categories. Lower is
+ * better; it rewards getting the ORDER right, not just the exact bucket.
+ */
+const rps3 = (p: { winA: number; draw: number; winB: number }, yA: number, yD: number) => {
+  const c1 = p.winA - yA; // cumulative through "home"
+  const c2 = p.winA + p.draw - (yA + yD); // cumulative through "home or draw"
+  return (c1 * c1 + c2 * c2) / 2;
+};
+
+/** Pooled (predicted prob, did-it-happen) points for the live model's reliability table. */
+const calib: { p: number; hit: number }[] = [];
 
 const all = [...MANUAL_MATCH_RESULTS].sort((x, y) => (x.date || "").localeCompare(y.date || ""));
 const rows: string[] = [];
@@ -100,12 +123,17 @@ for (const m of all) {
   for (const k of VARIANTS) {
     const p = probs[k];
     V[k].brier += (p.winA - yA) ** 2 + (p.draw - yD) ** 2 + (p.winB - yB) ** 2;
+    V[k].rps += rps3(p, yA, yD);
     const pa = yA ? p.winA : yD ? p.draw : p.winB;
     V[k].logloss += -Math.log(Math.max(1e-9, pa));
     const top = p.winA >= p.draw && p.winA >= p.winB ? "A" : p.draw >= p.winB ? "D" : "B";
     if (top === act) V[k].hits++;
     V[k].drawPred += p.draw;
   }
+  // Reliability points for the live (full+draw) model: each outcome's predicted
+  // probability paired with whether that outcome actually occurred.
+  const live = probs["full+draw"];
+  calib.push({ p: live.winA, hit: yA }, { p: live.draw, hit: yD }, { p: live.winB, hit: yB });
 
   const pf = probs["full+draw"];
   const favName = pf.winA >= pf.winB ? nm(m.teamA) : nm(m.teamB);
@@ -123,8 +151,35 @@ console.log(`Walk-forward backtest · ${N} completed matches (each predicted fro
 console.log("✗ = model's top pick wrong (full+draw variant)\n");
 console.log(rows.join("\n"));
 console.log(`\nActual draw rate: ${actualDraws}/${N} = ${(actualDraws / N * 100).toFixed(0)}%`);
-console.log("\nVariant            Brier↓  LogLoss↓  TopPickAcc   AvgDrawPred");
+console.log("\nVariant            Brier↓   RPS↓   LogLoss↓  TopPickAcc   AvgDrawPred");
 for (const k of VARIANTS) {
   const a = V[k];
-  console.log(`${k.padEnd(18)} ${(a.brier / N).toFixed(3)}   ${(a.logloss / N).toFixed(3)}     ${(a.hits / N * 100).toFixed(0)}% (${a.hits}/${N})     ${(a.drawPred / N * 100).toFixed(0)}%`);
+  console.log(`${k.padEnd(18)} ${(a.brier / N).toFixed(3)}  ${(a.rps / N).toFixed(3)}   ${(a.logloss / N).toFixed(3)}     ${(a.hits / N * 100).toFixed(0)}% (${a.hits}/${N})     ${(a.drawPred / N * 100).toFixed(0)}%`);
 }
+console.log("(RPS is the ordinal-aware headline metric — see file header.)");
+
+// ── Calibration / reliability of the live (full+draw) model ──────────────────
+// Bin the pooled outcome probabilities and compare mean predicted prob to the
+// observed frequency in each bin. Close columns ⇒ well-calibrated probabilities.
+const bins = [
+  { lo: 0.0, hi: 0.2, label: "00–20%" },
+  { lo: 0.2, hi: 0.4, label: "20–40%" },
+  { lo: 0.4, hi: 0.6, label: "40–60%" },
+  { lo: 0.6, hi: 0.8, label: "60–80%" },
+  { lo: 0.8, hi: 1.01, label: "80–100%" },
+];
+console.log("\nCalibration (live full+draw model, all outcomes pooled):");
+console.log("Pred bucket    n   MeanPred   Observed   Gap");
+let ece = 0;
+for (const b of bins) {
+  const pts = calib.filter((c) => c.p >= b.lo && c.p < b.hi);
+  if (!pts.length) continue;
+  const meanPred = pts.reduce((s, c) => s + c.p, 0) / pts.length;
+  const observed = pts.reduce((s, c) => s + c.hit, 0) / pts.length;
+  ece += (pts.length / calib.length) * Math.abs(meanPred - observed);
+  const gap = observed - meanPred;
+  console.log(
+    `${b.label.padEnd(11)} ${String(pts.length).padStart(3)}   ${(meanPred * 100).toFixed(0).padStart(6)}%   ${(observed * 100).toFixed(0).padStart(6)}%   ${(gap >= 0 ? "+" : "") + (gap * 100).toFixed(0)}%`
+  );
+}
+console.log(`Expected Calibration Error (ECE): ${(ece * 100).toFixed(1)}%  (lower is better; 0 = perfectly calibrated)`);
