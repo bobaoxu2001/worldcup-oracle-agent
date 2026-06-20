@@ -14,9 +14,9 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-20 (matchday-2 results through the confirmed 19 June
- * Group C & D games; the later Brazil–Haiti and Türkiye–Paraguay kickoffs were
- * still in progress and are not yet reported).
+ * Last updated: 2026-06-20 (matchday-2 results now include the confirmed Brazil
+ * 3–0 Haiti game; only Türkiye–Paraguay, which kicked off after midnight ET,
+ * was still in progress and is not yet reported).
  */
 
 export type ManualDailyNewsTag =
@@ -46,16 +46,27 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
-  // ── 19 June — matchday 2 begins for Groups C & D ──
+  // ── 19 June — matchday 2 for Groups C & D ──
+  {
+    id: "2026-06-19-bra-hai",
+    date: "2026-06-19",
+    title: "Brazil 3–0 Haiti — Seleção bounce back and go top of Group C",
+    summary:
+      "After being held 1–1 by Morocco, Brazil responded emphatically. Matheus Cunha struck twice (23' and 36') and Vinícius Júnior added a third in first-half stoppage time, the game effectively over by the break. Brazil move to four points and lead Group C on goal difference (+3 to Morocco's +1), with Haiti eliminated from contention.",
+    tag: "Result",
+    relatedTeams: ["brazil", "haiti"],
+    relatedMatch: { group: "C", teamA: "brazil", teamB: "haiti" },
+    prompt: "Who will qualify from Group C?",
+  },
   {
     id: "2026-06-19-matchday2-cd",
     date: "2026-06-19",
-    title: "Matchday 2: Morocco edge Scotland, USA cruise past Australia",
+    title: "Matchday 2: Brazil hit back, Morocco edge Scotland, USA cruise",
     summary:
-      "The second round of group games reached Groups C and D. Morocco beat Scotland 1–0 — an early Ismael Saibari goal enough to send them top of Group C on four points. In Group D, co-hosts the United States beat Australia 2–0 (a Burgess own goal and an Alex Freeman strike) to make it two wins from two and reach the knockout round. Brazil v Haiti and Türkiye v Paraguay kicked off later.",
+      "The second round of group games reached Groups C and D. Brazil bounced back from their opening draw with a 3–0 win over Haiti to top Group C on goal difference, while Morocco beat Scotland 1–0 through an early Ismael Saibari goal to stay level on four points. In Group D, co-hosts the United States beat Australia 2–0 (a Burgess own goal and an Alex Freeman strike) to make it two wins from two and reach the knockout round. Türkiye v Paraguay kicked off after midnight ET.",
     tag: "Standings",
-    relatedTeams: ["morocco", "scotland", "usa", "australia"],
-    prompt: "Who will qualify from Group D?",
+    relatedTeams: ["brazil", "morocco", "usa", "australia"],
+    prompt: "Who will qualify from Group C?",
   },
   {
     id: "2026-06-19-sco-mar",
