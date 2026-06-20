@@ -22,6 +22,7 @@
     "test:form": "tsx scripts/test-confederation-form.ts",
     "test:completed": "tsx scripts/test-completed-fixtures.ts",
     "test:freshness": "tsx scripts/test-freshness.ts",
+    "test:honesty": "tsx scripts/test-agent-honesty.ts",
     "backtest": "tsx scripts/backtest.ts",
     "evolve": "tsx scripts/evolve.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"

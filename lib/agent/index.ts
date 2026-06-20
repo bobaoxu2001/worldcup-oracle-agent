@@ -23,6 +23,7 @@ import {
   getCompletedFixture,
   completedFixtureNote,
 } from "@/lib/prediction-engine";
+import { freshnessFootnote } from "@/lib/data-truth/freshness";
 import {
   getTournamentState,
   gateChampionOdds,
@@ -152,12 +153,20 @@ async function deterministicAnswer(
 }
 
 // Betting-intent wording gets an explicit deterministic disclaimer appended
-// after narration (the footer/disclaimer alone is too easy to miss).
-const BETTING_RE = /\b(bet|bets|betting|wager|wagering|gamble|gambling|parlay|stake|bookie|odds slip)\b|赌|投注|下注/i;
+// after narration (the footer/disclaimer alone is too easy to miss). The phrase
+// list also covers tipping-style asks that omit the words "bet/odds" ("sure
+// thing", "should I back …", "lock of the day"), worded narrowly to avoid false
+// positives like "locker room" or "background".
+const BETTING_RE =
+  /\b(bet|bets|betting|wager|wagering|gamble|gambling|parlay|stake|bookie|odds slip|sure thing|safe pick|shoo-?in)\b|\bshould i back\b|\block of the\b|赌|投注|下注/i;
 const BETTING_NOTE =
-  "\n\n_⚠️ Not betting advice. Probabilities are model estimates for entertainment & informational purposes only._";
+  "\n\n_⚠️ Not betting advice. Probabilities are model estimates expressing uncertainty, for entertainment & informational purposes only._";
 function withBettingNote(text: string, query: string): string {
   return BETTING_RE.test(query) && !text.includes("Not betting advice") ? text + BETTING_NOTE : text;
+}
+/** Whether a query reads as a betting/tipping ask (used by the disclaimer + tests). */
+export function mentionsBetting(query: string): boolean {
+  return BETTING_RE.test(query);
 }
 
 // "今晚/tonight" wording must not imply we verified an official fixture — the
@@ -1076,8 +1085,16 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
       ? getCompletedFixture(teamA.slug, teamB.slug)
       : null;
   const resultPrefix = completedFixtureNote(completedFixture, teamA.name, teamB.name, lang);
+  // For an UPCOMING fixture (a real match-prediction the model hasn't seen played),
+  // state how fresh the results behind the read are — and flag it when stale. A
+  // played fixture already leads with the result banner, and scenario/tiktok
+  // intents are hypothetical/stylised, so neither gets the footnote.
+  const freshnessNote =
+    plan.intent === "match-prediction" && !completedFixture ? freshnessFootnote(lang) : "";
   const text =
-    resultPrefix + withFixtureNote(withBettingNote(matchNarrated.text, query), query, lang);
+    resultPrefix +
+    withFixtureNote(withBettingNote(matchNarrated.text, query), query, lang) +
+    freshnessNote;
   const { enhanced, method, provider } = matchNarrated;
   // In-language deterministic headline (also used for text-to-speech).
   const localizedSummary = lang === "en-US" ? undefined : buildMatchSummary(result, lang);

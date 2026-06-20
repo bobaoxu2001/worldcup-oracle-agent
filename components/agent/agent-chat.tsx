@@ -785,5 +785,9 @@ function mdLite(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    // Italic emphasis — used by the deterministic honesty notes (betting
+    // disclaimer, fixture caveat, data-freshness footnote). Runs after bold so
+    // the two never collide. Without this they render as literal "_underscores_".
+    .replace(/_(.+?)_/g, "<em>$1</em>")
     .replace(/^•\s?/, "<span class='text-neon'>•</span> ");
 }
