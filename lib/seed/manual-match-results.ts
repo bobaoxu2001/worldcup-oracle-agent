@@ -15,11 +15,14 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-18 (through 18 June matchday-2, Groups A & B: Czechia
- * 1-1 South Africa, Mexico 1-0 South Korea, Switzerland 4-1 Bosnia, Canada 6-0
- * Qatar. Strong out-of-sample validation of V5.1.2: the bounce-back favourites
- * (Switzerland, Canada) routed weaker foes, the finishing-trimmed Czechia
- * couldn't kill the game, and the narrow-win Mexico edged it 1-0.)
+ * Last updated: 2026-06-20 (through the CONFIRMED 19 June matchday-2 fixtures in
+ * Groups C & D: Morocco 1-0 Scotland and USA 2-0 Australia. The other two
+ * matchday-2 games — Brazil v Haiti (late kickoff in Philadelphia) and
+ * Türkiye v Paraguay (00:00 ET / 03:00 UTC start) — had not finished at the time
+ * of this update and are deliberately NOT recorded until a final score is
+ * confirmed; we never enter an in-progress or predicted score. Earlier: through
+ * 18 June matchday-2 Groups A & B — Czechia 1-1 South Africa, Mexico 1-0 South
+ * Korea, Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
  */
 
 export interface ManualMatchResult {
@@ -288,5 +291,26 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 0,
     date: "2026-06-18",
     note: "Jonathan David hat-trick + Larin + Saliba + OG. Canada's first-ever WC win and the 'killing spree' call — Qatar reduced to 9 men (two reds) (ESPN/CBC/Globalnews)",
+  },
+  // 19 June — matchday 2, Groups C & D. Only the two CONFIRMED-final games are
+  // recorded; Brazil v Haiti and Türkiye v Paraguay kicked off late and were
+  // still in progress at the time of this update (see file header).
+  {
+    group: "C",
+    teamA: "scotland",
+    teamB: "morocco",
+    scoreA: 0,
+    scoreB: 1,
+    date: "2026-06-19",
+    note: "Saibari 2'. Morocco's early goal held up; Scotland created little against a compact, transition-sharp side. Morocco top Group C on 4 pts — matched the 'narrow win for the stronger, well-organised side' read (Wikipedia/FOX/ESPN)",
+  },
+  {
+    group: "D",
+    teamA: "usa",
+    teamB: "australia",
+    scoreA: 2,
+    scoreB: 0,
+    date: "2026-06-19",
+    note: "Burgess own goal 11', Alex Freeman 43'. Co-hosts USA clinch a knockout spot with a second straight win (6 GF, 1 GA) — a clean home-favourite hold (Wikipedia/NBC/ESPN)",
   },
 ];

@@ -14,7 +14,9 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-15 (results through 14 June; Groups G & H previewed).
+ * Last updated: 2026-06-20 (matchday-2 results through the confirmed 19 June
+ * Group C & D games; the later Brazil–Haiti and Türkiye–Paraguay kickoffs were
+ * still in progress and are not yet reported).
  */
 
 export type ManualDailyNewsTag =
@@ -44,6 +46,40 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 19 June — matchday 2 begins for Groups C & D ──
+  {
+    id: "2026-06-19-matchday2-cd",
+    date: "2026-06-19",
+    title: "Matchday 2: Morocco edge Scotland, USA cruise past Australia",
+    summary:
+      "The second round of group games reached Groups C and D. Morocco beat Scotland 1–0 — an early Ismael Saibari goal enough to send them top of Group C on four points. In Group D, co-hosts the United States beat Australia 2–0 (a Burgess own goal and an Alex Freeman strike) to make it two wins from two and reach the knockout round. Brazil v Haiti and Türkiye v Paraguay kicked off later.",
+    tag: "Standings",
+    relatedTeams: ["morocco", "scotland", "usa", "australia"],
+    prompt: "Who will qualify from Group D?",
+  },
+  {
+    id: "2026-06-19-sco-mar",
+    date: "2026-06-19",
+    title: "Morocco 1–0 Scotland",
+    summary:
+      "Saibari struck inside the opening two minutes and Morocco's compact, transition-sharp side protected the lead to go top of Group C. Scotland, beaten for the first time, will need a result in their final game.",
+    tag: "Result",
+    relatedTeams: ["morocco", "scotland"],
+    relatedMatch: { group: "C", teamA: "scotland", teamB: "morocco" },
+    prompt: "Who will qualify from Group C?",
+  },
+  {
+    id: "2026-06-19-usa-aus",
+    date: "2026-06-19",
+    title: "USA 2–0 Australia — co-hosts into the knockouts",
+    summary:
+      "A first-half own goal and a Freeman finish gave the United States a comfortable win and a perfect six points from two games, clinching a place in the round of 32 with a match to spare.",
+    tag: "Result",
+    relatedTeams: ["usa", "australia"],
+    relatedMatch: { group: "D", teamA: "usa", teamB: "australia" },
+    prompt: "How far can the USA go in the tournament?",
+  },
+
   // ── 15 June — Groups G & H open (previews; not yet played) ──
   {
     id: "2026-06-15-daily-brief",
