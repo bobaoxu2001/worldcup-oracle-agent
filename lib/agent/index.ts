@@ -17,7 +17,12 @@
  * output is deterministic; Gemini (optional) only restyles the prose.
  */
 
-import { predictMatch, getChampionProbabilities } from "@/lib/prediction-engine";
+import {
+  predictMatch,
+  getChampionProbabilities,
+  getCompletedFixture,
+  completedFixtureNote,
+} from "@/lib/prediction-engine";
 import {
   getTournamentState,
   gateChampionOdds,
@@ -1063,7 +1068,16 @@ export async function runAgent(input: AgentInput): Promise<AgentResponse> {
     query,
     plan.intent
   );
-  const text = withFixtureNote(withBettingNote(matchNarrated.text, query), query, lang);
+  // If this exact pairing has already been played (the tournament is live), lead
+  // with the real score — the model's read is retrospective, not a fresh tip. A
+  // what-if scenario re-frames the game hypothetically, so it is left untouched.
+  const completedFixture =
+    plan.intent === "match-prediction"
+      ? getCompletedFixture(teamA.slug, teamB.slug)
+      : null;
+  const resultPrefix = completedFixtureNote(completedFixture, teamA.name, teamB.name, lang);
+  const text =
+    resultPrefix + withFixtureNote(withBettingNote(matchNarrated.text, query), query, lang);
   const { enhanced, method, provider } = matchNarrated;
   // In-language deterministic headline (also used for text-to-speech).
   const localizedSummary = lang === "en-US" ? undefined : buildMatchSummary(result, lang);

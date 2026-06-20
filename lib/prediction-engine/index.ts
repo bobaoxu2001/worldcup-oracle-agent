@@ -98,3 +98,9 @@ export {
   scorelineGrid,
   mulberry32,
 } from "./elo";
+export {
+  getCompletedFixture,
+  hasBeenPlayed,
+  completedFixtureNote,
+  type CompletedFixture,
+} from "./completedFixtures";

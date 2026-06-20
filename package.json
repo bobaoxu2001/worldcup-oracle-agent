@@ -20,6 +20,7 @@
     "test:matchtype": "tsx scripts/test-match-type.ts",
     "test:bounce": "tsx scripts/test-bounce-back.ts",
     "test:form": "tsx scripts/test-confederation-form.ts",
+    "test:completed": "tsx scripts/test-completed-fixtures.ts",
     "backtest": "tsx scripts/backtest.ts",
     "evolve": "tsx scripts/evolve.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
