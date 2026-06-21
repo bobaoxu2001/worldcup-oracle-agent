@@ -72,7 +72,7 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     date: "2026-06-20",
     title: "Matchday 2: Germany survive a scare, Netherlands and Japan cruise",
     summary:
-      "Groups E and F completed their second round. Germany came from behind to beat Ivory Coast 2–1 — Deniz Undav's stoppage-time winner clinching a knockout spot — while Ecuador and Curaçao drew 0–0. In Group F, the Netherlands routed Sweden 5–1 and Japan beat Tunisia 4–0, the two leaders level on four points with Tunisia eliminated.",
+      "Groups E and F completed their second round. Germany came from behind to beat Ivory Coast 2–1 — Deniz Undav's stoppage-time winner clinching a knockout spot — while Ecuador and Curaçao drew 0–0. In Group F, the Netherlands routed Sweden 5–1 and Japan beat Tunisia 4–0, the two leaders level on four points and Tunisia bottom of the group on zero, their qualification hopes all but gone.",
     tag: "Standings",
     relatedTeams: ["germany", "netherlands", "japan", "ivory-coast"],
     prompt: "Who will qualify from Group F?",
@@ -127,7 +127,7 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     date: "2026-06-20",
     title: "Japan 4–0 Tunisia — Samurai Blue close on the last 16",
     summary:
-      "Daichi Kamada opened inside four minutes, Ayase Ueda added a brace and Junya Itō also scored as Japan swept Tunisia aside. The win puts Japan level with the Netherlands on four points and on the brink of qualification, while a second defeat eliminates Tunisia.",
+      "Daichi Kamada opened inside four minutes, Ayase Ueda added a brace and Junya Itō also scored as Japan swept Tunisia aside. The win puts Japan level with the Netherlands on four points and on the brink of qualification, while a second defeat leaves Tunisia bottom on zero, needing a final-day win over the Netherlands just to keep faint hopes alive.",
     tag: "Result",
     relatedTeams: ["japan", "tunisia"],
     relatedMatch: { group: "F", teamA: "japan", teamB: "tunisia" },
@@ -159,7 +159,7 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     date: "2026-06-19",
     title: "Brazil 3–0 Haiti — Seleção bounce back and go top of Group C",
     summary:
-      "After being held 1–1 by Morocco, Brazil responded emphatically. Matheus Cunha struck twice (23' and 36') and Vinícius Júnior added a third in first-half stoppage time, the game effectively over by the break. Brazil move to four points and lead Group C on goal difference (+3 to Morocco's +1), with Haiti eliminated from contention.",
+      "After being held 1–1 by Morocco, Brazil responded emphatically. Matheus Cunha struck twice (23' and 36') and Vinícius Júnior added a third in first-half stoppage time, the game effectively over by the break. Brazil move to four points and lead Group C on goal difference (+3 to Morocco's +1), with Haiti bottom of the group and on the brink of elimination.",
     tag: "Result",
     relatedTeams: ["brazil", "haiti"],
     relatedMatch: { group: "C", teamA: "brazil", teamB: "haiti" },

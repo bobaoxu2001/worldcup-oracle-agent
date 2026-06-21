@@ -402,7 +402,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 4,
     scoreB: 0,
     date: "2026-06-20",
-    note: "Kamada 4', Ueda brace (31', 83') and Itō 69'. Japan dominate to join the Netherlands on 4 pts (level on GD) and all but seal qualification, while a second straight defeat eliminates Tunisia — a clean stronger-side win over an outmatched opponent (Wikipedia/ESPN).",
+    note: "Kamada 4', Ueda brace (31', 83') and Itō 69'. Japan dominate to join the Netherlands on 4 pts (level on GD) and all but seal qualification, while a second straight defeat leaves Tunisia bottom on zero points and on the brink of elimination — a clean stronger-side win over an outmatched opponent (Wikipedia/ESPN).",
     sourceName: "Wikipedia (Group F table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
     verified: true,
