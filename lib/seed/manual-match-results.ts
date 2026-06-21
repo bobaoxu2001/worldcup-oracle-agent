@@ -389,7 +389,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 5,
     scoreB: 1,
     date: "2026-06-20",
-    note: "Brobbey (5', 17') and Gakpo (47', 54') both with braces, Summerville added a fifth; Elanga 59' for Sweden. The Netherlands bounce back from the Japan draw with a rout to go top of Group F on goal difference — the decisive favourite win the model expects from a stumbled quality side (Wikipedia/ESPN).",
+    note: "Brobbey (5', 17') and Gakpo (47', 54') both with braces, Summerville added a fifth; Elanga 59' for Sweden. The Netherlands bounce back from the Japan draw with a rout to go top of Group F on goals scored (level with Japan on points and goal difference) — the decisive favourite win the model expects from a stumbled quality side (Wikipedia/ESPN).",
     sourceName: "Wikipedia (Group F table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
     verified: true,

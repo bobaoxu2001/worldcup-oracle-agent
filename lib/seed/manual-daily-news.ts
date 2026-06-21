@@ -112,7 +112,7 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     date: "2026-06-20",
     title: "Netherlands 5–1 Sweden — Oranje respond in style",
     summary:
-      "Brian Brobbey and Cody Gakpo both struck twice and Crysencio Summerville added a fifth as the Netherlands bounced back from their opening draw with Japan to thrash Sweden. Anthony Elanga's strike was a brief consolation. The Dutch go top of Group F on goal difference.",
+      "Brian Brobbey and Cody Gakpo both struck twice and Crysencio Summerville added a fifth as the Netherlands bounced back from their opening draw with Japan to thrash Sweden. Anthony Elanga's strike was a brief consolation. The Dutch go top of Group F on goals scored, level with Japan on points and goal difference.",
     tag: "Result",
     relatedTeams: ["netherlands", "sweden"],
     relatedMatch: { group: "F", teamA: "netherlands", teamB: "sweden" },
@@ -125,7 +125,7 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
   {
     id: "2026-06-20-jpn-tun",
     date: "2026-06-20",
-    title: "Japan 4–0 Tunisia — Samurai Blue close on the last 16",
+    title: "Japan 4–0 Tunisia — Samurai Blue close on the knockouts",
     summary:
       "Daichi Kamada opened inside four minutes, Ayase Ueda added a brace and Junya Itō also scored as Japan swept Tunisia aside. The win puts Japan level with the Netherlands on four points and on the brink of qualification, while a second defeat leaves Tunisia bottom on zero, needing a final-day win over the Netherlands just to keep faint hopes alive.",
     tag: "Result",
