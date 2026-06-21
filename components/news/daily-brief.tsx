@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ClipboardList, Sparkles } from "lucide-react";
 import { getManualDailyNews, type ManualDailyNewsTag } from "@/lib/seed/manual-daily-news";
 import { getTeam } from "@/lib/seed/world-cup-2026-groups";
+import { VerificationBadge } from "@/components/news/news-badges";
 
 /** Tag chip styling per editorial tag (matches the site's neon/dark badges). */
 const TAG_STYLE: Record<ManualDailyNewsTag, string> = {
@@ -59,6 +60,7 @@ export function DailyBrief({ limit = 4 }: { limit?: number }) {
               >
                 {it.tag}
               </span>
+              <VerificationBadge provenance={it} />
               <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
                 {fmtBriefDate(it.date)}
               </span>

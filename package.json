@@ -23,6 +23,7 @@
     "test:completed": "tsx scripts/test-completed-fixtures.ts",
     "test:freshness": "tsx scripts/test-freshness.ts",
     "test:honesty": "tsx scripts/test-agent-honesty.ts",
+    "test:provenance": "tsx scripts/test-provenance.ts",
     "backtest": "tsx scripts/backtest.ts",
     "evolve": "tsx scripts/evolve.ts",
     "setup:mongo": "tsx scripts/setup-mongo.ts"

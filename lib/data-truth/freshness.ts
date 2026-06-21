@@ -23,6 +23,17 @@ import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
 import { getCachedFixtures } from "@/lib/live-sports/tournamentState";
 import { newsMode, getLastNewsUpdate } from "@/lib/news/newsIngestor";
 import type { NewsSource } from "@/lib/news/types";
+import { provenanceStatus } from "./provenance";
+
+// Re-export the PURE provenance helpers so server callers can keep importing them
+// from this module, while client components import them from ./provenance (which
+// has no DB/Node deps). Keeping the definitions in ./provenance prevents this
+// module's mongodb-backed imports from leaking into the client bundle.
+export {
+  provenanceStatus,
+  type VerificationProvenance,
+  type ProvenanceStatus,
+} from "./provenance";
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -51,6 +62,11 @@ export function getRecordedResultCount(): number {
   return MANUAL_MATCH_RESULTS.length;
 }
 
+/** How many recorded results were cross-checked against an authoritative source. */
+export function getVerifiedResultCount(): number {
+  return MANUAL_MATCH_RESULTS.filter((r) => provenanceStatus(r).verified).length;
+}
+
 /**
  * Classify how fresh a date is relative to `now`. Pure and deterministic so it is
  * trivially testable. Thresholds: same/next day → "live"; ≤3 days → "recent";
@@ -76,6 +92,8 @@ export interface DataFreshnessSummary {
   results: {
     latestDate: string | null;
     count: number;
+    /** How many of `count` are cross-checked against an authoritative source. */
+    verifiedCount: number;
     freshness: FreshnessClass;
   };
   liveCache: {
@@ -122,6 +140,7 @@ export async function getDataFreshnessSummary(now: Date = new Date()): Promise<D
     results: {
       latestDate,
       count: getRecordedResultCount(),
+      verifiedCount: getVerifiedResultCount(),
       freshness: classifyFreshness(latestDate, now),
     },
     liveCache: { fetchedAt, ageHours },

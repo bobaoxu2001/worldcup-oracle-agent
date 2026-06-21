@@ -9,9 +9,11 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  BadgeCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NewsCategory, NewsDirection, NewsImpact } from "@/lib/news/types";
+import { provenanceStatus, type VerificationProvenance } from "@/lib/data-truth/provenance";
 
 const CATEGORY_META: Record<NewsCategory, { label: string; icon: React.ReactNode }> = {
   injury: { label: "Injury", icon: <Stethoscope className="h-3 w-3" /> },
@@ -62,6 +64,35 @@ export function DemoBadge() {
     <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
       Demo data
     </span>
+  );
+}
+
+/**
+ * Compact "Verified" provenance chip — shown only when a record was cross-checked
+ * against an authoritative source (renders nothing otherwise). Links to the
+ * source when one is recorded; the source name is in the tooltip to stay compact.
+ */
+export function VerificationBadge({ provenance }: { provenance: VerificationProvenance }) {
+  const s = provenanceStatus(provenance);
+  if (!s.verified) return null;
+  const title = s.sourceName ? `Verified · source: ${s.sourceName}` : "Verified";
+  const chip = (
+    <span className="inline-flex items-center gap-1 rounded-full border border-neon/30 bg-neon/10 px-2 py-0.5 text-[10px] font-medium text-neon">
+      <BadgeCheck className="h-3 w-3" /> Verified
+    </span>
+  );
+  return s.sourceUrl ? (
+    <a
+      href={s.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={title}
+      className="transition hover:opacity-80"
+    >
+      {chip}
+    </a>
+  ) : (
+    <span title={title}>{chip}</span>
   );
 }
 

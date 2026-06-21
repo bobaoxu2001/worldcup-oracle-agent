@@ -15,16 +15,16 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-20 (19 June matchday-2 is now COMPLETE — the final
- * outstanding game, Türkiye 0-1 Paraguay, is confirmed: Galarza 2', and 10-man
- * Paraguay held on after Almirón's red. The full 19 June set: Morocco 1-0
- * Scotland, USA 2-0 Australia, Brazil 3-0 Haiti, Türkiye 0-1 Paraguay. The
- * 20 June matchday-2 games (Groups E & F: Germany v Ivory Coast, Ecuador v
- * Curaçao, Netherlands v Sweden, Tunisia v Japan) had NOT been confirmed final
- * in any authoritative source at update time and are deliberately NOT recorded
- * yet — we never enter an in-progress or predicted score. Through 18 June
- * matchday-2 Groups A & B — Czechia 1-1 South Africa, Mexico 1-0 South Korea,
- * Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
+ * Last updated: 2026-06-21 (20 June matchday-2 Groups E & F are now COMPLETE and
+ * verified against the Wikipedia group tables: Germany 2-1 Ivory Coast (Undav
+ * stoppage-time winner), Ecuador 0-0 Curaçao, Netherlands 5-1 Sweden, Japan 4-0
+ * Tunisia. The 21 June matchday-2 games (Groups G & H: Belgium v Iran, Egypt v
+ * New Zealand, Spain v Saudi Arabia, Cape Verde v Uruguay) are TODAY and were
+ * still unplayed/scheduled on Wikipedia at update time — deliberately NOT
+ * recorded yet; we never enter an in-progress or predicted score. Earlier:
+ * 19 June Groups C & D — Morocco 1-0 Scotland, USA 2-0 Australia, Brazil 3-0
+ * Haiti, Türkiye 0-1 Paraguay; 18 June Groups A & B — Czechia 1-1 South Africa,
+ * Mexico 1-0 South Korea, Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
  */
 
 export interface ManualMatchResult {
@@ -35,6 +35,14 @@ export interface ManualMatchResult {
   scoreB: number;
   date?: string; // YYYY-MM-DD (optional, display only)
   note?: string;
+  // ── Structured verification provenance (all optional, display/metadata only;
+  // the prediction engine ignores these). `verified` is set ONLY when the score
+  // was cross-checked against an authoritative source (e.g. the official FIFA /
+  // Wikipedia group table), never for an in-progress or single-report score. ──
+  sourceName?: string; // e.g. "Wikipedia (Group D table)"
+  sourceUrl?: string; // canonical source URL
+  verified?: boolean; // true = cross-checked against an authoritative source
+  verifiedAt?: string; // YYYY-MM-DD the check was performed
 }
 
 export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
@@ -303,6 +311,10 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 1,
     date: "2026-06-19",
     note: "Saibari 2'. Morocco's early goal held up; Scotland created little against a compact, transition-sharp side. Morocco top Group C on 4 pts — matched the 'narrow win for the stronger, well-organised side' read (Wikipedia/FOX/ESPN)",
+    sourceName: "Wikipedia (Group C table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_C",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
   {
     group: "D",
@@ -312,6 +324,10 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 0,
     date: "2026-06-19",
     note: "Burgess own goal 11', Alex Freeman 43'. Co-hosts USA clinch a knockout spot with a second straight win (6 GF, 1 GA) — a clean home-favourite hold (Wikipedia/NBC/ESPN)",
+    sourceName: "Wikipedia (Group D table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_D",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
   {
     group: "C",
@@ -321,6 +337,10 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 0,
     date: "2026-06-19",
     note: "Cunha 23' & 36', Vinícius Júnior 45'+3' — all three before half-time. Brazil bounce back from the 1-1 vs Morocco with a comfortable win to reach 4 pts and go top of Group C on goal difference (+3 vs Morocco's +1); the 'stumbled quality side cashes in vs a weaker foe' bounce-back read (ESPN/NBC).",
+    sourceName: "Wikipedia (Group C table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_C",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
   {
     group: "D",
@@ -330,5 +350,62 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreB: 1,
     date: "2026-06-19",
     note: "Galarza 2' (fastest goal of the tournament). Paraguay played most of the match a man down after Almirón's first-half red but held on; Türkiye wasteful. Paraguay climb to 3 pts (level with Australia); Türkiye stay on 0 and are nearly out (ESPN/FIFA/Yahoo)",
+    sourceName: "Wikipedia (Group D table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_D",
+    verified: true,
+    verifiedAt: "2026-06-20",
+  },
+  // 20 June — matchday 2, Groups E & F (now COMPLETE: all four games confirmed).
+  {
+    group: "E",
+    teamA: "germany",
+    teamB: "ivory-coast",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-06-20",
+    note: "Kessié 30' put Ivory Coast ahead, but Deniz Undav struck twice (68' and 90+4') to win it in stoppage time. Germany come from behind to make it two wins from two, clinch a knockout spot and top Group E on 6 pts — the 'quality favourite finds a way' read after a real scare (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group E table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_E",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    group: "E",
+    teamA: "curacao",
+    teamB: "ecuador",
+    scoreA: 0,
+    scoreB: 0,
+    date: "2026-06-20",
+    note: "A goalless draw in Kansas City: debutants Curaçao's compact low block frustrated Ecuador, who couldn't break it down — the same 'possession side stymied by an organised minnow' pattern as Spain–Cape Verde. Curaçao earn their first-ever World Cup point; both sides on 1 pt, all but out behind Germany & Ivory Coast (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group E table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_E",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    group: "F",
+    teamA: "netherlands",
+    teamB: "sweden",
+    scoreA: 5,
+    scoreB: 1,
+    date: "2026-06-20",
+    note: "Brobbey (5', 17') and Gakpo (47', 54') both with braces, Summerville added a fifth; Elanga 59' for Sweden. The Netherlands bounce back from the Japan draw with a rout to go top of Group F on goals scored (level with Japan on points and goal difference) — the decisive favourite win the model expects from a stumbled quality side (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group F table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    group: "F",
+    teamA: "japan",
+    teamB: "tunisia",
+    scoreA: 4,
+    scoreB: 0,
+    date: "2026-06-20",
+    note: "Kamada 4', Ueda brace (31', 83') and Itō 69'. Japan dominate to join the Netherlands on 4 pts (level on GD) and all but seal qualification, while a second straight defeat leaves Tunisia bottom on zero points and on the brink of elimination — a clean stronger-side win over an outmatched opponent (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group F table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
+    verified: true,
+    verifiedAt: "2026-06-21",
   },
 ];

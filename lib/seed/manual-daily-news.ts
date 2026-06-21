@@ -14,9 +14,10 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-20 (19 June matchday-2 is complete: Brazil 3–0 Haiti
- * and the now-confirmed Türkiye 0–1 Paraguay added. The 20 June Group E & F
- * games were not yet final in any authoritative source and are not reported yet.)
+ * Last updated: 2026-06-21 (20 June matchday-2 Groups E & F complete and verified:
+ * Germany 2–1 Ivory Coast, Ecuador 0–0 Curaçao, Netherlands 5–1 Sweden, Japan 4–0
+ * Tunisia. A preview is added for today's 21 June Group G & H games, which are in
+ * progress — only final, verified scores are reported as results.)
  */
 
 export type ManualDailyNewsTag =
@@ -43,9 +44,100 @@ export interface ManualDailyNewsItem {
   };
   /** Example question for the Agent — renders an "Ask the Oracle" chip. */
   prompt?: string;
+  // ── Structured verification provenance (all optional; display/metadata only).
+  // `verified` is set only for items cross-checked against an authoritative
+  // source, so the UI can show a "Verified · source" badge honestly. ──
+  sourceName?: string; // e.g. "Wikipedia (Group D table)"
+  sourceUrl?: string; // canonical source URL
+  verified?: boolean; // true = cross-checked against an authoritative source
+  verifiedAt?: string; // YYYY-MM-DD the check was performed
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 21 June — matchday 2 for Groups G & H (TODAY; previews, not yet played) ──
+  {
+    id: "2026-06-21-groups-gh-preview",
+    date: "2026-06-21",
+    title: "Matchday 2 today: can Spain and Belgium recover from shock openers?",
+    summary:
+      "Groups G and H play their second round today. In Group H, Spain — held to a stunning 0–0 by debutants Cape Verde — face Saudi Arabia needing a win, while Cape Verde meet Uruguay. In Group G, a Belgium side held by Egypt take on Iran, and Egypt play New Zealand. After their opening-day draws, the favourites are under pressure to deliver. (Games are in progress; the Oracle records only final, verified scores.)",
+    tag: "Match Preview",
+    relatedTeams: ["spain", "belgium", "uruguay", "iran"],
+    prompt: "Who will qualify from Group H?",
+  },
+
+  // ── 20 June — matchday 2 for Groups E & F (now complete) ──
+  {
+    id: "2026-06-20-matchday2-ef",
+    date: "2026-06-20",
+    title: "Matchday 2: Germany survive a scare, Netherlands and Japan cruise",
+    summary:
+      "Groups E and F completed their second round. Germany came from behind to beat Ivory Coast 2–1 — Deniz Undav's stoppage-time winner clinching a knockout spot — while Ecuador and Curaçao drew 0–0. In Group F, the Netherlands routed Sweden 5–1 and Japan beat Tunisia 4–0, the two leaders level on four points and Tunisia bottom of the group on zero, their qualification hopes all but gone.",
+    tag: "Standings",
+    relatedTeams: ["germany", "netherlands", "japan", "ivory-coast"],
+    prompt: "Who will qualify from Group F?",
+  },
+  {
+    id: "2026-06-20-ger-civ",
+    date: "2026-06-20",
+    title: "Germany 2–1 Ivory Coast — Undav's late double rescues the favourites",
+    summary:
+      "Franck Kessié put Ivory Coast ahead on 30 minutes, but Deniz Undav levelled on 68' and snatched a stoppage-time winner (90+4') to give Germany a second straight victory. The win takes Germany top of Group E on six points and into the knockout round, while Ivory Coast stay second on three.",
+    tag: "Result",
+    relatedTeams: ["germany", "ivory-coast"],
+    relatedMatch: { group: "E", teamA: "germany", teamB: "ivory-coast" },
+    prompt: "How far can Germany go in the tournament?",
+    sourceName: "Wikipedia (Group E table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_E",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    id: "2026-06-20-ecu-cuw",
+    date: "2026-06-20",
+    title: "Ecuador 0–0 Curaçao — debutants hold firm for a historic point",
+    summary:
+      "Curaçao's compact low block frustrated Ecuador in a goalless draw in Kansas City, the tournament's smallest nation earning their first-ever World Cup point. Ecuador could not break the resistance down — echoes of Spain's stalemate with Cape Verde — and both sides are left on a single point, adrift of Germany and Ivory Coast.",
+    tag: "Result",
+    relatedTeams: ["ecuador", "curacao"],
+    relatedMatch: { group: "E", teamA: "curacao", teamB: "ecuador" },
+    prompt: "Who will qualify from Group E?",
+    sourceName: "Wikipedia (Group E table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_E",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    id: "2026-06-20-ned-swe",
+    date: "2026-06-20",
+    title: "Netherlands 5–1 Sweden — Oranje respond in style",
+    summary:
+      "Brian Brobbey and Cody Gakpo both struck twice and Crysencio Summerville added a fifth as the Netherlands bounced back from their opening draw with Japan to thrash Sweden. Anthony Elanga's strike was a brief consolation. The Dutch go top of Group F on goals scored, level with Japan on points and goal difference.",
+    tag: "Result",
+    relatedTeams: ["netherlands", "sweden"],
+    relatedMatch: { group: "F", teamA: "netherlands", teamB: "sweden" },
+    prompt: "Who will qualify from Group F?",
+    sourceName: "Wikipedia (Group F table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    id: "2026-06-20-jpn-tun",
+    date: "2026-06-20",
+    title: "Japan 4–0 Tunisia — Samurai Blue close on the knockouts",
+    summary:
+      "Daichi Kamada opened inside four minutes, Ayase Ueda added a brace and Junya Itō also scored as Japan swept Tunisia aside. The win puts Japan level with the Netherlands on four points and on the brink of qualification, while a second defeat leaves Tunisia bottom on zero, needing a final-day win over the Netherlands just to keep faint hopes alive.",
+    tag: "Result",
+    relatedTeams: ["japan", "tunisia"],
+    relatedMatch: { group: "F", teamA: "japan", teamB: "tunisia" },
+    prompt: "How far can Japan go in the tournament?",
+    sourceName: "Wikipedia (Group F table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+
   // ── 19 June — matchday 2 for Groups C & D (now complete) ──
   {
     id: "2026-06-19-tur-par",
@@ -57,17 +149,25 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     relatedTeams: ["paraguay", "turkey"],
     relatedMatch: { group: "D", teamA: "turkey", teamB: "paraguay" },
     prompt: "Who will qualify from Group D?",
+    sourceName: "Wikipedia (Group D table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_D",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
   {
     id: "2026-06-19-bra-hai",
     date: "2026-06-19",
     title: "Brazil 3–0 Haiti — Seleção bounce back and go top of Group C",
     summary:
-      "After being held 1–1 by Morocco, Brazil responded emphatically. Matheus Cunha struck twice (23' and 36') and Vinícius Júnior added a third in first-half stoppage time, the game effectively over by the break. Brazil move to four points and lead Group C on goal difference (+3 to Morocco's +1), with Haiti eliminated from contention.",
+      "After being held 1–1 by Morocco, Brazil responded emphatically. Matheus Cunha struck twice (23' and 36') and Vinícius Júnior added a third in first-half stoppage time, the game effectively over by the break. Brazil move to four points and lead Group C on goal difference (+3 to Morocco's +1), with Haiti bottom of the group and on the brink of elimination.",
     tag: "Result",
     relatedTeams: ["brazil", "haiti"],
     relatedMatch: { group: "C", teamA: "brazil", teamB: "haiti" },
     prompt: "Who will qualify from Group C?",
+    sourceName: "Wikipedia (Group C table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_C",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
   {
     id: "2026-06-19-matchday2-cd",
@@ -89,6 +189,10 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     relatedTeams: ["morocco", "scotland"],
     relatedMatch: { group: "C", teamA: "scotland", teamB: "morocco" },
     prompt: "Who will qualify from Group C?",
+    sourceName: "Wikipedia (Group C table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_C",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
   {
     id: "2026-06-19-usa-aus",
@@ -100,6 +204,10 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     relatedTeams: ["usa", "australia"],
     relatedMatch: { group: "D", teamA: "usa", teamB: "australia" },
     prompt: "How far can the USA go in the tournament?",
+    sourceName: "Wikipedia (Group D table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_D",
+    verified: true,
+    verifiedAt: "2026-06-20",
   },
 
   // ── 15 June — Groups G & H open (previews; not yet played) ──
