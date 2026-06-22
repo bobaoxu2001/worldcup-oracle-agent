@@ -15,16 +15,17 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-21 (20 June matchday-2 Groups E & F are now COMPLETE and
- * verified against the Wikipedia group tables: Germany 2-1 Ivory Coast (Undav
- * stoppage-time winner), Ecuador 0-0 Curaçao, Netherlands 5-1 Sweden, Japan 4-0
- * Tunisia. The 21 June matchday-2 games (Groups G & H: Belgium v Iran, Egypt v
- * New Zealand, Spain v Saudi Arabia, Cape Verde v Uruguay) are TODAY and were
- * still unplayed/scheduled on Wikipedia at update time — deliberately NOT
- * recorded yet; we never enter an in-progress or predicted score. Earlier:
- * 19 June Groups C & D — Morocco 1-0 Scotland, USA 2-0 Australia, Brazil 3-0
- * Haiti, Türkiye 0-1 Paraguay; 18 June Groups A & B — Czechia 1-1 South Africa,
- * Mexico 1-0 South Korea, Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
+ * Last updated: 2026-06-21 (later same day — Group H matchday-2 is COMPLETE and
+ * Group G is partially played, all verified against the Wikipedia group tables:
+ * Spain 4-0 Saudi Arabia, Cape Verde 2-2 Uruguay (debutants still unbeaten),
+ * Belgium 0-0 Iran (10-man Belgium). Group G's other game, Egypt v New Zealand,
+ * kicks off 01:00 UTC 22 June and is deliberately NOT recorded yet — we never
+ * enter an in-progress or predicted score. Earlier: 20 June Groups E & F —
+ * Germany 2-1 Ivory Coast (Undav stoppage-time winner), Ecuador 0-0 Curaçao,
+ * Netherlands 5-1 Sweden, Japan 4-0 Tunisia; 19 June Groups C & D — Morocco 1-0
+ * Scotland, USA 2-0 Australia, Brazil 3-0 Haiti, Türkiye 0-1 Paraguay; 18 June
+ * Groups A & B — Czechia 1-1 South Africa, Mexico 1-0 South Korea, Switzerland
+ * 4-1 Bosnia, Canada 6-0 Qatar.)
  */
 
 export interface ManualMatchResult {
@@ -405,6 +406,48 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     note: "Kamada 4', Ueda brace (31', 83') and Itō 69'. Japan dominate to join the Netherlands on 4 pts (level on GD) and all but seal qualification, while a second straight defeat leaves Tunisia bottom on zero points and on the brink of elimination — a clean stronger-side win over an outmatched opponent (Wikipedia/ESPN).",
     sourceName: "Wikipedia (Group F table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_F",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  // 21 June — matchday 2, Groups G & H. Group H is COMPLETE; in Group G only
+  // Belgium v Iran has been played (Egypt v New Zealand kicks off 01:00 UTC
+  // 22 June and is NOT recorded yet).
+  {
+    group: "H",
+    teamA: "spain",
+    teamB: "saudi-arabia",
+    scoreA: 4,
+    scoreB: 0,
+    date: "2026-06-21",
+    note: "Lamine Yamal 10', Mikel Oyarzabal 21' & 24', plus a Hassan Al-Tambakti own goal 49'. Spain answer their shock 0-0 opener against Cape Verde emphatically, sweeping Saudi Arabia aside to lead Group H on 4 pts — the quality favourite reasserting itself after a stumble (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group H table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_H",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    group: "H",
+    teamA: "cape-verde",
+    teamB: "uruguay",
+    scoreA: 2,
+    scoreB: 2,
+    date: "2026-06-21",
+    note: "Kevin Pina 21' and Hélio Varela 61' for Cape Verde; Maxi Araújo 44' and Agustín Canobbio 45+6' for Uruguay. The debutants twice pegged Uruguay back to earn a second straight draw and stay unbeaten — Cape Verde (2 pts) remain in genuine knockout contention; another 'organised newcomer frustrates a CONMEBOL side' result after Spain–Cape Verde (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group H table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_H",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    group: "G",
+    teamA: "belgium",
+    teamB: "iran",
+    scoreA: 0,
+    scoreB: 0,
+    date: "2026-06-21",
+    note: "A goalless draw at SoFi Stadium; Belgium saw out the closing half-hour a man down after Nathan Ngoy's 66' red card. Two draws leave Belgium on just 2 pts, with Iran top of Group G on goals scored — the favourite again stumbling in a tight, low-scoring group (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group G table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
     verified: true,
     verifiedAt: "2026-06-21",
   },

@@ -14,10 +14,10 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-21 (20 June matchday-2 Groups E & F complete and verified:
- * Germany 2–1 Ivory Coast, Ecuador 0–0 Curaçao, Netherlands 5–1 Sweden, Japan 4–0
- * Tunisia. A preview is added for today's 21 June Group G & H games, which are in
- * progress — only final, verified scores are reported as results.)
+ * Last updated: 2026-06-21 (later same day — 21 June results added and verified:
+ * Spain 4–0 Saudi Arabia, Cape Verde 2–2 Uruguay (debutants unbeaten), Belgium
+ * 0–0 Iran (10-man Belgium). Group G's Egypt v New Zealand kicks off 01:00 UTC
+ * 22 June and is not reported yet. Earlier today: 20 June Groups E & F results.)
  */
 
 export type ManualDailyNewsTag =
@@ -54,13 +54,69 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
-  // ── 21 June — matchday 2 for Groups G & H (TODAY; previews, not yet played) ──
+  // ── 21 June — matchday 2 results: Group H complete, Group G partly played ──
+  {
+    id: "2026-06-21-matchday2-gh",
+    date: "2026-06-21",
+    title: "Matchday 2: Spain hit back, Cape Verde stun again, Belgium held",
+    summary:
+      "Group H wrapped up its second round and Group G played one of its two games. Spain answered their shock opener with a 4–0 rout of Saudi Arabia to lead Group H, while debutants Cape Verde earned a second straight draw, 2–2 with Uruguay, to stay unbeaten and in contention. In Group G, 10-man Belgium were held to a goalless draw by Iran, who lead the group on goals scored; Egypt v New Zealand follows on 22 June.",
+    tag: "Standings",
+    relatedTeams: ["spain", "cape-verde", "belgium", "iran"],
+    prompt: "Who will qualify from Group H?",
+  },
+  {
+    id: "2026-06-21-esp-ksa",
+    date: "2026-06-21",
+    title: "Spain 4–0 Saudi Arabia — La Roja roar back",
+    summary:
+      "Stung by their opening 0–0 with Cape Verde, Spain were ruthless: Lamine Yamal struck early, Mikel Oyarzabal added a quickfire first-half brace and a Hassan Al-Tambakti own goal completed the rout. Spain go top of Group H on four points; Saudi Arabia, beaten heavily, are left needing a final-day win.",
+    tag: "Result",
+    relatedTeams: ["spain", "saudi-arabia"],
+    relatedMatch: { group: "H", teamA: "spain", teamB: "saudi-arabia" },
+    prompt: "How far can Spain go in the tournament?",
+    sourceName: "Wikipedia (Group H table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_H",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    id: "2026-06-21-cpv-uru",
+    date: "2026-06-21",
+    title: "Cape Verde 2–2 Uruguay — debutants stay unbeaten",
+    summary:
+      "The tournament's smallest nation did it again. Kevin Pina put Cape Verde ahead before Maxi Araújo and Agustín Canobbio turned it around for Uruguay by half-time, but Hélio Varela levelled on 61' to secure a second straight draw. Cape Verde are unbeaten on two points and very much alive in Group H, with Uruguay also on two.",
+    tag: "Result",
+    relatedTeams: ["cape-verde", "uruguay"],
+    relatedMatch: { group: "H", teamA: "cape-verde", teamB: "uruguay" },
+    prompt: "Can Cape Verde qualify from Group H?",
+    sourceName: "Wikipedia (Group H table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_H",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  {
+    id: "2026-06-21-bel-irn",
+    date: "2026-06-21",
+    title: "Belgium 0–0 Iran — Red Devils held, and down to ten",
+    summary:
+      "Belgium's stutter continued in a goalless draw with Iran, played out a man short after Nathan Ngoy was sent off on 66 minutes. A second straight draw leaves the favourites on just two points, level with Iran, who top Group G on goals scored. The group remains wide open with Egypt v New Zealand still to play on 22 June.",
+    tag: "Result",
+    relatedTeams: ["belgium", "iran"],
+    relatedMatch: { group: "G", teamA: "belgium", teamB: "iran" },
+    prompt: "Who will qualify from Group G?",
+    sourceName: "Wikipedia (Group G table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
+    verified: true,
+    verifiedAt: "2026-06-21",
+  },
+  // ── 21 June — earlier preview (kept for the day's record) ──
   {
     id: "2026-06-21-groups-gh-preview",
     date: "2026-06-21",
     title: "Matchday 2 today: can Spain and Belgium recover from shock openers?",
     summary:
-      "Groups G and H play their second round today. In Group H, Spain — held to a stunning 0–0 by debutants Cape Verde — face Saudi Arabia needing a win, while Cape Verde meet Uruguay. In Group G, a Belgium side held by Egypt take on Iran, and Egypt play New Zealand. After their opening-day draws, the favourites are under pressure to deliver. (Games are in progress; the Oracle records only final, verified scores.)",
+      "Groups G and H play their second round today. In Group H, Spain — held to a stunning 0–0 by debutants Cape Verde — face Saudi Arabia needing a win, while Cape Verde meet Uruguay. In Group G, a Belgium side held by Egypt take on Iran, and Egypt play New Zealand. After their opening-day draws, the favourites are under pressure to deliver.",
     tag: "Match Preview",
     relatedTeams: ["spain", "belgium", "uruguay", "iran"],
     prompt: "Who will qualify from Group H?",
