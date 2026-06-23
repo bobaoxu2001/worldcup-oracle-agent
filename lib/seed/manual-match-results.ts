@@ -15,17 +15,22 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-21 (later same day — Group H matchday-2 is COMPLETE and
- * Group G is partially played, all verified against the Wikipedia group tables:
- * Spain 4-0 Saudi Arabia, Cape Verde 2-2 Uruguay (debutants still unbeaten),
- * Belgium 0-0 Iran (10-man Belgium). Group G's other game, Egypt v New Zealand,
- * kicks off 01:00 UTC 22 June and is deliberately NOT recorded yet — we never
- * enter an in-progress or predicted score. Earlier: 20 June Groups E & F —
- * Germany 2-1 Ivory Coast (Undav stoppage-time winner), Ecuador 0-0 Curaçao,
- * Netherlands 5-1 Sweden, Japan 4-0 Tunisia; 19 June Groups C & D — Morocco 1-0
- * Scotland, USA 2-0 Australia, Brazil 3-0 Haiti, Türkiye 0-1 Paraguay; 18 June
- * Groups A & B — Czechia 1-1 South Africa, Mexico 1-0 South Korea, Switzerland
- * 4-1 Bosnia, Canada 6-0 Qatar.)
+ * Last updated: 2026-06-23 — matchday 2 is now complete through Group J, all
+ * verified against the Wikipedia group tables. NEW since the last update: Group G
+ * finished with Egypt 3-1 New Zealand (the Pharaohs' first-ever World Cup win,
+ * Salah on the scoresheet) on 21 June; and 22 June completed Groups I & J —
+ * France 3-0 Iraq (Mbappé brace), Norway 3-2 Senegal (Haaland brace; France and
+ * Norway both through), Argentina 2-0 Austria (Messi brace + the men's World Cup
+ * all-time scoring record; Argentina through) and Algeria 2-1 Jordan. Groups K &
+ * L play their second round on 23 June (Portugal v Uzbekistan, DR Congo v
+ * Colombia, England v Ghana, Croatia v Panama) and are deliberately NOT recorded
+ * yet — we never enter an in-progress or predicted score. Earlier: 21 June Group
+ * H — Spain 4-0 Saudi Arabia, Cape Verde 2-2 Uruguay; Group G — Belgium 0-0 Iran
+ * (10-man Belgium). 20 June Groups E & F — Germany 2-1 Ivory Coast (Undav
+ * stoppage-time winner), Ecuador 0-0 Curaçao, Netherlands 5-1 Sweden, Japan 4-0
+ * Tunisia; 19 June Groups C & D — Morocco 1-0 Scotland, USA 2-0 Australia, Brazil
+ * 3-0 Haiti, Türkiye 0-1 Paraguay; 18 June Groups A & B — Czechia 1-1 South
+ * Africa, Mexico 1-0 South Korea, Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
  */
 
 export interface ManualMatchResult {
@@ -409,9 +414,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-06-21",
   },
-  // 21 June — matchday 2, Groups G & H. Group H is COMPLETE; in Group G only
-  // Belgium v Iran has been played (Egypt v New Zealand kicks off 01:00 UTC
-  // 22 June and is NOT recorded yet).
+  // 21 June — matchday 2, Groups G & H (both now COMPLETE).
   {
     group: "H",
     teamA: "spain",
@@ -450,5 +453,71 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
     verified: true,
     verifiedAt: "2026-06-21",
+  },
+  {
+    group: "G",
+    teamA: "egypt",
+    teamB: "new-zealand",
+    scoreA: 3,
+    scoreB: 1,
+    date: "2026-06-21",
+    note: "Finn Surman headed New Zealand in front (15') at BC Place in Vancouver, but Egypt hit back with three unanswered second-half goals — an equaliser on 58', then Mohamed Salah (67') and Trézéguet (82'). It is Egypt's first-ever World Cup win, at the fourth attempt since their 1934 debut, and it sends them top of Group G on 4 pts; Salah becomes the Pharaohs' all-time leading World Cup scorer. The group stays wide open — Iran and Belgium are level on 2, New Zealand on 1 (Wikipedia/ESPN/Al Jazeera).",
+    sourceName: "Wikipedia (Group G table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  // 22 June — matchday 2, Groups I & J (both now COMPLETE).
+  {
+    group: "I",
+    teamA: "france",
+    teamB: "iraq",
+    scoreA: 3,
+    scoreB: 0,
+    date: "2026-06-22",
+    note: "Kylian Mbappé struck either side of half-time (14', 54') and Ballon d'Or holder Ousmane Dembélé added a third (66') as France beat Iraq — through a storm delay of more than two hours at half-time in Philadelphia. A second straight win takes France to 6 pts and into the knockout round; Iraq, still without a point, can no longer finish in the group's top two (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group I table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_I",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    group: "I",
+    teamA: "senegal",
+    teamB: "norway",
+    scoreA: 2,
+    scoreB: 3,
+    date: "2026-06-22",
+    note: "Marcus Pedersen opened the scoring and Erling Haaland struck twice (his second straight brace) as Norway won 3-2 at MetLife Stadium; a Sarr double for Senegal, including a stoppage-time strike, came too late. Norway join France on 6 pts and reach the knockouts; Senegal stay on 0 and can no longer finish in the top two (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group I table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_I",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    group: "J",
+    teamA: "argentina",
+    teamB: "austria",
+    scoreA: 2,
+    scoreB: 0,
+    date: "2026-06-22",
+    note: "Lionel Messi scored in each half (38' and deep into stoppage time, 90+5'), having earlier missed a penalty — goals that made him the all-time leading scorer in men's World Cup history. The holders make it two wins from two, reach 6 pts and clinch their place in the round of 32; Austria, beaten for the first time, drop to second on 3 (Wikipedia/ESPN/Al Jazeera).",
+    sourceName: "Wikipedia (Group J table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    group: "J",
+    teamA: "algeria",
+    teamB: "jordan",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-06-22",
+    note: "Nizar Al-Rashdan put Jordan ahead (36'), but Nadhir Benbouali (69') and Amine Gouiri (82') turned it around for Algeria after the break. The win lifts Algeria to 3 pts, level with Austria in the race for second behind Argentina; Jordan stay on 0 and, unable now to finish in the top two, are all but out (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group J table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-06-23",
   },
 ];

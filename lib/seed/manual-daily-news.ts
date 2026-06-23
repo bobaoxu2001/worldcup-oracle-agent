@@ -14,10 +14,13 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-21 (later same day — 21 June results added and verified:
- * Spain 4–0 Saudi Arabia, Cape Verde 2–2 Uruguay (debutants unbeaten), Belgium
- * 0–0 Iran (10-man Belgium). Group G's Egypt v New Zealand kicks off 01:00 UTC
- * 22 June and is not reported yet. Earlier today: 20 June Groups E & F results.)
+ * Last updated: 2026-06-23 — added Group G's completion (Egypt 3–1 New Zealand,
+ * the Pharaohs' historic first World Cup win, played 21 June) and the 22 June
+ * matchday-2 results for Groups I & J (France 3–0 Iraq, Norway 3–2 Senegal,
+ * Argentina 2–0 Austria, Algeria 2–1 Jordan — France, Norway and Argentina all
+ * into the knockouts; Messi sets the men's World Cup scoring record), plus a
+ * preview of the 23 June Group K & L second-round games. All results verified
+ * against the Wikipedia group tables.
  */
 
 export type ManualDailyNewsTag =
@@ -54,6 +57,105 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 23 June — Groups K & L play their second round today (preview only) ──
+  {
+    id: "2026-06-23-groups-kl-preview",
+    date: "2026-06-23",
+    title: "Matchday 2 today: Portugal and England look to take control of Groups K & L",
+    summary:
+      "The last two groups play their second round. In Group K, Portugal — held to a draw by DR Congo in their opener — face debutants Uzbekistan, while DR Congo meet group-leaders Colombia. In Group L, opening-day winners England and Ghana clash at the top, and a beaten Croatia must respond against Panama. Results will be recorded here once the games are final.",
+    tag: "Match Preview",
+    relatedTeams: ["portugal", "england", "colombia", "ghana"],
+    prompt: "Who will qualify from Group L?",
+  },
+
+  // ── 22 June — matchday 2 results: Groups I & J complete, Group G wrapped up ──
+  {
+    id: "2026-06-22-matchday2-ij",
+    date: "2026-06-22",
+    title: "Matchday 2: France, Norway and Argentina reach the knockouts; Messi makes history",
+    summary:
+      "Groups I and J completed their second round and three teams booked round-of-32 places. France beat Iraq 3–0 (Mbappé brace) and Norway edged Senegal 3–2 (Haaland brace) to both qualify from Group I, while Lionel Messi's two goals in Argentina's 2–0 win over Austria — which made him the all-time leading scorer in men's World Cup history — sent the holders through. Algeria beat Jordan 2–1 to stay in the hunt. Overnight, Egypt had completed Group G with a historic first World Cup win over New Zealand.",
+    tag: "Standings",
+    relatedTeams: ["france", "norway", "argentina", "egypt"],
+    prompt: "Who will qualify from Group J?",
+  },
+  {
+    id: "2026-06-22-fra-irq",
+    date: "2026-06-22",
+    title: "France 3–0 Iraq — Mbappé double sends Les Bleus through",
+    summary:
+      "Kylian Mbappé struck in each half and Ballon d'Or holder Ousmane Dembélé added a third as France beat Iraq 3–0 — a game played either side of a storm delay of more than two hours in Philadelphia. A second straight win takes France to six points and into the knockout round, while Iraq, still without a point, can no longer finish in the group's top two.",
+    tag: "Result",
+    relatedTeams: ["france", "iraq"],
+    relatedMatch: { group: "I", teamA: "france", teamB: "iraq" },
+    prompt: "How far can France go in the tournament?",
+    sourceName: "Wikipedia (Group I table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_I",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-22-nor-sen",
+    date: "2026-06-22",
+    title: "Norway 3–2 Senegal — Haaland double books Norway's spot",
+    summary:
+      "Marcus Pedersen opened the scoring and Erling Haaland struck twice as Norway survived a late Senegal rally to win 3–2. A Sarr double, including a stoppage-time strike, gave Senegal hope, but Norway held on to make it two wins from two and join France in the knockout round. Senegal stay on zero points.",
+    tag: "Result",
+    relatedTeams: ["norway", "senegal"],
+    relatedMatch: { group: "I", teamA: "senegal", teamB: "norway" },
+    prompt: "Who will qualify from Group I?",
+    sourceName: "Wikipedia (Group I table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_I",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-22-arg-aut",
+    date: "2026-06-22",
+    title: "Argentina 2–0 Austria — Messi breaks the World Cup scoring record",
+    summary:
+      "Lionel Messi scored in each half — the second deep into stoppage time — to give Argentina a 2–0 win over Austria and make him the all-time leading goalscorer in men's World Cup history. The defending champions make it two wins from two and clinch a place in the round of 32; Austria, beaten for the first time, drop to second on three points.",
+    tag: "Result",
+    relatedTeams: ["argentina", "austria"],
+    relatedMatch: { group: "J", teamA: "argentina", teamB: "austria" },
+    prompt: "How far can Argentina go in the tournament?",
+    sourceName: "Wikipedia (Group J table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-22-alg-jor",
+    date: "2026-06-22",
+    title: "Algeria 2–1 Jordan — Desert Warriors come from behind",
+    summary:
+      "Nizar Al-Rashdan put Jordan ahead, but Nadhir Benbouali and Amine Gouiri struck after the break to turn it around for Algeria. The 2–1 win lifts Algeria to three points, level with Austria in the race for second behind Argentina, while Jordan, still without a point and now unable to finish in the top two, are all but out.",
+    tag: "Result",
+    relatedTeams: ["algeria", "jordan"],
+    relatedMatch: { group: "J", teamA: "algeria", teamB: "jordan" },
+    prompt: "Who will qualify from Group J?",
+    sourceName: "Wikipedia (Group J table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-22-egy-nzl",
+    date: "2026-06-22",
+    title: "Egypt 3–1 New Zealand — Salah seals a historic first World Cup win",
+    summary:
+      "Egypt claimed the first World Cup victory in their history, at the fourth attempt since their 1934 debut. Finn Surman headed New Zealand in front in Vancouver, but Egypt replied with three unanswered second-half goals — an equaliser, then Mohamed Salah and a late Trézéguet strike — to win 3–1. The result, which completed Group G's second round, sends Egypt top of the group on four points; Salah is now the Pharaohs' all-time leading World Cup scorer. Iran and Belgium sit on two points, New Zealand on one.",
+    tag: "Result",
+    relatedTeams: ["egypt", "new-zealand"],
+    relatedMatch: { group: "G", teamA: "egypt", teamB: "new-zealand" },
+    prompt: "Who will qualify from Group G?",
+    sourceName: "Wikipedia (Group G table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+
   // ── 21 June — matchday 2 results: Group H complete, Group G partly played ──
   {
     id: "2026-06-21-matchday2-gh",
