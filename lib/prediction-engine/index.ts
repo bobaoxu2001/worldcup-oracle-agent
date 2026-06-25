@@ -74,6 +74,16 @@ export {
   type StakesState,
 } from "./matchStakes";
 export {
+  projectSeeding,
+  knockoutPath,
+  quarterFields,
+  describePath,
+  type Seeding,
+  type KnockoutPath,
+  type PathStep,
+  type QuarterField,
+} from "./bracketPath";
+export {
   classifyMatchType,
   COINFLIP_FAV_CEIL,
   ELITE_KILL,
