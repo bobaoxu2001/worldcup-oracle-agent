@@ -94,6 +94,7 @@ export const TEAM_STYLES: Record<string, TacticalStyle> = {
   "dr-congo": { lowBlock: 4, breakdown: 2, note: "V5.1.2: held Portugal 1-1 — deep block + a real transition outlet; resistance verified." },
   qatar: { lowBlock: 4, breakdown: 2, note: "V5.1.2: held Switzerland 1-1 with a deep block + counter; resistance verified." },
   iran: { lowBlock: 4, breakdown: 2, note: "Classic deep, compact block; dangerous mainly in transition." },
+  ghana: { lowBlock: 4, breakdown: 2, note: "V5.1.2: two clean sheets — beat Panama 1-0 and held England 0-0 (19 shots faced); a genuine organised block, blunt going forward. Resistance verified (note: vs an elite breakdown-4 attack the block is matched, not dominant)." },
 
   // ── Solid, well-organised mid/low blocks ────────────────────────────────
   uruguay: { lowBlock: 3, breakdown: 2, note: "V5.1.2: structure intact but finishing/creation lacked vs Saudi (1-1); kill index trimmed. CB injuries also blunt the block." },
@@ -108,6 +109,7 @@ export const TEAM_STYLES: Record<string, TacticalStyle> = {
   australia: { lowBlock: 3, breakdown: 2, note: "Physical, compact, set-piece reliant; saw off Turkey 2-0." },
   jordan: { lowBlock: 3, breakdown: 2, note: "Deep block, counterattacking; defence pressured by Austria." },
   "new-zealand": { lowBlock: 3, breakdown: 2, note: "Physical, organised; held Iran 2-2 — resistance verified." },
+  curacao: { lowBlock: 3, breakdown: 1, note: "V5.1.2: parked the bus for a historic 0-0 vs Ecuador, but the 7-1 opening loss to Germany caps the block below the elite tier; minimal threat (1 goal in 2)." },
 
   // ── Blocks downgraded after round 1 (breached / overrun) ────────────────
   senegal: { lowBlock: 2, breakdown: 3, note: "V5.1.2: resistance was overrated — could not hold a high-kill France (1-3); block downgraded." },
