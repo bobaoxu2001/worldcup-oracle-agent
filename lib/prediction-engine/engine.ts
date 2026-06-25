@@ -36,6 +36,7 @@ import {
   intelEloImpact,
 } from "./preMatchIntelligence";
 import { getBounceBack } from "./bounceBack";
+import { getMatchStakes, getMatchStakesState, describeStakes } from "./matchStakes";
 import {
   GROUPS,
   HOST_SLUGS,
@@ -224,6 +225,24 @@ function buildFactors(
     });
   }
 
+  // Final-round match stakes — a side whose place is settled tends to rotate,
+  // while one still chasing qualification or the group win plays full strength.
+  const stakesForA = getMatchStakes(aSlug, bSlug);
+  const stakesForB = getMatchStakes(bSlug, aSlug);
+  if (stakesForA < 0 || stakesForB < 0) {
+    const parts: string[] = [];
+    if (stakesForA < 0)
+      parts.push(`${a.name} ${stakesForA} (${describeStakes(getMatchStakesState(aSlug, bSlug))})`);
+    if (stakesForB < 0)
+      parts.push(`${b.name} ${stakesForB} (${describeStakes(getMatchStakesState(bSlug, aSlug))})`);
+    const mag = Math.max(-stakesForA, -stakesForB);
+    factors.push({
+      label: "Match stakes (rotation risk)",
+      detail: `Final group round: a team whose place is settled has less to play for and routinely rests starters, so its effective rating is trimmed (capped) — ${parts.join("; ")}. A side still fighting to qualify, or in a live race for top spot, is left at full strength. A behavioural prior on team-sheet rotation, not a confirmed line-up.`,
+      weight: mag >= 25 ? "medium" : "low",
+    });
+  }
+
   factors.push({
     label: "Expected goals (Dixon-Coles)",
     detail: `Model projects ${p.expectedGoalsA.toFixed(2)} xG for ${a.name} and ${p.expectedGoalsB.toFixed(2)} for ${b.name}, with a low-score draw correction (ρ = −0.13).`,
@@ -276,10 +295,16 @@ export function predictMatch(
   // Round-2 bounce-back: a stumbled quality side coming out firing vs a weaker foe.
   const bounceA = getBounceBack(teamASlug, teamBSlug);
   const bounceB = getBounceBack(teamBSlug, teamASlug);
+  // Final-round match stakes: trim a side whose place is settled (rotation risk);
+  // teams still chasing qualification or the group win stay at full strength.
+  // predictMatch-only (NOT folded into the Monte-Carlo sim — see matchStakes.ts).
+  const stakesA = getMatchStakes(teamASlug, teamBSlug);
+  const stakesB = getMatchStakes(teamBSlug, teamASlug);
   // Effective Elo the model simulates with = results + availability + form +
-  // the fixture's tactical matchup + confirmed pre-match intelligence + bounce-back.
-  const eloA = resultEloA + availA + formA + tac.a + intelA + bounceA;
-  const eloB = resultEloB + availB + formB + tac.b + intelB + bounceB;
+  // the fixture's tactical matchup + confirmed pre-match intelligence + bounce-back
+  // + final-round rotation stakes.
+  const eloA = resultEloA + availA + formA + tac.a + intelA + bounceA + stakesA;
+  const eloB = resultEloB + availB + formB + tac.b + intelB + bounceB + stakesB;
   const hb = homeBonus(teamASlug, teamBSlug);
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
@@ -363,6 +388,7 @@ export function predictMatch(
         tacticalMatchupAdjustment: tac.a,
         intelligenceAdjustment: intelA,
         bounceBackAdjustment: bounceA,
+        matchStakesAdjustment: stakesA,
         adjusted: effEloA,
       },
       b: {
@@ -374,6 +400,7 @@ export function predictMatch(
         tacticalMatchupAdjustment: tac.b,
         intelligenceAdjustment: intelB,
         bounceBackAdjustment: bounceB,
+        matchStakesAdjustment: stakesB,
         adjusted: effEloB,
       },
     },

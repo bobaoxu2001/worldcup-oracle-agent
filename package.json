@@ -16,6 +16,7 @@
     "test:availability": "tsx scripts/test-availability-adjustments.ts",
     "test:tactical": "tsx scripts/test-tactical-matchups.ts",
     "test:draw": "tsx scripts/test-draw-propensity.ts",
+    "test:stakes": "tsx scripts/test-match-stakes.ts",
     "test:intel": "tsx scripts/test-pre-match-intel.ts",
     "test:matchtype": "tsx scripts/test-match-type.ts",
     "test:bounce": "tsx scripts/test-bounce-back.ts",

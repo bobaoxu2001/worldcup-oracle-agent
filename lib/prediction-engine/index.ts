@@ -60,6 +60,20 @@ export {
   BOUNCE_CAP,
 } from "./bounceBack";
 export {
+  classifyStakes,
+  matchStakesDelta,
+  getMatchStakes,
+  getMatchStakesState,
+  describeStakes,
+  matchStakesMeta,
+  ROTATION_ELO,
+  ROTATION_CAP,
+  ROTATION_LEAD,
+  ROTATION_WEIGHT,
+  DEFAULT_ROTATION_TENDENCY,
+  type StakesState,
+} from "./matchStakes";
+export {
   classifyMatchType,
   COINFLIP_FAV_CEIL,
   ELITE_KILL,

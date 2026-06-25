@@ -89,6 +89,8 @@ export interface EloBreakdown {
   intelligenceAdjustment?: number;
   /** Round-2 bounce-back: motivation/reversion for a stumbled quality side vs a weaker foe (0–25). */
   bounceBackAdjustment?: number;
+  /** Final-round rotation risk: capped negative nudge when a team's place is settled (−45…0). */
+  matchStakesAdjustment?: number;
   adjusted: number; // base + adjustments (what the goal model uses)
 }
 
