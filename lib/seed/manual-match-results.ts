@@ -15,22 +15,23 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-23 — matchday 2 is now complete through Group J, all
- * verified against the Wikipedia group tables. NEW since the last update: Group G
- * finished with Egypt 3-1 New Zealand (the Pharaohs' first-ever World Cup win,
- * Salah on the scoresheet) on 21 June; and 22 June completed Groups I & J —
- * France 3-0 Iraq (Mbappé brace), Norway 3-2 Senegal (Haaland brace; France and
- * Norway both through), Argentina 2-0 Austria (Messi brace + the men's World Cup
- * all-time scoring record; Argentina through) and Algeria 2-1 Jordan. Groups K &
- * L play their second round on 23 June (Portugal v Uzbekistan, DR Congo v
- * Colombia, England v Ghana, Croatia v Panama) and are deliberately NOT recorded
- * yet — we never enter an in-progress or predicted score. Earlier: 21 June Group
- * H — Spain 4-0 Saudi Arabia, Cape Verde 2-2 Uruguay; Group G — Belgium 0-0 Iran
- * (10-man Belgium). 20 June Groups E & F — Germany 2-1 Ivory Coast (Undav
- * stoppage-time winner), Ecuador 0-0 Curaçao, Netherlands 5-1 Sweden, Japan 4-0
- * Tunisia; 19 June Groups C & D — Morocco 1-0 Scotland, USA 2-0 Australia, Brazil
- * 3-0 Haiti, Türkiye 0-1 Paraguay; 18 June Groups A & B — Czechia 1-1 South
- * Africa, Mexico 1-0 South Korea, Switzerland 4-1 Bosnia, Canada 6-0 Qatar.)
+ * Last updated: 2026-06-23 (later same day) — Groups K & L matchday-2 are now
+ * COMPLETE, which finishes the SECOND ROUND across all 12 groups. K: Portugal 5-0
+ * Uzbekistan (Ronaldo brace — the first player to score at six different World
+ * Cups), Colombia 1-0 DR Congo (Colombia through to the R32). L: England 0-0
+ * Ghana, Croatia 1-0 Panama (Panama bottom on zero and all but out). Earlier
+ * today Group G finished with Egypt 3-1 New Zealand (21 June — the Pharaohs'
+ * first-ever World Cup win), and 22 June completed Groups I & J — France 3-0 Iraq
+ * (Mbappé brace), Norway 3-2 Senegal (Haaland brace; France & Norway both
+ * through), Argentina 2-0 Austria (Messi brace + the men's World Cup all-time
+ * scoring record; Argentina through) and Algeria 2-1 Jordan. All verified against
+ * the Wikipedia group tables. Prior rounds: 21 June Group H — Spain 4-0 Saudi
+ * Arabia, Cape Verde 2-2 Uruguay; Group G — Belgium 0-0 Iran (10-man). 20 June
+ * Groups E & F — Germany 2-1 Ivory Coast, Ecuador 0-0 Curaçao, Netherlands 5-1
+ * Sweden, Japan 4-0 Tunisia; 19 June Groups C & D — Morocco 1-0 Scotland, USA 2-0
+ * Australia, Brazil 3-0 Haiti, Türkiye 0-1 Paraguay; 18 June Groups A & B —
+ * Czechia 1-1 South Africa, Mexico 1-0 South Korea, Switzerland 4-1 Bosnia,
+ * Canada 6-0 Qatar.)
  */
 
 export interface ManualMatchResult {
@@ -517,6 +518,60 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     note: "Nizar Al-Rashdan put Jordan ahead (36'), but Nadhir Benbouali (69') and Amine Gouiri (82') turned it around for Algeria after the break. The win lifts Algeria to 3 pts, level with Austria in the race for second behind Argentina; Jordan stay on 0 and, unable now to finish in the top two, are all but out (Wikipedia/ESPN).",
     sourceName: "Wikipedia (Group J table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  // 23 June — matchday 2, Groups K & L (both now COMPLETE; this finishes the
+  // second round across all 12 groups).
+  {
+    group: "K",
+    teamA: "portugal",
+    teamB: "uzbekistan",
+    scoreA: 5,
+    scoreB: 0,
+    date: "2026-06-23",
+    note: "Cristiano Ronaldo scored twice (6', 39') — becoming the first player to score at six different World Cups — with Nuno Mendes (17'), an Abduvohid Nematov own goal (60') and Rafael Leão (87') completing the rout. Ronaldo's first goals of the tournament answer the criticism after Portugal's opening draw; Portugal climb to second in Group K on 4 pts, well placed (though not yet mathematically certain) to join Colombia in the knockouts (Wikipedia/ESPN/Al Jazeera).",
+    sourceName: "Wikipedia (Group K table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_K",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    group: "K",
+    teamA: "dr-congo",
+    teamB: "colombia",
+    scoreA: 0,
+    scoreB: 1,
+    date: "2026-06-23",
+    note: "Daniel Muñoz's deflected strike (76') finally broke a stubborn DR Congo down to give Colombia a second straight win. Colombia go top of Group K on 6 pts and are through to the round of 32; DR Congo slip to third on 1, Uzbekistan bottom on 0 (Wikipedia/ESPN/NBC).",
+    sourceName: "Wikipedia (Group K table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_K",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    group: "L",
+    teamA: "england",
+    teamB: "ghana",
+    scoreA: 0,
+    scoreB: 0,
+    date: "2026-06-23",
+    note: "A goalless draw at Gillette Stadium: England dominated the chances (19 shots to Ghana's 2) but couldn't break down a disciplined Ghana side. Both move to 4 pts and share the Group L lead — England top on goal difference (+2 to Ghana's +1) — ahead of the final round (Wikipedia/ESPN).",
+    sourceName: "Wikipedia (Group L table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    group: "L",
+    teamA: "croatia",
+    teamB: "panama",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-06-23",
+    note: "Ante Budimir's second-half finish (54') gave Croatia a vital first win at Toronto Stadium to revive their campaign on 3 pts. A second straight defeat leaves Panama bottom on 0 with no goals scored: they can no longer finish in the top two and are all but out — to survive they would have to beat England on the final day and hope the best-third permutations fall their way (the 2026 format sends 8 of 12 third-placed teams through), so they are NOT yet mathematically eliminated (Wikipedia/ESPN/NBC).",
+    sourceName: "Wikipedia (Group L table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
     verified: true,
     verifiedAt: "2026-06-23",
   },
