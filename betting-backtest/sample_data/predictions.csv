@@ -1,0 +1,14 @@
+match_id,prediction_timestamp,predicted_home_win_prob,predicted_draw_prob,predicted_away_win_prob,top1_score,top2_score,top3_score,model_version,notes
+m01,2026-06-11T17:00:00Z,0.74,0.21,0.05,1-0,2-1,1-1,V6.6,Host Mexico clear favourite vs South Africa
+m02,2026-06-13T17:00:00Z,0.40,0.40,0.20,1-1,1-0,2-1,V6.6,Morocco a verified low block; draw mass raised (fortress term)
+m03,2026-06-15T17:00:00Z,0.77,0.21,0.02,1-0,0-0,2-0,V6.6,Cape Verde elite low block; model trimmed below market
+m04,2026-06-14T14:00:00Z,0.81,0.17,0.02,2-0,3-0,3-1,V6.6,Germany vs weak debutant; blowout risk
+m05,2026-06-16T17:00:00Z,0.82,0.16,0.02,2-0,1-0,3-0,V6.6,Argentina elite kill power vs breached block
+m06,2026-06-16T20:00:00Z,0.60,0.28,0.12,1-0,2-1,2-0,V6.6,France strong but model ~ market (no edge)
+m07,2026-06-17T17:00:00Z,0.46,0.32,0.22,2-1,1-1,2-0,V6.6,England high-tempo; tight vs experienced Croatia
+m08,2026-06-21T17:00:00Z,0.43,0.37,0.20,1-0,1-1,0-0,V6.6,Belgium stumbling; Iran a strong bus; draw live but underpriced
+m09,2026-06-23T14:00:00Z,0.76,0.19,0.05,2-0,1-0,3-0,V6.6,Portugal bounce-back vs debutants
+m10,2026-06-20T17:00:00Z,0.61,0.27,0.12,1-0,2-0,2-1,V6.6,Japan favoured vs winless Tunisia
+m11,2026-06-12T17:00:00Z,0.56,0.31,0.13,2-1,1-0,2-0,V6.6,Host USA edge vs Paraguay; model ~ market
+m12,2026-06-17T20:00:00Z,0.32,0.39,0.29,1-0,1-1,0-1,V6.6,Ghana v Panama a coin-flip; model leans draw but no price edge
+m13,2026-06-19T17:00:00Z,0.45,0.30,0.25,1-0,0-0,1-1,V6.6,Turkey slight favourite vs Paraguay (model's lone wrong-winner call)

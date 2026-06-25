@@ -1,0 +1,14 @@
+match_id,actual_1x2,predicted_top_1x2,hit_1x2,actual_score,top1_score_hit,top3_score_hit,brier_score,log_loss
+m01,home,home,1,2-0,0,0,0.1142,0.3011
+m02,draw,home,0,1-1,1,1,0.56,0.9163
+m03,draw,home,0,0-0,0,1,1.2174,1.5606
+m04,home,home,1,7-1,0,0,0.0654,0.2107
+m05,home,home,1,3-0,0,1,0.0584,0.1985
+m06,home,home,1,3-1,0,0,0.2528,0.5108
+m07,home,home,1,4-2,0,0,0.4424,0.7765
+m08,draw,home,0,0-0,0,1,0.6218,0.9943
+m09,home,home,1,5-0,0,0,0.0962,0.2744
+m10,home,home,1,4-0,0,0,0.2394,0.4943
+m11,home,home,1,4-1,0,0,0.3066,0.5798
+m12,home,draw,0,1-0,1,1,0.6986,1.1394
+m13,away,home,0,0-1,0,0,0.855,1.3863

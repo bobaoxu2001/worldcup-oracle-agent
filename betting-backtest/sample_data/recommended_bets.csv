@@ -1,0 +1,14 @@
+match_id,timestamp,market,selection,market_price,model_probability,edge,recommended_stake_units,recommendation,reason
+m01,2026-06-11T17:30:00Z,pre_match_single,home,1.55,0.74,0.0948,0.5,BET,edge 9.5pp >= 5pp over the price (EV +0.15/u)
+m02,2026-06-13T17:30:00Z,draw,draw,3.3,0.4,0.097,0.25,BET,edge 9.7pp >= 8pp over the price (EV +0.32/u)
+m03,2026-06-15T17:30:00Z,1x2,none,,,0.0282,0.0,NO BET,no selection clears its edge threshold (best 2.8pp); overround 5.9%
+m04,2026-06-14T14:30:00Z,1x2,none,,,0.0271,0.0,NO BET,no selection clears its edge threshold (best 2.7pp); overround 7.1%
+m05,2026-06-16T17:30:00Z,pre_match_single,home,1.3,0.82,0.0508,0.5,BET,edge 5.1pp >= 5pp over the price (EV +0.07/u)
+m06,2026-06-16T20:30:00Z,1x2,none,,,0.0168,0.0,NO BET,no selection clears its edge threshold (best 1.7pp); overround 6.0%
+m07,2026-06-17T17:30:00Z,1x2,none,,,0.0259,0.0,NO BET,no selection clears its edge threshold (best 2.6pp); overround 5.6%
+m08,2026-06-21T17:30:00Z,1x2,none,,,0.0474,0.0,NO BET,no selection clears its edge threshold (best 4.7pp); overround 7.8%; guard:locked_first!=relax (no auto-downgrade for being qualified); guard:rotation!=low_effort; principle:draw needs 8pp price edge (enforced at gate); principle:live exit-fast on a goal; nudge:underdog_intensity(+0.03 to underdog)
+m09,2026-06-23T14:30:00Z,1x2,none,,,-0.0023,0.0,NO BET,no selection clears its edge threshold (best -0.2pp); overround 5.7%
+m10,2026-06-20T17:30:00Z,1x2,none,,,0.0039,0.0,NO BET,no selection clears its edge threshold (best 0.4pp); overround 5.8%
+m11,2026-06-12T17:30:00Z,1x2,none,,,0.0243,0.0,NO BET,no selection clears its edge threshold (best 2.4pp); overround 5.9%
+m12,2026-06-17T20:30:00Z,1x2,none,,,0.0674,0.0,NO BET,no selection clears its edge threshold (best 6.7pp); overround 5.6%; guard:locked_first!=relax (no auto-downgrade for being qualified); guard:rotation!=low_effort; principle:draw needs 8pp price edge (enforced at gate); principle:live exit-fast on a goal
+m13,2026-06-19T17:30:00Z,1x2,none,,,0.0274,0.0,NO BET,no selection clears its edge threshold (best 2.7pp); overround 5.6%; guard:locked_first!=relax (no auto-downgrade for being qualified); guard:rotation!=low_effort; principle:draw needs 8pp price edge (enforced at gate); principle:live exit-fast on a goal; nudge:fav_draw_downgrade(-0.05 win -> draw); nudge:underdog_intensity(+0.03 to underdog)

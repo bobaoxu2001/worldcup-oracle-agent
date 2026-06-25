@@ -1,0 +1,14 @@
+match_id,date,group,home_team,away_team,venue,neutral_or_home_context,kickoff_time,final_home_goals,final_away_goals
+m01,2026-06-11,A,Mexico,South Africa,Estadio Azteca,home,2026-06-11T19:00:00Z,2,0
+m02,2026-06-13,C,Brazil,Morocco,MetLife Stadium,neutral,2026-06-13T19:00:00Z,1,1
+m03,2026-06-15,H,Spain,Cape Verde,Levi's Stadium,neutral,2026-06-15T19:00:00Z,0,0
+m04,2026-06-14,E,Germany,Curacao,Lincoln Financial Field,neutral,2026-06-14T16:00:00Z,7,1
+m05,2026-06-16,J,Argentina,Algeria,Hard Rock Stadium,neutral,2026-06-16T19:00:00Z,3,0
+m06,2026-06-16,I,France,Senegal,Mercedes-Benz Stadium,neutral,2026-06-16T22:00:00Z,3,1
+m07,2026-06-17,L,England,Croatia,Gillette Stadium,neutral,2026-06-17T19:00:00Z,4,2
+m08,2026-06-21,G,Belgium,Iran,SoFi Stadium,neutral,2026-06-21T19:00:00Z,0,0
+m09,2026-06-23,K,Portugal,Uzbekistan,NRG Stadium,neutral,2026-06-23T16:00:00Z,5,0
+m10,2026-06-20,F,Japan,Tunisia,Arrowhead Stadium,neutral,2026-06-20T19:00:00Z,4,0
+m11,2026-06-12,D,USA,Paraguay,SoFi Stadium,home,2026-06-12T19:00:00Z,4,1
+m12,2026-06-17,L,Ghana,Panama,BC Place,neutral,2026-06-17T22:00:00Z,1,0
+m13,2026-06-19,D,Turkey,Paraguay,Levi's Stadium,neutral,2026-06-19T19:00:00Z,0,1

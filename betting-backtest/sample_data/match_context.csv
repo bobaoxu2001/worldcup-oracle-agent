@@ -1,0 +1,4 @@
+match_id,is_third_round,fav_side,locked_first_does_not_equal_relax,rotation_can_increase_motivation,draw_logic_requires_price_edge,must_win_underdog_gets_intensity_boost,stronger_team_with_draw_enough_gets_win_probability_downgrade,home_favorite_gets_effort_boost,live_model_must_update_aggressively_after_goal
+m08,true,home,true,true,true,true,false,false,true
+m12,true,none,true,true,true,true,false,false,true
+m13,true,home,true,true,true,true,true,false,true
