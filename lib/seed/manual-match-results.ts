@@ -19,7 +19,7 @@
  * COMPLETE, which finishes the SECOND ROUND across all 12 groups. K: Portugal 5-0
  * Uzbekistan (Ronaldo brace — the first player to score at six different World
  * Cups), Colombia 1-0 DR Congo (Colombia through to the R32). L: England 0-0
- * Ghana, Croatia 1-0 Panama (Panama become the first team eliminated). Earlier
+ * Ghana, Croatia 1-0 Panama (Panama bottom on zero and all but out). Earlier
  * today Group G finished with Egypt 3-1 New Zealand (21 June — the Pharaohs'
  * first-ever World Cup win), and 22 June completed Groups I & J — France 3-0 Iraq
  * (Mbappé brace), Norway 3-2 Senegal (Haaland brace; France & Norway both
@@ -569,7 +569,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 1,
     scoreB: 0,
     date: "2026-06-23",
-    note: "Ante Budimir's second-half finish (54') gave Croatia a vital first win at Toronto Stadium to revive their campaign on 3 pts. The defeat leaves Panama bottom on 0 with no goals and no route to the knockouts — the first team eliminated from the tournament (Wikipedia/ESPN/NBC).",
+    note: "Ante Budimir's second-half finish (54') gave Croatia a vital first win at Toronto Stadium to revive their campaign on 3 pts. A second straight defeat leaves Panama bottom on 0 with no goals scored: they can no longer finish in the top two and are all but out — to survive they would have to beat England on the final day and hope the best-third permutations fall their way (the 2026 format sends 8 of 12 third-placed teams through), so they are NOT yet mathematically eliminated (Wikipedia/ESPN/NBC).",
     sourceName: "Wikipedia (Group L table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
     verified: true,

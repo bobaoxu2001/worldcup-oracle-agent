@@ -17,8 +17,8 @@
  * Last updated: 2026-06-23 (later same day) — Groups K & L results added,
  * completing the second round across all 12 groups: Portugal 5–0 Uzbekistan
  * (Ronaldo's record sixth-World-Cup goals), Colombia 1–0 DR Congo (Colombia
- * through), England 0–0 Ghana, Croatia 1–0 Panama (Panama become the first team
- * eliminated). Earlier today: Group G completed (Egypt 3–1 New Zealand, the
+ * through), England 0–0 Ghana, Croatia 1–0 Panama (Panama bottom on zero and all
+ * but out). Earlier today: Group G completed (Egypt 3–1 New Zealand, the
  * Pharaohs' historic first World Cup win, played 21 June) and the 22 June Groups
  * I & J results (France, Norway and Argentina all into the knockouts; Messi sets
  * the men's World Cup scoring record). All results verified against the Wikipedia
@@ -63,9 +63,9 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
   {
     id: "2026-06-23-matchday2-kl",
     date: "2026-06-23",
-    title: "Matchday 2 complete: Ronaldo makes history, Colombia through, Panama out",
+    title: "Matchday 2 complete: Ronaldo makes history, Colombia through, Panama on the brink",
     summary:
-      "Groups K and L finished the second round, which is now complete across all 12 groups. Cristiano Ronaldo scored twice in Portugal's 5–0 rout of Uzbekistan to become the first player to score at six different World Cups, while Colombia beat DR Congo 1–0 to reach the knockouts. In Group L, England were held to a goalless draw by Ghana — leaving both on four points — and Croatia beat Panama 1–0 to send the Central Americans out as the tournament's first eliminated team.",
+      "Groups K and L finished the second round, which is now complete across all 12 groups. Cristiano Ronaldo scored twice in Portugal's 5–0 rout of Uzbekistan to become the first player to score at six different World Cups, while Colombia beat DR Congo 1–0 to reach the knockouts. In Group L, England were held to a goalless draw by Ghana — leaving both on four points — and Croatia beat Panama 1–0 to leave the Central Americans bottom on zero and all but out (they can no longer finish in the top two, with only a faint best-third route left).",
     tag: "Standings",
     relatedTeams: ["portugal", "colombia", "england", "panama"],
     prompt: "Who will qualify from Group L?",
@@ -118,9 +118,9 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
   {
     id: "2026-06-23-cro-pan",
     date: "2026-06-23",
-    title: "Croatia 1–0 Panama — Budimir keeps Croatia alive, Panama eliminated",
+    title: "Croatia 1–0 Panama — Budimir keeps Croatia alive, Panama on the brink",
     summary:
-      "Ante Budimir's 54th-minute finish gave Croatia a much-needed first win to revive their campaign on three points. For Panama, a second straight defeat — still without a goal — ends their tournament: bottom of Group L with no route to the knockouts, they become the first team eliminated from the 2026 World Cup.",
+      "Ante Budimir's 54th-minute finish gave Croatia a much-needed first win to revive their campaign on three points. A second straight defeat — still without a goal — leaves Panama bottom of Group L and all but out: they can no longer finish in the top two and would have to beat England on the final day, then hope the best-third permutations fall their way, to stay alive.",
     tag: "Result",
     relatedTeams: ["croatia", "panama"],
     relatedMatch: { group: "L", teamA: "croatia", teamB: "panama" },
