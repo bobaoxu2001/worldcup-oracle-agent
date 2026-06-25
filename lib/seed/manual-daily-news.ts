@@ -14,13 +14,15 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-23 — added Group G's completion (Egypt 3–1 New Zealand,
- * the Pharaohs' historic first World Cup win, played 21 June) and the 22 June
- * matchday-2 results for Groups I & J (France 3–0 Iraq, Norway 3–2 Senegal,
- * Argentina 2–0 Austria, Algeria 2–1 Jordan — France, Norway and Argentina all
- * into the knockouts; Messi sets the men's World Cup scoring record), plus a
- * preview of the 23 June Group K & L second-round games. All results verified
- * against the Wikipedia group tables.
+ * Last updated: 2026-06-23 (later same day) — Groups K & L results added,
+ * completing the second round across all 12 groups: Portugal 5–0 Uzbekistan
+ * (Ronaldo's record sixth-World-Cup goals), Colombia 1–0 DR Congo (Colombia
+ * through), England 0–0 Ghana, Croatia 1–0 Panama (Panama become the first team
+ * eliminated). Earlier today: Group G completed (Egypt 3–1 New Zealand, the
+ * Pharaohs' historic first World Cup win, played 21 June) and the 22 June Groups
+ * I & J results (France, Norway and Argentina all into the knockouts; Messi sets
+ * the men's World Cup scoring record). All results verified against the Wikipedia
+ * group tables.
  */
 
 export type ManualDailyNewsTag =
@@ -57,16 +59,76 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
-  // ── 23 June — Groups K & L play their second round today (preview only) ──
+  // ── 23 June — matchday 2 results: Groups K & L complete the second round ──
   {
-    id: "2026-06-23-groups-kl-preview",
+    id: "2026-06-23-matchday2-kl",
     date: "2026-06-23",
-    title: "Matchday 2 today: Portugal and England look to take control of Groups K & L",
+    title: "Matchday 2 complete: Ronaldo makes history, Colombia through, Panama out",
     summary:
-      "The last two groups play their second round. In Group K, Portugal — held to a draw by DR Congo in their opener — face debutants Uzbekistan, while DR Congo meet group-leaders Colombia. In Group L, opening-day winners England and Ghana clash at the top, and a beaten Croatia must respond against Panama. Results will be recorded here once the games are final.",
-    tag: "Match Preview",
-    relatedTeams: ["portugal", "england", "colombia", "ghana"],
+      "Groups K and L finished the second round, which is now complete across all 12 groups. Cristiano Ronaldo scored twice in Portugal's 5–0 rout of Uzbekistan to become the first player to score at six different World Cups, while Colombia beat DR Congo 1–0 to reach the knockouts. In Group L, England were held to a goalless draw by Ghana — leaving both on four points — and Croatia beat Panama 1–0 to send the Central Americans out as the tournament's first eliminated team.",
+    tag: "Standings",
+    relatedTeams: ["portugal", "colombia", "england", "panama"],
     prompt: "Who will qualify from Group L?",
+  },
+  {
+    id: "2026-06-23-por-uzb",
+    date: "2026-06-23",
+    title: "Portugal 5–0 Uzbekistan — Ronaldo's record sixth-World-Cup goals",
+    summary:
+      "Cristiano Ronaldo struck twice to become the first player ever to score at six different World Cups, with Nuno Mendes, an own goal and Rafael Leão completing a 5–0 rout of debutants Uzbekistan. The brace — Ronaldo's first goals of the tournament — answered the criticism after Portugal's opening draw and lifted them to second in Group K, well placed to join Colombia in the knockouts.",
+    tag: "Result",
+    relatedTeams: ["portugal", "uzbekistan"],
+    relatedMatch: { group: "K", teamA: "portugal", teamB: "uzbekistan" },
+    prompt: "How far can Portugal go in the tournament?",
+    sourceName: "Wikipedia (Group K table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_K",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-23-col-cod",
+    date: "2026-06-23",
+    title: "Colombia 1–0 DR Congo — Muñoz sends Colombia through",
+    summary:
+      "Daniel Muñoz's deflected second-half strike was enough to break down a stubborn DR Congo and give Colombia a second straight win. The result takes Colombia top of Group K on six points and into the round of 32 with a game to spare, while DR Congo slip to third.",
+    tag: "Result",
+    relatedTeams: ["colombia", "dr-congo"],
+    relatedMatch: { group: "K", teamA: "dr-congo", teamB: "colombia" },
+    prompt: "Who will qualify from Group K?",
+    sourceName: "Wikipedia (Group K table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_K",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-23-eng-gha",
+    date: "2026-06-23",
+    title: "England 0–0 Ghana — Three Lions held despite dominance",
+    summary:
+      "England controlled the game and piled up 19 shots to Ghana's two but couldn't find a way through in a goalless draw at Gillette Stadium. The point leaves England top of Group L on goal difference, level on four points with Ghana, with both sides still to seal their places.",
+    tag: "Result",
+    relatedTeams: ["england", "ghana"],
+    relatedMatch: { group: "L", teamA: "england", teamB: "ghana" },
+    prompt: "Who will qualify from Group L?",
+    sourceName: "Wikipedia (Group L table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
+    verified: true,
+    verifiedAt: "2026-06-23",
+  },
+  {
+    id: "2026-06-23-cro-pan",
+    date: "2026-06-23",
+    title: "Croatia 1–0 Panama — Budimir keeps Croatia alive, Panama eliminated",
+    summary:
+      "Ante Budimir's 54th-minute finish gave Croatia a much-needed first win to revive their campaign on three points. For Panama, a second straight defeat — still without a goal — ends their tournament: bottom of Group L with no route to the knockouts, they become the first team eliminated from the 2026 World Cup.",
+    tag: "Result",
+    relatedTeams: ["croatia", "panama"],
+    relatedMatch: { group: "L", teamA: "croatia", teamB: "panama" },
+    prompt: "Who will qualify from Group L?",
+    sourceName: "Wikipedia (Group L table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
+    verified: true,
+    verifiedAt: "2026-06-23",
   },
 
   // ── 22 June — matchday 2 results: Groups I & J complete, Group G wrapped up ──
