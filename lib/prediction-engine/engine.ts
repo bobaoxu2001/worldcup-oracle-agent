@@ -251,9 +251,12 @@ function buildFactors(
 
   const dp = applyDrawPropensity(p, aSlug, bSlug);
   if (dp.applied) {
+    const fortress = dp.lowBlockBoost
+      ? " It also includes a low-block fortress component: the underdog's deep block out-rates the favourite's ability to break it, so extra draw mass is added — and unlike the opener boost, this part does not taper away by matchday (a real bus holds in round 3 too)."
+      : "";
     factors.push({
       label: "Group-stage draw propensity",
-      detail: `World Cup group openers draw far more often than raw Elo implies (the 11–15 June openers drew 50%, vs a ~23% model baseline). The draw is nudged +${Math.round(dp.boost * 100)} pts (to ${Math.round(dp.draw * 100)}%) for this group fixture, with both win probabilities shrunk proportionally — the favourite is unchanged. A small, capped correction toward the historical WC group draw rate, strongest for matchday-1 openers.`,
+      detail: `World Cup group openers draw far more often than raw Elo implies (the 11–15 June openers drew 50%, vs a ~23% model baseline). The draw is nudged +${Math.round(dp.boost * 100)} pts (to ${Math.round(dp.draw * 100)}%) for this group fixture, with both win probabilities shrunk proportionally — the favourite is unchanged. A small, capped correction toward the historical WC group draw rate, strongest for matchday-1 openers.${fortress}`,
       weight: dp.boost >= 0.05 ? "medium" : "low",
     });
   }

@@ -78,6 +78,25 @@ export const KILL_DAMP_FLOOR = 0.4;
 /** Kill index (breakdown) at/below which no dampening applies. */
 export const KILL_DAMP_THRESHOLD = 3;
 
+/**
+ * LOW-BLOCK FORTRESS DRAW TERM (added 25 June, from the backtest 复盘).
+ *
+ * The opener-tapered boost above under-corrects the model's clearest blind spot:
+ * an elite/possession favourite held to a draw by a genuine BUS (Spain 0-0 Cape
+ * Verde, Belgium 0-0 Iran, Portugal 1-1 DR Congo, England 0-0 Ghana). The taper
+ * shrinks the draw cushion to almost nothing by matchday 3 — yet a real fortress
+ * holds in round 3 just as well as round 1. So we add a SECOND, matchday-INVARIANT
+ * draw term driven purely by the matchup: how far the underdog's low block out-
+ * rates the favourite's ability to break it (busResist = dogLowBlock − favBreakdown,
+ * the same "frustration" the tactical-Elo layer reads). Capped overall by DRAW_CEIL,
+ * and it only fires when a side is genuinely profiled as a strong block, so blowouts
+ * (weak/breached blocks, lethal-kill favourites) are untouched.
+ *
+ * A capped scouting-style prior, not a fitted constant; re-fit (npm run evolve)
+ * as more matchdays land.
+ */
+export const LOWBLOCK_DRAW_WEIGHT = 0.1;
+
 /** Teams with at least one completed result on file (proxy for "has played"). */
 const PLAYED_TEAMS = new Set<string>(
   MANUAL_MATCH_RESULTS.flatMap((m) => [m.teamA, m.teamB])
@@ -114,11 +133,15 @@ export function killDampFactor(favKillIndex: number): number {
 export function drawMultiplierFor(
   isGroup: boolean,
   playedCount: number,
-  favKillIndex = 2
+  favKillIndex = 2,
+  busResist = 0
 ): number {
   if (!isGroup) return 1;
   const w = playedCount <= 0 ? 1.0 : playedCount === 1 ? 0.6 : 0.4;
-  return 1 + GROUP_DRAW_BOOST * w * killDampFactor(favKillIndex);
+  const opener = GROUP_DRAW_BOOST * w * killDampFactor(favKillIndex);
+  // Matchday-INVARIANT fortress term: a strong bus holds in every round.
+  const fortress = LOWBLOCK_DRAW_WEIGHT * Math.max(0, busResist);
+  return 1 + opener + fortress;
 }
 
 export interface InflatedProb {
@@ -162,6 +185,8 @@ export interface DrawAdjusted {
   boost: number;
   applied: boolean;
   mult: number;
+  /** True when the matchday-invariant low-block fortress term contributed. */
+  lowBlockBoost: boolean;
 }
 
 /**
@@ -177,11 +202,22 @@ export function applyDrawPropensity(
   const isGroup = isGroupFixture(aSlug, bSlug);
   const playedCount = (PLAYED_TEAMS.has(aSlug) ? 1 : 0) + (PLAYED_TEAMS.has(bSlug) ? 1 : 0);
   // The favourite (higher pre-adjustment win prob) supplies the kill index that
-  // dampens the boost — a lethal attack is less likely to be held to a draw.
-  const favKillIndex = (p.winA >= p.winB ? getStyle(aSlug) : getStyle(bSlug)).breakdown;
-  const mult = drawMultiplierFor(isGroup, playedCount, favKillIndex);
+  // dampens the boost; the underdog's low block supplies the matchday-invariant
+  // fortress term — a bus the favourite can't break draws more, in any round.
+  const favStyle = p.winA >= p.winB ? getStyle(aSlug) : getStyle(bSlug);
+  const dogStyle = p.winA >= p.winB ? getStyle(bSlug) : getStyle(aSlug);
+  const busResist = Math.max(0, dogStyle.lowBlock - favStyle.breakdown);
+  const mult = drawMultiplierFor(isGroup, playedCount, favStyle.breakdown, busResist);
   const r = inflateDraw(p.winA, p.draw, p.winB, mult);
-  return { winA: r.winA, draw: r.draw, winB: r.winB, boost: r.boost, applied: r.applied, mult };
+  return {
+    winA: r.winA,
+    draw: r.draw,
+    winB: r.winB,
+    boost: r.boost,
+    applied: r.applied,
+    mult,
+    lowBlockBoost: isGroup && busResist > 0 && r.applied,
+  };
 }
 
 /** Metadata for transparent UI labelling. */

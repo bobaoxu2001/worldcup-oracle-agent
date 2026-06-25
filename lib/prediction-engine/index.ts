@@ -44,6 +44,7 @@ export {
 export {
   GROUP_DRAW_BOOST,
   DRAW_CEIL,
+  LOWBLOCK_DRAW_WEIGHT,
   isGroupFixture,
   drawMultiplierFor,
   inflateDraw,

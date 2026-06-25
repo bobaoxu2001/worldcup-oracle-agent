@@ -43,6 +43,19 @@ check("kill damp never falls below the floor", killDampFactor(5) >= KILL_DAMP_FL
 const mEliteFav = drawMultiplierFor(true, 0, 4);
 check("elite-kill favourite's opener boost is dampened vs flat", mEliteFav < mOpener && mEliteFav > 1, `${mEliteFav.toFixed(3)} < ${mOpener.toFixed(3)}`);
 
+// Low-block fortress term: a bus the favourite can't break adds draw mass, and
+// (unlike the opener boost) it does NOT taper away by matchday.
+const mNoBus = drawMultiplierFor(true, 2, 2, 0);
+const mBus = drawMultiplierFor(true, 2, 2, 3);
+check("fortress term adds draw mass over a no-bus matchup", mBus > mNoBus, `${mBus.toFixed(3)} > ${mNoBus.toFixed(3)}`);
+const busOpener = drawMultiplierFor(true, 0, 2, 3) - drawMultiplierFor(true, 0, 2, 0);
+const busLate = drawMultiplierFor(true, 2, 2, 3) - drawMultiplierFor(true, 2, 2, 0);
+check("fortress term is matchday-invariant (round 1 == round 3)", approx(busOpener, busLate), `${busOpener.toFixed(3)} vs ${busLate.toFixed(3)}`);
+const fort = applyDrawPropensity({ winA: 0.8, draw: 0.15, winB: 0.05 }, "spain", "cape-verde");
+check("profiled bus (Spain v Cape Verde) flags the low-block boost", fort.lowBlockBoost && fort.applied);
+const noFort = applyDrawPropensity({ winA: 0.8, draw: 0.15, winB: 0.05 }, "germany", "curacao");
+check("non-bus matchup (Germany v Curaçao) does not flag the low-block boost", !noFort.lowBlockBoost);
+
 // 3. inflateDraw: draw rises, wins shrink proportionally, sum stays 1, favourite preserved.
 const r = inflateDraw(0.55, 0.25, 0.20, mOpener);
 check("draw probability increases", r.draw > 0.25, `${(0.25).toFixed(2)}→${r.draw.toFixed(3)}`);

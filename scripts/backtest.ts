@@ -105,10 +105,14 @@ for (const m of all) {
   const pOld = matchProb(oldA, oldB, bonus);
   const pFull = matchProb(fullA, fullB, bonus);
   // drawFlat = flat opener-weighted boost; full+draw = + kill-index dampener
-  // (the favourite's tactical breakdown shrinks the boost for elite attacks).
-  const favKill = (pFull.winA >= pFull.winB ? getStyle(m.teamA) : getStyle(m.teamB)).breakdown;
+  // (favourite's breakdown shrinks the boost for elite attacks) + matchday-
+  // invariant low-block fortress term (underdog's bus the favourite can't break).
+  const favStyle = pFull.winA >= pFull.winB ? getStyle(m.teamA) : getStyle(m.teamB);
+  const dogStyle = pFull.winA >= pFull.winB ? getStyle(m.teamB) : getStyle(m.teamA);
+  const favKill = favStyle.breakdown;
+  const busResist = Math.max(0, dogStyle.lowBlock - favStyle.breakdown);
   const drawMultFlat = drawMultiplierFor(isGroup, playedCount);
-  const drawMultDamped = drawMultiplierFor(isGroup, playedCount, favKill);
+  const drawMultDamped = drawMultiplierFor(isGroup, playedCount, favKill, busResist);
   const pDrawFlat = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMultFlat);
   const pDraw = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMultDamped);
   const probs: Record<string, { winA: number; draw: number; winB: number }> = {
