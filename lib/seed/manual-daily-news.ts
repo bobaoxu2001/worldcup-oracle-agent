@@ -14,15 +14,13 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-23 (later same day) — Groups K & L results added,
- * completing the second round across all 12 groups: Portugal 5–0 Uzbekistan
- * (Ronaldo's record sixth-World-Cup goals), Colombia 1–0 DR Congo (Colombia
- * through), England 0–0 Ghana, Croatia 1–0 Panama (Panama bottom on zero and all
- * but out). Earlier today: Group G completed (Egypt 3–1 New Zealand, the
- * Pharaohs' historic first World Cup win, played 21 June) and the 22 June Groups
- * I & J results (France, Norway and Argentina all into the knockouts; Messi sets
- * the men's World Cup scoring record). All results verified against the Wikipedia
- * group tables.
+ * Last updated: 2026-06-26 — matchday 3 (the final round) underway. Groups A–F
+ * have finished: Mexico won Group A with a perfect record, Brazil & Morocco both
+ * advanced from C, the hosts (USA) took Group D despite a 3–2 loss to Türkiye,
+ * Germany survived a 2–1 defeat to Ecuador to win Group E on goal difference, and
+ * the Netherlands won Group F. Groups G–L conclude on 26–27 June and are not yet
+ * recorded (scores not yet verifiable at time of writing). All A–F results
+ * verified against the Wikipedia group tables.
  */
 
 export type ManualDailyNewsTag =
@@ -59,6 +57,90 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 25 June — matchday 3 results: Groups D, E & F complete ──
+  {
+    id: "2026-06-25-matchday3-def",
+    date: "2026-06-25",
+    title: "Matchday 3: USA top Group D despite defeat; Germany survive Ecuador scare; Netherlands cruise",
+    summary:
+      "Groups D, E and F finished the final round. The hosts United States lost 3–2 to Türkiye — Kaan Ayhan scoring in the eighth minute of stoppage time — but still won Group D, with Australia edging Paraguay for second on goal difference. Germany were beaten 2–1 by Ecuador yet topped Group E on goal difference, Ivory Coast taking second. The Netherlands beat Tunisia 3–1 to win Group F, Japan qualifying second after a 1–1 draw with Sweden. Ecuador, Paraguay and Sweden all finish third and go into the best-thirds pool.",
+    tag: "Standings",
+    relatedTeams: ["usa", "germany", "netherlands", "ecuador"],
+    prompt: "Which third-placed teams will reach the round of 32?",
+  },
+  {
+    id: "2026-06-25-ecu-ger",
+    date: "2026-06-25",
+    title: "Ecuador 2–1 Germany — Germany lose but win the group",
+    summary:
+      "Nilson Angulo and Gonzalo Plata struck either side of half-time to overturn Leroy Sané's second-minute opener and hand Germany a surprise 2–1 defeat. Germany still finished top of Group E on goal difference ahead of Ivory Coast, while Ecuador's three points lifted them to third and into the best-thirds race.",
+    tag: "Result",
+    relatedTeams: ["ecuador", "germany"],
+    relatedMatch: { group: "E", teamA: "ecuador", teamB: "germany" },
+    prompt: "How far can Germany go in the knockouts?",
+    sourceName: "Wikipedia (Group E table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_E",
+    verified: true,
+    verifiedAt: "2026-06-26",
+  },
+  {
+    id: "2026-06-25-tur-usa",
+    date: "2026-06-25",
+    title: "Türkiye 3–2 USA — hosts lose the battle, win the group",
+    summary:
+      "Türkiye took a thrilling final-round contest 3–2, Kaan Ayhan finishing it deep into stoppage time, but the United States had already done enough to top Group D. Australia claimed the runners-up spot on goal difference over Paraguay, while Türkiye were eliminated despite the win.",
+    tag: "Result",
+    relatedTeams: ["turkey", "usa"],
+    relatedMatch: { group: "D", teamA: "turkey", teamB: "usa" },
+    prompt: "Who will the USA face in the round of 32?",
+    sourceName: "Wikipedia (Group D table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_D",
+    verified: true,
+    verifiedAt: "2026-06-26",
+  },
+
+  // ── 24 June — matchday 3 results: Groups A, B & C complete ──
+  {
+    id: "2026-06-24-matchday3-abc",
+    date: "2026-06-24",
+    title: "Matchday 3: Mexico finish perfect; Brazil and Morocco both through",
+    summary:
+      "The final round opened with Groups A, B and C. Hosts Mexico beat Czechia 3–0 to complete a flawless group stage — three wins, six goals, none conceded — with South Africa joining them in second. Switzerland edged Canada 2–1 to win Group B, Canada qualifying second and Bosnia going through as a best-third candidate. In Group C, Brazil beat Scotland 3–0 (Vinícius Júnior with a brace) to pip Morocco to top spot on goal difference, with Morocco safely second after a 4–2 win over Haiti.",
+    tag: "Standings",
+    relatedTeams: ["mexico", "brazil", "morocco", "switzerland"],
+    prompt: "Who tops the best-thirds standings so far?",
+  },
+  {
+    id: "2026-06-24-sco-bra",
+    date: "2026-06-24",
+    title: "Scotland 0–3 Brazil — Vinícius double sends Brazil top",
+    summary:
+      "Vinícius Júnior scored twice and Matheus Cunha added a third as Brazil beat Scotland 3–0 to win Group C, edging Morocco on goal difference with both level on seven points. Scotland finish third and must wait on the best-thirds permutations.",
+    tag: "Result",
+    relatedTeams: ["scotland", "brazil"],
+    relatedMatch: { group: "C", teamA: "scotland", teamB: "brazil" },
+    prompt: "How far can Brazil go at this World Cup?",
+    sourceName: "Wikipedia (Group C table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_C",
+    verified: true,
+    verifiedAt: "2026-06-26",
+  },
+  {
+    id: "2026-06-24-cze-mex",
+    date: "2026-06-24",
+    title: "Mexico 3–0 Czechia — hosts complete a perfect group stage",
+    summary:
+      "Goals from Mateo Chávez, Julián Quiñones and a stoppage-time Álvaro Fidalgo finish gave Mexico a 3–0 win to end the group stage with a perfect record: three wins, six scored, none conceded, and nine points at the top of Group A. South Africa qualified second; Czechia finished bottom and are out.",
+    tag: "Result",
+    relatedTeams: ["mexico", "czech-republic"],
+    relatedMatch: { group: "A", teamA: "czech-republic", teamB: "mexico" },
+    prompt: "Can Mexico make a deep run as hosts?",
+    sourceName: "Wikipedia (Group A table)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_A",
+    verified: true,
+    verifiedAt: "2026-06-26",
+  },
+
   // ── 23 June — matchday 2 results: Groups K & L complete the second round ──
   {
     id: "2026-06-23-matchday2-kl",
