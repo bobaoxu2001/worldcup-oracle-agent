@@ -29,6 +29,10 @@
     "test:provenance": "tsx scripts/test-provenance.ts",
     "backtest": "tsx scripts/backtest.ts",
     "evolve": "tsx scripts/evolve.ts",
+    "dc:export": "tsx scripts/export-results-csv.ts betting-backtest/data",
+    "dc:backtest": "tsx scripts/export-results-csv.ts betting-backtest/data && python3 betting-backtest/dc_model.py betting-backtest/data",
+    "dc:selftest": "python3 betting-backtest/dc_model.py --selftest",
+    "dc:nightly": "bash betting-backtest/run_nightly.sh",
     "setup:mongo": "tsx scripts/setup-mongo.ts"
   },
   "dependencies": {

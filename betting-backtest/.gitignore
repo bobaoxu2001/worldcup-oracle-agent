@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Generated each run from the seed (lib/seed/manual-match-results.ts) — not
+# source. The tracked artifacts are reports/dc_latest.{md,json}.
+data/

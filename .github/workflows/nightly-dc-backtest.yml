@@ -1,0 +1,55 @@
+name: Nightly DC backtest
+
+# Refit the ridge Dixon-Coles model on the latest recorded scores every night
+# and commit the refreshed backtest report. Manual runs are allowed too.
+on:
+  schedule:
+    - cron: "0 8 * * *" # 08:00 UTC daily (after a typical match-day is recorded)
+  workflow_dispatch: {}
+
+# Allow the job to push the regenerated report back to the repo.
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-dc-backtest
+  cancel-in-progress: false
+
+jobs:
+  refit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install JS deps
+        run: npm ci
+
+      - name: Self-test the model (fast invariant checks)
+        run: python3 betting-backtest/dc_model.py --selftest
+
+      - name: Export latest scores + refit + backtest
+        run: bash betting-backtest/run_nightly.sh
+
+      - name: Commit refreshed report if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add betting-backtest/reports/dc_latest.md betting-backtest/reports/dc_latest.json
+          if git diff --cached --quiet; then
+            echo "No change in the backtest report."
+          else
+            git commit -m "chore: nightly ridge-DC backtest report [skip ci]"
+            git push
+          fi

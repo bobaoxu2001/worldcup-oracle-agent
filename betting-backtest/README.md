@@ -51,6 +51,60 @@ python3 report.py /path/to/your_data   # point at your own CSVs
 
 No dependencies — standard library only (Python 3.8+).
 
+---
+
+## The fitted model: ridge Dixon-Coles + leave-one-out backtest
+
+Everything above only **scores** pre-recorded predictions. `dc_model.py` adds the
+piece that actually **fits** a model to the goals and produces its own predictions,
+which then flow back into this same evaluator.
+
+**Model.** A [Dixon-Coles](https://www.tandfonline.com/doi/abs/10.1111/1467-9876.00065)
+bivariate-Poisson goals model: each team has an attack `a_i` and defence `d_i`,
+`log λ_home = μ0 + a_h − d_a + γ·home`, `log λ_away = μ0 + a_a − d_h`, with the
+DC low-score correction `ρ` for the 0-0 / 1-0 / 0-1 / 1-1 cells. Fit by penalised
+maximum likelihood (Adam, analytic gradients), pure stdlib.
+
+**Ridge.** With only ~3 group games per team an unpenalised fit over-fits wildly,
+so we shrink every team toward a common mean: `−(k/2)·Σ(a_i² + d_i²)`. The strength
+`k` is chosen by the **LOO log-loss itself** — out-of-sample, not by hand.
+
+**LOO backtest.** For every match we refit on the other N−1 and predict the
+held-out one (warm-started for speed). That match never touches its own fit, so
+RPS / Brier / log-loss / calibration are genuine out-of-sample numbers. (LOO is
+cross-sectional out-of-sample, not strictly time-ordered walk-forward.)
+
+**Calibration.** The same pooled-outcome reliability table + ECE used elsewhere,
+computed on the LOO predictions.
+
+```bash
+# from the repo root — one reproducible command:
+npm run dc:nightly            # export latest scores → refit → backtest report
+# or directly:
+bash betting-backtest/run_nightly.sh
+python3 betting-backtest/dc_model.py betting-backtest/data
+python3 betting-backtest/dc_model.py --selftest   # invariant checks (CI)
+```
+
+Outputs (tracked): `reports/dc_latest.md` and `reports/dc_latest.json`. The
+`data/` dir (regenerated `matches.csv` + LOO `predictions.csv`) is git-ignored —
+it is rebuilt from the seed every run. Because `predictions.csv` is written in the
+schema above, `python3 report.py data` then scores the DC predictions (and, if you
+drop in a real `market_prices.csv`, runs the edge gate + decision engine on them).
+
+### Nightly auto-refit
+
+`.github/workflows/nightly-dc-backtest.yml` runs the pipeline every night (08:00
+UTC), commits the refreshed `reports/dc_latest.*` when it changes, and can also be
+run on demand from the Actions tab. As knockout scores are recorded in
+`lib/seed/manual-match-results.ts`, the next run refits on them automatically.
+
+> **Honesty note (small sample).** 72 group matches ≈ 3 games per team — heavy
+> shrinkage (high `k`) is what keeps the LOO log-loss below the uniform baseline,
+> and the per-bucket calibration is noisy at this size. The LOO RPS/Brier/log-loss
+> skill scores are the robust signal; the team-strength table and ECE are
+> diagnostics, not precise truth. Expect both to firm up as the knockouts add games.
+
 `report.py` prints accuracy + calibration + ROI-by-edge-threshold, and writes two
 output tables into the data dir: `recommended_bets.csv` and `results_evaluation.csv`.
 
@@ -64,8 +118,12 @@ output tables into the data dir: `recommended_bets.csv` and `results_evaluation.
 | `decision_engine.py` | the betting rules (edge gate, stakes, NO-BET default, third-round flags) |
 | `backtest.py` | walk-forward evaluation functions (accuracy, Brier, log-loss, calibration, profit sims) |
 | `report.py` | runs everything, prints the report, writes the output CSVs |
+| `dc_model.py` | **ridge Dixon-Coles** goals model — fit + LOO backtest + calibration; writes `reports/dc_latest.*` and the LOO `predictions.csv` |
+| `run_nightly.sh` | one-command pipeline: export latest scores → refit → report |
 | `skills.md` | the V6.6 rule set this project encodes |
 | `sample_data/` | 13 illustrative matches (real WC2026 results, synthetic prices) |
+| `../scripts/export-results-csv.ts` | exports the recorded results (the seed) into `data/matches.csv` |
+| `../.github/workflows/nightly-dc-backtest.yml` | nightly cron that refits + commits the report |
 
 ## Data schema
 

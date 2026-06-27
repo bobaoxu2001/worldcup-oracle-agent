@@ -24,10 +24,15 @@ import decision_engine as de
 def load_all(data_dir):
     matches = schema.load_csv(os.path.join(data_dir, "matches.csv"))
     predictions = schema.load_csv(os.path.join(data_dir, "predictions.csv"))
-    prices = schema.load_csv(os.path.join(data_dir, "market_prices.csv"))
+    # Market prices are OPTIONAL: without them the betting layer is skipped and
+    # only prediction accuracy + calibration are reported (e.g. when scoring the
+    # Dixon-Coles LOO predictions, for which we have no captured odds).
+    prices_path = os.path.join(data_dir, "market_prices.csv")
+    prices = schema.load_csv(prices_path) if os.path.exists(prices_path) else []
     schema.validate_columns(matches, schema.MATCHES_COLUMNS, "matches.csv")
     schema.validate_columns(predictions, schema.PREDICTIONS_COLUMNS, "predictions.csv")
-    schema.validate_columns(prices, schema.MARKET_PRICES_COLUMNS, "market_prices.csv")
+    if prices:
+        schema.validate_columns(prices, schema.MARKET_PRICES_COLUMNS, "market_prices.csv")
     ctx_path = os.path.join(data_dir, "match_context.csv")
     context = schema.load_csv(ctx_path) if os.path.exists(ctx_path) else []
     return matches, predictions, prices, context
@@ -122,28 +127,36 @@ def main():
         print(f"  {b['label']:<9} {b['n']:>3}   {b['mean_pred']*100:6.0f}%   {b['observed']*100:6.0f}%   {b['gap']*100:+5.0f}%")
     print(f"  ECE: {cal['ece']*100:.1f}%")
 
-    # ── Betting profitability (the SEPARATE question) ────────────────────────
-    print("\n-- BETTING SIMULATION (flat 1u; isolates the effect) --------------")
-    flat = bt.simulate_flat_stake_profit(predictions, matches, prices)
-    print(f"Flat-stake on model top pick: {flat['bets']} bets, "
-          f"win {flat['win_rate']*100:.0f}%, ROI {flat['roi']*100:+.1f}%  (pnl {flat['pnl']:+.2f}u)")
-    print("\nROI by edge threshold (edge = model_prob - 1/price, i.e. over the vig-laden price):")
-    print("  threshold   bets   win%    staked     pnl       ROI")
-    for thr in (0.00, 0.05, 0.07, 0.08, 0.10, 0.15):
-        s = bt.simulate_edge_threshold_profit(predictions, matches, prices, thr)
-        roi = f"{s['roi']*100:+.1f}%" if s["bets"] else "  n/a"
-        print(f"  {thr*100:>5.0f}pp   {s['bets']:>4}   {s['win_rate']*100:>3.0f}%   {s['staked']:>6.2f}u   {s['pnl']:>+6.2f}u   {roi:>7}")
+    if not prices:
+        # No captured odds → prediction-only report (e.g. scoring the DC LOO
+        # predictions). The betting layer needs real prices to mean anything.
+        write_results_evaluation(data_dir, matches, predictions)
+        print("\n-- BETTING SIMULATION ----------------------------------------------")
+        print("  Skipped: no market_prices.csv in the data dir. Supply captured")
+        print("  decimal odds to run the edge gate + decision engine.")
+    else:
+        # ── Betting profitability (the SEPARATE question) ────────────────────
+        print("\n-- BETTING SIMULATION (flat 1u; isolates the effect) --------------")
+        flat = bt.simulate_flat_stake_profit(predictions, matches, prices)
+        print(f"Flat-stake on model top pick: {flat['bets']} bets, "
+              f"win {flat['win_rate']*100:.0f}%, ROI {flat['roi']*100:+.1f}%  (pnl {flat['pnl']:+.2f}u)")
+        print("\nROI by edge threshold (edge = model_prob - 1/price, i.e. over the vig-laden price):")
+        print("  threshold   bets   win%    staked     pnl       ROI")
+        for thr in (0.00, 0.05, 0.07, 0.08, 0.10, 0.15):
+            s = bt.simulate_edge_threshold_profit(predictions, matches, prices, thr)
+            roi = f"{s['roi']*100:+.1f}%" if s["bets"] else "  n/a"
+            print(f"  {thr*100:>5.0f}pp   {s['bets']:>4}   {s['win_rate']*100:>3.0f}%   {s['staked']:>6.2f}u   {s['pnl']:>+6.2f}u   {roi:>7}")
 
-    # ── Decision engine output ───────────────────────────────────────────────
-    recs = write_recommended_bets(data_dir, matches, predictions, prices, ctx_map)
-    write_results_evaluation(data_dir, matches, predictions)
-    bet_rows = [r for r in recs if r["recommendation"] == "BET"]
-    print(f"\n-- DECISION ENGINE -------------------------------------------------")
-    print(f"Recommendations: {len(recs)} matches → {len(bet_rows)} BET, {len(recs)-len(bet_rows)} NO BET")
-    for r in bet_rows:
-        print(f"  BET {r['match_id']}: {r['selection']} @ {r['market_price']} "
-              f"(edge {float(r['edge'])*100:+.1f}pp, {r['recommended_stake_units']}u)")
-    print("  (full detail in sample_data/recommended_bets.csv)")
+        # ── Decision engine output ───────────────────────────────────────────
+        recs = write_recommended_bets(data_dir, matches, predictions, prices, ctx_map)
+        write_results_evaluation(data_dir, matches, predictions)
+        bet_rows = [r for r in recs if r["recommendation"] == "BET"]
+        print(f"\n-- DECISION ENGINE -------------------------------------------------")
+        print(f"Recommendations: {len(recs)} matches → {len(bet_rows)} BET, {len(recs)-len(bet_rows)} NO BET")
+        for r in bet_rows:
+            print(f"  BET {r['match_id']}: {r['selection']} @ {r['market_price']} "
+                  f"(edge {float(r['edge'])*100:+.1f}pp, {r['recommended_stake_units']}u)")
+        print("  (full detail in recommended_bets.csv)")
 
     # ── Honesty banner ───────────────────────────────────────────────────────
     print("\n" + "!" * 64)
