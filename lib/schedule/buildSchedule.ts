@@ -28,6 +28,10 @@ export interface ScheduleRow {
   date: string; // ISO date or "TBA"
   venue: string; // city/venue or "TBA"
   status: "Scheduled" | "Finished" | "Live" | "TBA" | "Unknown";
+  /** Positional slot labels (knockout rows) — kept when the teams are resolved,
+   *  e.g. teamA "🇲🇽 Mexico" with teamASlot "2A". */
+  teamASlot?: string;
+  teamBSlot?: string;
   /** Final score when a matched live fixture is finished, e.g. "1–2". */
   score?: string;
   /** Structured goals (slugA's / slugB's) when a result is known — feeds standings. */
@@ -194,9 +198,32 @@ export function mergeManualIntoGroups(groups: GroupFixtures[]): GroupFixtures[] 
   }));
 }
 
-/** The knockout bracket grouped into round columns (R32 → Final) for the UI. */
-export function bracketColumns(): { round: string; matches: ScheduleRow[] }[] {
-  const rows = buildKnockoutFixtures();
+/**
+ * The knockout bracket grouped into round columns (R32 → Final) for the UI.
+ *
+ * Pass `resolvedR32` (match no → resolved team slugs) once the group stage is
+ * complete to replace the Round-of-32 positional placeholders (1A, 2B, 3rd→M74)
+ * with the actual qualified teams. The original slot labels are preserved in
+ * teamASlot / teamBSlot so the UI can still show "2A v 2B" as a subtitle. Later
+ * rounds keep their "winner of Mxx" slots until those matches are played.
+ */
+export function bracketColumns(
+  resolvedR32?: Map<number, { home: string; away: string }>
+): { round: string; matches: ScheduleRow[] }[] {
+  const rows = buildKnockoutFixtures().map((r) => {
+    const res = r.matchNo != null ? resolvedR32?.get(r.matchNo) : undefined;
+    if (!res) return r;
+    return {
+      ...r,
+      teamASlot: r.teamA,
+      teamBSlot: r.teamB,
+      teamA: teamLabel(res.home),
+      teamB: teamLabel(res.away),
+      // Teams are known now, but the official kickoff/venue is still not in the
+      // bundled data — keep it honest rather than inventing a time.
+      status: "Scheduled" as const,
+    };
+  });
   const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
   return order.map((round) => ({
     round,

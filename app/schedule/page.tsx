@@ -8,6 +8,7 @@ import {
   bracketColumns,
 } from "@/lib/schedule/buildSchedule";
 import { computeStandings } from "@/lib/schedule/standings";
+import { resolveQualification } from "@/lib/schedule/qualification";
 import { getCachedFixtures } from "@/lib/live-sports/tournamentState";
 import { getTeam } from "@/lib/seed/world-cup-2026-groups";
 import { fmtDatetime } from "@/lib/utils";
@@ -92,7 +93,17 @@ export default async function SchedulePage() {
   // with manually entered results (clearly labelled; live always wins).
   const groups = mergeManualIntoGroups(mergeLiveIntoGroups(buildGroupFixtures(), fixtures));
   const standingsByGroup = new Map(computeStandings(groups).map((s) => [s.group, s]));
-  const bracket = bracketColumns();
+
+  // Once the group stage is complete, resolve the official Round-of-32 slots to
+  // the actual qualified teams (and the eight best third-placed teams). Until
+  // then the bracket keeps its positional placeholders (1A, 2B, 3rd→M74).
+  const qualification = resolveQualification(groups);
+  const resolvedR32 = qualification.complete
+    ? new Map(qualification.r32.map((m) => [m.no, { home: m.home, away: m.away }]))
+    : undefined;
+  const bracket = bracketColumns(resolvedR32);
+  const qualifiedThirds = qualification.thirds.filter((t) => t.qualified);
+  const missedThirds = qualification.thirds.filter((t) => !t.qualified);
 
   // Freshness label is driven by the data actually on screen: the most recent
   // completed-result date in the standings (manual OR verified live). This can't
@@ -229,10 +240,50 @@ export default async function SchedulePage() {
         </p>
       </section>
 
+      {/* Best third-placed teams — resolved once every group has finished */}
+      {qualification.complete && (
+        <section className="mb-8">
+          <h2 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
+            <Trophy className="h-3.5 w-3.5" /> Best third-placed teams — 8 of 12 advance
+          </h2>
+          <div className="glass rounded-2xl p-4">
+            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
+              {qualifiedThirds.map((t) => (
+                <div
+                  key={t.slug}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-neon/20 bg-neon/[0.05] px-3 py-1.5 text-[13px]"
+                >
+                  <span className="min-w-0 truncate font-medium">
+                    {getTeam(t.slug).flag} {getTeam(t.slug).name}
+                  </span>
+                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                    3{t.group} · {t.row.points}pts · {t.row.goalDiff > 0 ? `+${t.row.goalDiff}` : t.row.goalDiff}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {missedThirds.length > 0 && (
+              <p className="mt-3 text-[11px] text-muted-foreground/70">
+                Did not advance (lower-ranked thirds):{" "}
+                {missedThirds.map((t, i) => (
+                  <span key={t.slug}>
+                    {i > 0 ? ", " : ""}
+                    {getTeam(t.slug).name} ({t.row.points}pts)
+                  </span>
+                ))}
+                . Thirds are ranked on points → goal difference → goals scored.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Knockout bracket — official routing as a round-by-round bracket view */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
-          Knockout bracket — official 2026 routing (teams TBA until groups finish)
+          {qualification.complete
+            ? "Knockout bracket — Round of 32 set; later rounds resolve as matches are played"
+            : "Knockout bracket — official 2026 routing (teams TBA until groups finish)"}
         </h2>
         <div className="glass overflow-x-auto rounded-2xl p-4">
           <div className="flex min-w-[1060px] items-stretch gap-4">
@@ -257,6 +308,11 @@ export default async function SchedulePage() {
                         {m.teamA} <span className="font-normal text-muted-foreground">vs</span>{" "}
                         {m.teamB}
                       </div>
+                      {m.teamASlot && m.teamBSlot && (
+                        <div className="mt-0.5 truncate text-[10px] text-muted-foreground/70 tabular-nums">
+                          {m.teamASlot} v {m.teamBSlot}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -265,8 +321,19 @@ export default async function SchedulePage() {
           </div>
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground/70">
-          Pairings show official bracket slots (1A = Group A winners, W73 = winner of Match 73,
-          3rd→M74 = best-third assigned by FIFA Annex C). Kickoff &amp; venue: TBA.
+          {qualification.complete ? (
+            <>
+              Round-of-32 teams are resolved from the final group standings, with the eight best
+              third-placed teams assigned to their slots via FIFA Annex C (slot labels shown
+              beneath, e.g. 1A v 2B). Later rounds show the feeding match (W73 = winner of Match 73)
+              until played. Kickoff &amp; venue: TBA.
+            </>
+          ) : (
+            <>
+              Pairings show official bracket slots (1A = Group A winners, W73 = winner of Match 73,
+              3rd→M74 = best-third assigned by FIFA Annex C). Kickoff &amp; venue: TBA.
+            </>
+          )}
         </p>
       </section>
     </div>
