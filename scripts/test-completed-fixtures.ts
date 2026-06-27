@@ -5,7 +5,9 @@
  *
  * Result-driven, so it picks an unplayed pairing DYNAMICALLY (scan the groups for
  * a pairing with no recorded result) rather than hard-coding one that goes stale
- * as matchdays land.
+ * as matchdays land. Once the group stage is COMPLETE (every within-group pairing
+ * played), it falls back to a cross-group pairing for the "never recorded → null"
+ * case — that pairing can never be seeded, so the contract still holds.
  */
 
 import {
@@ -34,7 +36,10 @@ for (const g of GROUPS) {
   }
 }
 if (!played) throw new Error("expected at least one completed group fixture on file");
-if (!unplayed) throw new Error("expected at least one unplayed group fixture on file");
+// Group stage complete → no within-group pairing is unplayed. Fall back to a
+// cross-group pairing, which is never seeded as a group result either way.
+const crossGroup = { a: "argentina", b: "brazil" };
+const notPlayed = unplayed ?? crossGroup;
 
 // 1. A played pairing resolves to a real, oriented result.
 const r = getCompletedFixture(played.a, played.b)!;
@@ -54,9 +59,10 @@ check("flipping arguments flips the outcome", flip.outcome === flippedOutcome, `
 const expected = r.scoreA > r.scoreB ? "A" : r.scoreB > r.scoreA ? "B" : "draw";
 check("outcome matches the scoreline", r.outcome === expected, r.outcome);
 
-// 4. An unplayed group pairing returns null / false.
-check(`unplayed pairing returns null (${getTeam(unplayed.a).name} v ${getTeam(unplayed.b).name})`, getCompletedFixture(unplayed.a, unplayed.b) === null);
-check("hasBeenPlayed is false for an unplayed pairing", !hasBeenPlayed(unplayed.a, unplayed.b));
+// 4. A pairing with no recorded result returns null / false (an unplayed
+//    within-group pairing if one remains, else a cross-group pairing).
+check(`unplayed pairing returns null (${getTeam(notPlayed.a).name} v ${getTeam(notPlayed.b).name})`, getCompletedFixture(notPlayed.a, notPlayed.b) === null);
+check("hasBeenPlayed is false for an unplayed pairing", !hasBeenPlayed(notPlayed.a, notPlayed.b));
 
 // 5. A cross-group pairing can never have a recorded (group-stage) result.
 //    Argentina (J) and Brazil (C) only meet in the knockouts, which are never seeded.

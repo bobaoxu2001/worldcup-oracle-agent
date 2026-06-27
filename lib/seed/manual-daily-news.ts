@@ -14,13 +14,15 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-26 — matchday 3 (the final round) underway. Groups A–F
- * have finished: Mexico won Group A with a perfect record, Brazil & Morocco both
- * advanced from C, the hosts (USA) took Group D despite a 3–2 loss to Türkiye,
- * Germany survived a 2–1 defeat to Ecuador to win Group E on goal difference, and
- * the Netherlands won Group F. Groups G–L conclude on 26–27 June and are not yet
- * recorded (scores not yet verifiable at time of writing). All A–F results
- * verified against the Wikipedia group tables.
+ * Last updated: 2026-06-27 — the group stage is COMPLETE. Groups G–L finished on
+ * 26–27 June: Egypt won Group G on goals scored over Belgium; debutants Cape Verde
+ * went through from Group H as Uruguay crashed out; France took Group I with a
+ * perfect record; Argentina won Group J and Austria took second; Portugal pipped
+ * Colombia to top Group K; and England won Group L with Ghana qualifying second on
+ * a disciplined draw. These G–L items are curated on the day of the games and are
+ * NOT badged "verified" (not yet cross-checked against an authoritative table); the
+ * A–F items remain verified. All 24 round-of-32 qualifiers' group placings are now
+ * set; the eight best third-placed teams resolve from the standings.
  */
 
 export type ManualDailyNewsTag =
@@ -57,6 +59,74 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 27 June — matchday 3 results: Groups J, K & L complete the group stage ──
+  {
+    id: "2026-06-27-matchday3-jkl",
+    date: "2026-06-27",
+    title: "Group stage done: Portugal pip Colombia, Ghana hold on, Argentina finish perfect",
+    summary:
+      "The final groups settled the last knockout places. Argentina rotated and still beat Jordan 2–0 to win Group J with nine points, Austria taking second past Algeria with a 2–1 win. Portugal beat Colombia 2–1 to snatch top spot in Group K — both already through — while DR Congo's 2–0 win over Uzbekistan put them third. In Group L, England beat Panama 3–0 to finish top and Ghana's disciplined 1–1 draw with Croatia carried them into the round of 32 as runners-up. With all 12 groups complete, the 16 group winners and runners-up are joined by the eight best third-placed teams.",
+    tag: "Standings",
+    relatedTeams: ["portugal", "england", "ghana", "argentina"],
+    prompt: "Which eight third-placed teams qualify for the round of 32?",
+  },
+  {
+    id: "2026-06-27-por-col",
+    date: "2026-06-27",
+    title: "Portugal 2–1 Colombia — Ronaldo's side snatch Group K",
+    summary:
+      "Portugal beat an already-qualified Colombia 2–1 to leapfrog them and win Group K on seven points, Cristiano Ronaldo again at the heart of it after his slow start to the tournament. Colombia go through second; DR Congo finish third and into the best-thirds pool.",
+    tag: "Result",
+    relatedTeams: ["portugal", "colombia"],
+    relatedMatch: { group: "K", teamA: "portugal", teamB: "colombia" },
+    prompt: "How far can Portugal go in the knockouts?",
+  },
+  {
+    id: "2026-06-27-cro-gha",
+    date: "2026-06-27",
+    title: "Croatia 1–1 Ghana — Ghana's resistance books a knockout place",
+    summary:
+      "A 1–1 draw was exactly what Ghana needed: it sent them through as Group L runners-up on five points, the organised low block the model re-scored after their goalless draw with England holding firm once more. Croatia finish third on four points and keep a live best-thirds case.",
+    tag: "Result",
+    relatedTeams: ["croatia", "ghana"],
+    relatedMatch: { group: "L", teamA: "croatia", teamB: "ghana" },
+    prompt: "Can Ghana spring a surprise in the round of 32?",
+  },
+
+  // ── 26 June — matchday 3 results: Groups G, H & I complete ──
+  {
+    id: "2026-06-26-matchday3-ghi",
+    date: "2026-06-26",
+    title: "Cape Verde make history; Egypt edge Belgium; France finish perfect",
+    summary:
+      "Groups G, H and I delivered the final round's biggest story: debutants Cape Verde beat Saudi Arabia 1–0 to reach the round of 32, unbeaten, while Uruguay lost 2–1 to Spain and went out in third. Egypt's 1–1 draw with Iran won them Group G on goals scored over Belgium (both on five points and the same goal difference), with Belgium second after a 2–0 win over New Zealand. France beat Norway 2–1 to take Group I with a perfect nine points, Norway qualifying second.",
+    tag: "Standings",
+    relatedTeams: ["cape-verde", "egypt", "spain", "france"],
+    prompt: "How did Cape Verde reach the knockouts on their World Cup debut?",
+  },
+  {
+    id: "2026-06-26-cpv-ksa",
+    date: "2026-06-26",
+    title: "Cape Verde 1–0 Saudi Arabia — debutants into the last 32",
+    summary:
+      "Cape Verde's first-ever World Cup win sent them through as Group H runners-up on five points, unbeaten across the group after holding both Spain and Uruguay. The compact, well-drilled low block the model profiled after the 0–0 with Spain carried the islanders all the way to the round of 32. Spain won the group; Saudi Arabia finished bottom and are out.",
+    tag: "Result",
+    relatedTeams: ["cape-verde", "saudi-arabia"],
+    relatedMatch: { group: "H", teamA: "cape-verde", teamB: "saudi-arabia" },
+    prompt: "Who could Cape Verde face in the round of 32?",
+  },
+  {
+    id: "2026-06-26-egy-irn",
+    date: "2026-06-26",
+    title: "Egypt 1–1 Iran — Egypt top Group G on goals scored",
+    summary:
+      "A 1–1 draw was enough for Egypt to win Group G: level with Belgium on five points and the same +2 goal difference, the Pharaohs edged top spot on goals scored (five to three). It is a landmark group win after Egypt's first-ever World Cup victory in the previous round. Iran drew all three to finish third and enter the best-thirds pool.",
+    tag: "Result",
+    relatedTeams: ["egypt", "iran"],
+    relatedMatch: { group: "G", teamA: "egypt", teamB: "iran" },
+    prompt: "How far can Egypt go from here?",
+  },
+
   // ── 25 June — matchday 3 results: Groups D, E & F complete ──
   {
     id: "2026-06-25-matchday3-def",

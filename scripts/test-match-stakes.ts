@@ -108,55 +108,62 @@ for (const g of GROUPS) {
       if (!getCompletedFixture(t[i], t[j])) upcoming.push([t[i], t[j]]);
 }
 
-ok(upcoming.length > 0, `there are upcoming group fixtures to check (${upcoming.length})`);
-ok(
-  upcoming.every(([a, b]) => getMatchStakes(a, b) <= 0 && getMatchStakes(b, a) <= 0),
-  "every rotation nudge is ≤ 0 (it only ever trims, never inflates)"
-);
-
-const ROTATING: StakesState[] = ["settled-top", "settled-second", "comfortable"];
-const FULL: StakesState[] = ["must-play", "race-for-first"];
-let sawRotation = false;
-let sawFull = false;
-for (const [a, b] of upcoming) {
-  for (const [x, y] of [
-    [a, b],
-    [b, a],
-  ] as const) {
-    const st = getMatchStakesState(x, y);
-    if (ROTATING.includes(st)) {
-      sawRotation = true;
-      ok(
-        getMatchStakes(x, y) < 0,
-        `${getTeam(x).name} (${st}) is trimmed for rotation vs ${getTeam(y).name}`
-      );
-    }
-    if (FULL.includes(st) && !sawFull) {
-      sawFull = true;
-      ok(
-        getMatchStakes(x, y) === 0,
-        `${getTeam(x).name} (${st}) is left at full strength vs ${getTeam(y).name}`
-      );
-    }
-  }
-  if (sawRotation && sawFull) break;
-}
-if (!sawRotation) console.log("ℹ️  no team currently in a settled/comfortable state (all races still live)");
-
-// Breakdown + factor surface the layer when it fires.
-const flagged = upcoming.find(
-  ([a, b]) => getMatchStakes(a, b) < 0 || getMatchStakes(b, a) < 0
-);
-if (flagged) {
-  const pred = predictMatch(flagged[0], flagged[1]);
-  const stk =
-    (pred.eloBreakdown.a.matchStakesAdjustment ?? 0) +
-    (pred.eloBreakdown.b.matchStakesAdjustment ?? 0);
-  ok(stk < 0, "predictMatch eloBreakdown carries the matchStakesAdjustment");
+// The match-stakes layer only acts on a team's FINAL group game, so once the
+// group stage is COMPLETE there are no upcoming group fixtures left to check.
+// That is a valid terminal state, not a failure — the synthetic classifier
+// tests above already lock the contract deterministically.
+if (upcoming.length === 0) {
+  console.log("ℹ️  group stage complete — no upcoming group fixtures; engine-contract checks skipped");
+} else {
   ok(
-    pred.factors.some((f) => f.label === "Match stakes (rotation risk)"),
-    "predictMatch lists a 'Match stakes (rotation risk)' factor"
+    upcoming.every(([a, b]) => getMatchStakes(a, b) <= 0 && getMatchStakes(b, a) <= 0),
+    "every rotation nudge is ≤ 0 (it only ever trims, never inflates)"
   );
+
+  const ROTATING: StakesState[] = ["settled-top", "settled-second", "comfortable"];
+  const FULL: StakesState[] = ["must-play", "race-for-first"];
+  let sawRotation = false;
+  let sawFull = false;
+  for (const [a, b] of upcoming) {
+    for (const [x, y] of [
+      [a, b],
+      [b, a],
+    ] as const) {
+      const st = getMatchStakesState(x, y);
+      if (ROTATING.includes(st)) {
+        sawRotation = true;
+        ok(
+          getMatchStakes(x, y) < 0,
+          `${getTeam(x).name} (${st}) is trimmed for rotation vs ${getTeam(y).name}`
+        );
+      }
+      if (FULL.includes(st) && !sawFull) {
+        sawFull = true;
+        ok(
+          getMatchStakes(x, y) === 0,
+          `${getTeam(x).name} (${st}) is left at full strength vs ${getTeam(y).name}`
+        );
+      }
+    }
+    if (sawRotation && sawFull) break;
+  }
+  if (!sawRotation) console.log("ℹ️  no team currently in a settled/comfortable state (all races still live)");
+
+  // Breakdown + factor surface the layer when it fires.
+  const flagged = upcoming.find(
+    ([a, b]) => getMatchStakes(a, b) < 0 || getMatchStakes(b, a) < 0
+  );
+  if (flagged) {
+    const pred = predictMatch(flagged[0], flagged[1]);
+    const stk =
+      (pred.eloBreakdown.a.matchStakesAdjustment ?? 0) +
+      (pred.eloBreakdown.b.matchStakesAdjustment ?? 0);
+    ok(stk < 0, "predictMatch eloBreakdown carries the matchStakesAdjustment");
+    ok(
+      pred.factors.some((f) => f.label === "Match stakes (rotation risk)"),
+      "predictMatch lists a 'Match stakes (rotation risk)' factor"
+    );
+  }
 }
 
 console.log(`\nDefault rotation tendency: ${DEFAULT_ROTATION_TENDENCY}`);

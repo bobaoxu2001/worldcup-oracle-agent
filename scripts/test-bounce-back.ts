@@ -10,6 +10,10 @@ import {
   GAP_FLOOR,
   BOUNCE_CAP,
 } from "../lib/prediction-engine/bounceBack";
+import { getRating } from "../lib/prediction-engine/ratings";
+import { getResultDelta } from "../lib/prediction-engine/ratingUpdates";
+import { getEffectiveRating } from "../lib/prediction-engine/availabilityAdjustments";
+import { GROUPS, getTeam } from "../lib/seed/world-cup-2026-groups";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -37,15 +41,48 @@ check(
   bounceBackDelta(1900, -20, 300, true) >= bounceBackDelta(1900, -20, 100, true)
 );
 
-// Live: the two fixtures the user named should both fire for the favourite ----
-const swiVsBos = getBounceBack("switzerland", "bosnia-and-herzegovina");
-const canVsQat = getBounceBack("canada", "qatar");
-check("Switzerland (drew Qatar) bounces back vs Bosnia", swiVsBos > 0, `+${swiVsBos}`);
-check("Canada (drew Bosnia) bounces back vs Qatar", canVsQat > 0, `+${canVsQat}`);
-// …but the weaker sides do NOT get it.
-check("Bosnia does NOT get a bounce-back vs Switzerland", getBounceBack("bosnia-and-herzegovina", "switzerland") === 0);
-check("Qatar does NOT get a bounce-back vs Canada", getBounceBack("qatar", "canada") === 0);
+// Live contract — discovered DYNAMICALLY so it never goes stale as results land.
+// The layer keys on a side's CUMULATIVE result delta: a quality team only "needs
+// to bounce back" while it is still net under-performing. Once it strings together
+// wins (or the group stage is complete and deltas settle), it can stop qualifying —
+// that is correct, not a regression. So we find a current example rather than
+// hard-coding one team, and assert the contract on it; if none currently qualifies
+// we say so and lean on the pure-function checks above.
+let liveFav: { fav: string; weak: string; delta: number } | null = null;
+for (const g of GROUPS) {
+  const t = g.teams;
+  for (let i = 0; i < t.length && !liveFav; i++) {
+    for (let j = 0; j < t.length; j++) {
+      if (i === j) continue;
+      const fav = t[i], weak = t[j];
+      if (
+        getRating(fav) >= QUALITY_FLOOR &&
+        getResultDelta(fav) < 0 &&
+        getEffectiveRating(fav) - getEffectiveRating(weak) >= GAP_FLOOR
+      ) {
+        liveFav = { fav, weak, delta: getBounceBack(fav, weak) };
+        break;
+      }
+    }
+  }
+}
 
-console.log(`\nLive bounce-backs: Switzerland +${swiVsBos} (vs Bosnia), Canada +${canVsQat} (vs Qatar)`);
+if (liveFav) {
+  const { fav, weak } = liveFav;
+  const fwd = getBounceBack(fav, weak);
+  check(
+    `a currently under-performing quality side bounces back (${getTeam(fav).name} vs ${getTeam(weak).name})`,
+    fwd > 0,
+    `+${fwd}`
+  );
+  // …but the weaker side never gets it.
+  check(
+    `the weaker side does NOT get a bounce-back (${getTeam(weak).name} vs ${getTeam(fav).name})`,
+    getBounceBack(weak, fav) === 0
+  );
+  console.log(`\nLive bounce-back: ${getTeam(fav).name} +${fwd} (vs ${getTeam(weak).name})`);
+} else {
+  console.log("\nℹ️  no side currently under-performing-and-favoured in any group — bounce-back idle (pure-function contract still verified above)");
+}
 console.log(failures === 0 ? "\nAll bounce-back checks passed." : `\n${failures} check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);
