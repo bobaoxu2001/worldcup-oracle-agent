@@ -16,10 +16,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "▶ 1/2  Exporting recorded results → betting-backtest/data/matches.csv"
+echo "▶ 1/3  Exporting recorded results → betting-backtest/data/matches.csv"
 npx tsx scripts/export-results-csv.ts betting-backtest/data
 
-echo "▶ 2/2  Refitting ridge Dixon-Coles + leave-one-out backtest"
+echo "▶ 2/3  Exporting upcoming fixtures (Round of 32 if groups are done)"
+npx tsx scripts/export-fixtures-csv.ts betting-backtest/data
+
+echo "▶ 3/3  Refitting ridge Dixon-Coles + leave-one-out backtest + forecast"
 python3 betting-backtest/dc_model.py betting-backtest/data
 
-echo "✓ Done. Report: betting-backtest/reports/dc_latest.md"
+echo "✓ Done. Reports: betting-backtest/reports/dc_latest.md (+ dc_r32_forecast.md)"
