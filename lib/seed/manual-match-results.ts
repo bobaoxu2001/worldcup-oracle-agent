@@ -15,7 +15,16 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-27 — matchday-3 (the FINAL ROUND) is now COMPLETE across
+ * Last updated: 2026-06-30 — the ROUND OF 32 has begun. First four knockout
+ * results recorded (28–29 June), cross-checked against the Wikipedia knockout
+ * table + FIFA match centre and marked verified: Canada 1-0 South Africa (Eustáquio
+ * 90+2'), Paraguay beat Germany on penalties after 1-1 (4-3), Morocco beat the
+ * Netherlands on penalties after 1-1 (3-2), Brazil 2-1 Japan (Martinelli 90+5').
+ * Canada, Paraguay, Morocco and Brazil into the last 16; South Africa, Germany,
+ * Netherlands and Japan are out. Knockout entries use group "R32" so they fold
+ * into the Elo updates but never touch the group standings (shootouts stored at
+ * their 1-1 ET score → a draw in the Elo fold; the advancing side is noted).
+ * ── Prior 2026-06-27 — matchday-3 (the FINAL ROUND) is now COMPLETE across
  * all 12 groups: the group stage is done. Groups G–L (26–27 June) are entered here
  * through the manual layer on the day of the games and are NOT yet cross-checked
  * against an authoritative table, so their `verified` flag is intentionally left
@@ -901,5 +910,66 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     note: "Ghana's disciplined draw with Croatia (1–1) was enough to send them through as Group L runners-up on 5 pts — the verified resistance the model re-scored after their goalless draw with England paying off again. Croatia finish third on 4 pts and carry a live case into the best-thirds pool.",
     sourceName: "Wikipedia (Group L table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
+  },
+
+  // ── ROUND OF 32 (knockouts begin) ──────────────────────────────────────
+  // 28–29 June. These are NOT group games: `group` is set to "R32" so they
+  // never touch the group standings (buildSchedule/standings only match group
+  // pairings), but they DO fold into the post-match Elo updates the same way
+  // every other result does. Penalty-shootout matches are recorded at their
+  // regulation/extra-time score (a 1–1 draw → 0.5/0.5 in the Elo fold, the
+  // standard convention); the shootout winner who advances is named in `note`.
+  // Cross-checked against the Wikipedia knockout-stage table + FIFA match centre.
+  {
+    group: "R32",
+    teamA: "south-africa",
+    teamB: "canada",
+    scoreA: 0,
+    scoreB: 1,
+    date: "2026-06-28",
+    note: "The knockouts opened with the all-runners-up tie (2A v 2B): co-hosts Canada edged South Africa 1–0 on a Stephen Eustáquio strike deep in stoppage time (90+2'), reaching the round of 16. South Africa, who had impressed in second behind Mexico in Group A, go out.",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-06-30",
+  },
+  {
+    group: "R32",
+    teamA: "germany",
+    teamB: "paraguay",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-29",
+    note: "Group E winners Germany were stunned on penalties: Julio Enciso put Paraguay ahead (42'), Kai Havertz levelled (54'), and after 1–1 through extra time Paraguay held their nerve to win the shootout 4–3 and reach the last 16. One of the biggest upsets of the round — a major scalp for CONMEBOL. (Recorded as a 1–1 draw for the Elo fold; Paraguay advance.)",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-06-30",
+  },
+  {
+    group: "R32",
+    teamA: "netherlands",
+    teamB: "morocco",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-06-29",
+    note: "Another shootout, another fallen European heavyweight: Cody Gakpo's opener (72') was cancelled out by Issa Diop at the death (90+1'), and Morocco beat the Netherlands 3–2 on penalties after 1–1 to march into the round of 16. Morocco carry their 2022 semi-final pedigree into the knockouts. (Recorded as a 1–1 draw for the Elo fold; Morocco advance.)",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-06-30",
+  },
+  {
+    group: "R32",
+    teamA: "brazil",
+    teamB: "japan",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-06-29",
+    note: "Brazil needed a late winner to see off a stubborn Japan: Kaishū Sano gave Japan a shock lead (29'), Casemiro headed the equaliser (56'), and Gabriel Martinelli settled it in the fifth minute of stoppage time (90+5') for a 2–1 win. Brazil into the last 16; Japan, second in Group F, exit with credit.",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-06-30",
   },
 ];
