@@ -15,33 +15,46 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-06-30 — the ROUND OF 32 has begun. First four knockout
- * results recorded (28–29 June), cross-checked against the Wikipedia knockout
- * table + FIFA match centre and marked verified: Canada 1-0 South Africa (Eustáquio
- * 90+2'), Paraguay beat Germany on penalties after 1-1 (4-3), Morocco beat the
- * Netherlands on penalties after 1-1 (3-2), Brazil 2-1 Japan (Martinelli 90+5').
- * Canada, Paraguay, Morocco and Brazil into the last 16; South Africa, Germany,
- * Netherlands and Japan are out. Knockout entries use group "R32" so they fold
- * into the Elo updates but never touch the group standings (shootouts stored at
- * their 1-1 ET score → a draw in the Elo fold; the advancing side is noted).
- * ── Prior 2026-06-27 — matchday-3 (the FINAL ROUND) is now COMPLETE across
- * all 12 groups: the group stage is done. Groups G–L (26–27 June) are entered here
- * through the manual layer on the day of the games and are NOT yet cross-checked
- * against an authoritative table, so their `verified` flag is intentionally left
- * unset (A–F remain verified). 26 June (G–I): Belgium 2-0 New Zealand & Egypt 1-1
- * Iran (EGYPT win Group G on goals scored over Belgium, both 5 pts/+2; Belgium
- * second; Iran best-third), Spain 2-1 Uruguay & Cape Verde 1-0 Saudi Arabia (SPAIN
- * win Group H, debutants CAPE VERDE go through second, Uruguay out in third on 2),
- * France 2-1 Norway & Senegal 2-0 Iraq (FRANCE win Group I on a perfect 9, Norway
- * second). 27 June (J–L): Argentina 2-0 Jordan & Algeria 1-2 Austria (ARGENTINA
- * top Group J on 9, AUSTRIA second, Algeria best-third), Portugal 2-1 Colombia &
- * DR Congo 2-0 Uzbekistan (PORTUGAL snatch top spot in Group K, Colombia second,
- * DR Congo best-third), England 3-0 Panama & Croatia 1-1 Ghana (ENGLAND win Group
- * L, GHANA through second on the draw, Croatia best-third). Eliminated (bottom,
- * three results that can't reach a best-third spot): New Zealand, Saudi Arabia,
- * Iraq, Jordan, Uzbekistan, Panama. The eight best third-placed teams are resolved
- * from the standings once all results are loaded. ── Prior 2026-06-26: matchday-3
- * recorded for Groups A–F.
+ * Last updated: 2026-07-01 — THREE more Round-of-32 results recorded (France
+ * 3-0 Sweden, Norway 2-1 Ivory Coast, Mexico 2-0 Ecuador). Recording Mexico's
+ * game surfaced a bracket mismatch (the resolved R32 field had Mexico facing
+ * Senegal, but the real fixture was Mexico v Ecuador) which traced back to a
+ * DATA BUG: every matchday-3 score for Groups G–L (recorded 26–27 June,
+ * left `verified` unset at the time — see the superseded note this replaces)
+ * was actually wrong. Cross-checked and CORRECTED against the Wikipedia group
+ * tables on 1 July (now `verified: true`); real matchday-3 for G–L: Belgium
+ * 5-1 New Zealand & Egypt 1-1 Iran (BELGIUM win Group G on goal difference,
+ * +4 to Egypt's +2 — not Egypt as previously recorded; Iran third but MISS
+ * the best-thirds pool), Spain 1-0 Uruguay & Cape Verde 0-0 Saudi Arabia
+ * (Spain win Group H as before, Cape Verde through second on 3 draws not a
+ * win), France 4-1 Norway & Senegal 5-0 Iraq (France win Group I as before),
+ * Argentina 3-1 Jordan & Algeria 3-3 Austria (Argentina top Group J as
+ * before; Austria/Algeria level on 4 pts, Austria 2nd on GD), Portugal 0-0
+ * Colombia & DR Congo 3-1 Uzbekistan (COLOMBIA win Group K on 7 pts — not
+ * Portugal as previously recorded, who finish second on 5), England 2-0
+ * Panama & CROATIA 2-1 Ghana (England win Group L as before, but CROATIA are
+ * the real runners-up on 6 pts — not Ghana; Ghana finish third on 4 and make
+ * the best-thirds pool via that route instead). Net effect: the eight real
+ * best-thirds are DR Congo, Sweden, Ecuador, Ghana, Bosnia, Algeria, Paraguay,
+ * Senegal (Croatia and Iran — which the old wrong data implied — do NOT
+ * qualify; Croatia go through directly as a group runner-up instead). This
+ * flowed through to the R32 bracket resolver (`lib/schedule/qualification.ts`
+ * + `bracket-2026.ts`), which re-resolved correctly once the group data was
+ * fixed — cross-checked against the real Wikipedia knockout-stage fixture
+ * list, e.g. Mexico v Ecuador (not Senegal), Colombia v Ghana, Portugal v
+ * Croatia, Switzerland v Algeria, Belgium v Senegal, Australia v Egypt.
+ * ── Prior 2026-06-30 — the ROUND OF 32 began. First four knockout results
+ * recorded (28–29 June), cross-checked and verified: Canada 1-0 South Africa
+ * (Eustáquio 90+2'), Paraguay beat Germany on penalties after 1-1 (4-3),
+ * Morocco beat the Netherlands on penalties after 1-1 (3-2), Brazil 2-1 Japan
+ * (Martinelli 90+5'). Canada, Paraguay, Morocco and Brazil into the last 16;
+ * South Africa, Germany, Netherlands and Japan are out. Knockout entries use
+ * group "R32" so they fold into the Elo updates but never touch the group
+ * standings (shootouts stored at their 1-1 ET score → a draw in the Elo fold;
+ * the advancing side is noted). ── Prior 2026-06-27 — matchday-3 (the FINAL
+ * ROUND) completed all 12 groups (group stage done); the eight best third-
+ * placed teams are resolved from the standings once all results are loaded.
+ * ── Prior 2026-06-26: matchday-3 recorded for Groups A–F.
  * 24 June (A–C): Mexico 3-0 Czechia (Mexico win Group A with a perfect 3-0-0,
  * 6 scored & 0 conceded), South Africa 1-0 South Korea (RSA second), Switzerland 2-1
  * Canada (SUI win Group B, CAN second, Bosnia best-third), Bosnia 3-1 Qatar,
@@ -779,12 +792,14 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     group: "G",
     teamA: "belgium",
     teamB: "new-zealand",
-    scoreA: 2,
-    scoreB: 0,
+    scoreA: 5,
+    scoreB: 1,
     date: "2026-06-26",
-    note: "Belgium finally found their cutting edge after two draws, a controlled 2–0 win over New Zealand lifting them to 5 pts — but it was only enough for second. Egypt, level on 5 pts and the same +2 goal difference, pipped them to top spot on goals scored. New Zealand finish bottom on 1 pt and are out.",
+    note: "Belgium finally clicked in style, thrashing New Zealand 5–1 to finish Group G on 5 pts and +4 goal difference — enough to take top spot ahead of Egypt, who also finished on 5 pts but a lower +2 goal difference. New Zealand finish bottom on 1 pt and are out.",
     sourceName: "Wikipedia (Group G table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "G",
@@ -793,123 +808,150 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 1,
     scoreB: 1,
     date: "2026-06-26",
-    note: "A 1–1 draw was enough for Egypt to win Group G on goals scored (5 to Belgium's 3, the two level on 5 pts and +2 goal difference) — a landmark group win after their first-ever World Cup victory last time out. Iran draw all three games to finish third on 3 pts and go into the best-thirds pool.",
+    note: "Egypt's 1–1 draw with Iran leaves them second in Group G on 5 pts and +2 goal difference — Belgium's late 5–1 win over New Zealand took the group on goal difference (+4 to +2) instead. Both Belgium and Egypt are through. Iran draw all three games to finish third on 3 pts and miss out on the best-thirds pool.",
     sourceName: "Wikipedia (Group G table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_G",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "H",
     teamA: "spain",
     teamB: "uruguay",
-    scoreA: 2,
-    scoreB: 1,
+    scoreA: 1,
+    scoreB: 0,
     date: "2026-06-26",
-    note: "Spain edged Uruguay 2–1 to win Group H on 7 pts. The defeat leaves Uruguay third on just 2 pts — a chastening group for a side that drew with both Saudi Arabia and Cape Verde and never recovered the missing centre-backs; they enter the best-thirds pool but their two points are unlikely to be enough.",
+    note: "Spain closed out the group with a narrow 1–0 win away to Uruguay, finishing Group H on 7 pts. Uruguay's defeat leaves them third on 2 pts — a chastening group after draws with both Saudi Arabia and Cape Verde; they miss out on the best-thirds pool.",
     sourceName: "Wikipedia (Group H table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_H",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "H",
     teamA: "cape-verde",
     teamB: "saudi-arabia",
-    scoreA: 1,
+    scoreA: 0,
     scoreB: 0,
     date: "2026-06-26",
-    note: "Cape Verde's first-ever World Cup win — a 1–0 victory over Saudi Arabia — sends the debutants through to the round of 32 as Group H runners-up on 5 pts, unbeaten across the group (draws with Spain and Uruguay). The organised low block the model profiled after Spain 0–0 Cape Verde carried them all the way. Saudi Arabia finish bottom on 1 pt and are out.",
+    note: "Cape Verde's third straight draw — 0–0 with Saudi Arabia — sends the debutants through to the round of 32 as Group H runners-up on 3 pts, unbeaten across all three games. The organised low block the model profiled after Spain 0–0 Cape Verde held up all tournament. Saudi Arabia finish bottom on 2 pts (behind Uruguay on goal difference) and are out.",
     sourceName: "Wikipedia (Group H table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_H",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "I",
     teamA: "france",
     teamB: "norway",
-    scoreA: 2,
+    scoreA: 4,
     scoreB: 1,
     date: "2026-06-26",
-    note: "Top spot decided between two already-qualified sides: France beat Norway 2–1 to win Group I with a perfect nine points, Erling Haaland's reply not enough. Norway qualify second on 6 pts. Both are into the knockouts.",
+    note: "Top spot already secured for both, but France cruised past Norway 4–1 to finish Group I with a perfect nine points. Norway qualify second on 6 pts. Both are into the knockouts.",
     sourceName: "Wikipedia (Group I table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_I",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "I",
     teamA: "senegal",
     teamB: "iraq",
-    scoreA: 2,
+    scoreA: 5,
     scoreB: 0,
     date: "2026-06-26",
-    note: "Senegal salvaged pride with a 2–0 win over Iraq to finish third on 3 pts and slip into the best-thirds pool after two opening defeats. Iraq end the group stage with three losses and are eliminated.",
+    note: "Senegal signed off in style, hammering Iraq 5–0 to finish third on 3 pts and +2 goal difference — enough for the best-thirds pool after two opening defeats. Iraq end the group stage with three losses, no points, and are eliminated.",
     sourceName: "Wikipedia (Group I table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_I",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
 
   // ── 27 June — matchday 3: Groups J, K & L complete the final round (and the
-  // group stage). Entered through the manual layer on the day of the games;
-  // NOT yet cross-checked against an authoritative table, so `verified` is unset.
+  // group stage). CORRECTED 2026-07-01: this batch (like the 26 June G/H/I
+  // batch above) was entered same-day and left unverified — cross-checking
+  // against the Wikipedia group tables on 1 July found every score in this
+  // 26-27 June matchday-3 batch was wrong. Fixed here; see the file header
+  // for the standings/bracket consequences (Belgium not Egypt won Group G,
+  // Colombia not Portugal won Group K, Croatia not Ghana was the Group L
+  // runner-up).
   {
     group: "J",
     teamA: "argentina",
     teamB: "jordan",
-    scoreA: 2,
-    scoreB: 0,
+    scoreA: 3,
+    scoreB: 1,
     date: "2026-06-27",
-    note: "With top spot already secured, Argentina rotated but still saw off Jordan 2–0 to finish Group J on a perfect nine points. Jordan end with three defeats and are eliminated.",
+    note: "With top spot already secured, Argentina rotated but still beat Jordan 3–1 to finish Group J on a perfect nine points. Jordan end with three defeats and are eliminated.",
     sourceName: "Wikipedia (Group J table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "J",
     teamA: "algeria",
     teamB: "austria",
-    scoreA: 1,
-    scoreB: 2,
+    scoreA: 3,
+    scoreB: 3,
     date: "2026-06-27",
-    note: "The straight shoot-out for second went Austria's way: a 2–1 win took them to 6 pts and into the round of 32 as Group J runners-up. Algeria finish third on 3 pts and enter the best-thirds pool.",
+    note: "A wild 3–3 draw settled second and third: Austria finish on 4 pts and progress as Group J runners-up on goal difference (0 to Algeria's −2). Algeria also reach 4 pts but finish third — enough for the best-thirds pool.",
     sourceName: "Wikipedia (Group J table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_J",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "K",
     teamA: "portugal",
     teamB: "colombia",
-    scoreA: 2,
-    scoreB: 1,
+    scoreA: 0,
+    scoreB: 0,
     date: "2026-06-27",
-    note: "Portugal beat Colombia 2–1 to snatch top spot in Group K on 7 pts, Cristiano Ronaldo to the fore again after his slow start. Colombia, already qualified, finish second on 6 pts; both go through to the knockouts.",
+    note: "A goalless draw between two already-qualified sides. Colombia's point is enough to win Group K on 7 pts; Portugal, held again after their big win over Uzbekistan, finish second on 5 pts. Both go through to the knockouts.",
     sourceName: "Wikipedia (Group K table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_K",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "K",
     teamA: "dr-congo",
     teamB: "uzbekistan",
-    scoreA: 2,
-    scoreB: 0,
+    scoreA: 3,
+    scoreB: 1,
     date: "2026-06-27",
-    note: "DR Congo signed off with a 2–0 win over Uzbekistan to finish third in Group K on 4 pts and into the best-thirds pool with a positive goal difference. Debutants Uzbekistan lose all three and are eliminated.",
+    note: "DR Congo signed off with a 3–1 win over Uzbekistan to finish third in Group K on 4 pts and a positive goal difference — enough for the best-thirds pool. Debutants Uzbekistan lose all three and are eliminated.",
     sourceName: "Wikipedia (Group K table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_K",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "L",
     teamA: "england",
     teamB: "panama",
-    scoreA: 3,
+    scoreA: 2,
     scoreB: 0,
     date: "2026-06-27",
-    note: "England comfortably saw off Panama 3–0 to win Group L on 7 pts. Panama finish bottom with three defeats, no goals scored, and are eliminated.",
+    note: "England comfortably saw off Panama 2–0 to win Group L on 7 pts. Panama finish bottom with three defeats, no goals scored, and are eliminated.",
     sourceName: "Wikipedia (Group L table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
   {
     group: "L",
     teamA: "croatia",
     teamB: "ghana",
-    scoreA: 1,
+    scoreA: 2,
     scoreB: 1,
     date: "2026-06-27",
-    note: "Ghana's disciplined draw with Croatia (1–1) was enough to send them through as Group L runners-up on 5 pts — the verified resistance the model re-scored after their goalless draw with England paying off again. Croatia finish third on 4 pts and carry a live case into the best-thirds pool.",
+    note: "Croatia's 2–1 win over Ghana sends them through as Group L runners-up on 6 pts. Ghana finish third on 4 pts, but the resistance the model profiled after their goalless draw with England is enough to carry them into the best-thirds pool anyway.",
     sourceName: "Wikipedia (Group L table)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_L",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
 
   // ── ROUND OF 32 (knockouts begin) ──────────────────────────────────────
@@ -971,5 +1013,44 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
     verified: true,
     verifiedAt: "2026-06-30",
+  },
+  {
+    group: "R32",
+    teamA: "france",
+    teamB: "sweden",
+    scoreA: 3,
+    scoreB: 0,
+    date: "2026-06-30",
+    note: "France cruised into the last 16: Kylian Mbappé scored twice and Bradley Barcola added another in a comfortable 3–0 win over Sweden — the third-placed Group F qualifier no match for the group-I winners.",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-07-01",
+  },
+  {
+    group: "R32",
+    teamA: "ivory-coast",
+    teamB: "norway",
+    scoreA: 1,
+    scoreB: 2,
+    date: "2026-06-30",
+    note: "Norway won a World Cup knockout game for the first time: Antonio Nusa's 39' finish (assist Ødegaard) was cancelled out by Amad Diallo (74'), before Erling Haaland's 86' close-range finish settled it 2–1 for Norway, who face five-time champions Brazil in the round of 16.",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-07-01",
+  },
+  {
+    group: "R32",
+    teamA: "mexico",
+    teamB: "ecuador",
+    scoreA: 2,
+    scoreB: 0,
+    date: "2026-06-30",
+    note: "Co-hosts Mexico ended a 40-year wait for a World Cup knockout win: Julián Quiñones (22') and Raúl Jiménez (31') scored inside the first half hour, and Mexico held on 2–0 over Group E's best-third qualifier Ecuador to reach the round of 16, where they face the winner of England v DR Congo.",
+    sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
+    sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
+    verified: true,
+    verifiedAt: "2026-07-01",
   },
 ];

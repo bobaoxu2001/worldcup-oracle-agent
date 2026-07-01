@@ -148,6 +148,15 @@ export const REACH_BUCKET: Record<Round, number> = {
  */
 export const EXACT_ANNEX_C: Record<string, Record<ThirdSlotId, GroupLetter>> = {
   // "ABCDEFGH": { M74: "A", M77: "C", M79: "F", M80: "E", M81: "B", M82: "H", M85: "G", M87: "D" },
+
+  // 2026 REAL tournament combination (B,D,E,F,I,J,K,L qualified as best thirds).
+  // The deterministic matcher's alphabetical-first pass produces a DIFFERENT
+  // valid matching (it swaps I↔J between M82/M85 — both are allowed-set-legal,
+  // since M82 allows {A,E,H,I,J} and M85 allows {E,F,G,I,J}, so I and J are each
+  // legal in either slot). Cross-checked against the real Wikipedia Round-of-32
+  // fixture list on 1 July 2026 (Belgium v Senegal, Switzerland v Algeria) to
+  // pin FIFA's actual published assignment rather than the matcher's guess.
+  BDEFIJKL: { M74: "D", M77: "F", M79: "E", M80: "K", M81: "B", M82: "I", M85: "J", M87: "L" },
 };
 
 export function combinationKey(groups: GroupLetter[]): string {

@@ -10,19 +10,19 @@ genuine forward forecasts — the R32 has not been played._
 
 | Tie | Home win | Draw | Away win | Most likely | Top scorelines |
 |---|---|---|---|---|---|
-| M73 South Africa v Canada | 25% | 41% | 34% | **Draw** (41%) | 0-0, 0-1, 1-1 |
-| M74 Germany v Paraguay | 50% | 28% | 22% | **Germany** (50%) | 1-1, 2-1, 2-0 |
+| M73 South Africa v Canada | 28% | 37% | 35% | **Draw** (37%) | 0-0, 1-1, 0-1 |
+| M74 Germany v Paraguay | 47% | 28% | 25% | **Germany** (47%) | 1-1, 2-1, 2-0 |
 | M75 Netherlands v Morocco | 39% | 28% | 33% | **Netherlands** (39%) | 1-1, 2-1, 1-2 |
-| M76 Brazil v Japan | 48% | 30% | 23% | **Brazil** (48%) | 1-1, 0-0, 2-1 |
-| M77 France v Sweden | 61% | 22% | 17% | **France** (61%) | 1-1, 2-1, 2-0 |
-| M78 Ivory Coast v Norway | 34% | 30% | 36% | **Norway** (36%) | 1-1, 0-0, 1-2 |
-| M79 Mexico v Senegal | 75% | 17% | 8% | **Mexico** (75%) | 2-0, 3-0, 2-1 |
-| M80 England v DR Congo | 47% | 32% | 21% | **England** (47%) | 1-1, 0-0, 1-0 |
-| M81 United States v Bosnia & Herzegovina | 70% | 16% | 14% | **United States** (70%) | 3-1, 2-1, 4-1 |
-| M82 Egypt v Ecuador | 38% | 36% | 26% | **Egypt** (38%) | 0-0, 1-1, 1-0 |
-| M83 Colombia v Ghana | 32% | 38% | 29% | **Draw** (38%) | 0-0, 1-1, 1-0 |
-| M84 Spain v Austria | 50% | 29% | 21% | **Spain** (50%) | 1-1, 2-1, 1-0 |
-| M85 Switzerland v Iran | 50% | 30% | 20% | **Switzerland** (50%) | 1-1, 1-0, 0-0 |
-| M86 Argentina v Cape Verde | 49% | 34% | 17% | **Argentina** (49%) | 0-0, 1-0, 1-1 |
-| M87 Portugal v Croatia | 59% | 23% | 17% | **Portugal** (59%) | 1-1, 2-1, 2-0 |
-| M88 Australia v Belgium | 27% | 42% | 31% | **Draw** (42%) | 0-0, 0-1, 1-1 |
+| M76 Brazil v Japan | 45% | 29% | 26% | **Brazil** (45%) | 1-1, 2-1, 0-0 |
+| M77 France v Sweden | 67% | 20% | 13% | **France** (67%) | 2-1, 1-1, 2-0 |
+| M78 Ivory Coast v Norway | 33% | 29% | 38% | **Norway** (38%) | 1-1, 1-2, 2-1 |
+| M79 Mexico v Ecuador | 65% | 24% | 11% | **Mexico** (65%) | 2-0, 1-0, 1-1 |
+| M80 England v DR Congo | 43% | 30% | 27% | **England** (43%) | 1-1, 0-0, 2-1 |
+| M81 United States v Bosnia & Herzegovina | 65% | 18% | 17% | **United States** (65%) | 2-1, 3-1, 1-1 |
+| M82 Belgium v Senegal | 40% | 27% | 32% | **Belgium** (40%) | 1-1, 2-1, 1-2 |
+| M83 Portugal v Croatia | 46% | 28% | 25% | **Portugal** (46%) | 1-1, 2-1, 2-0 |
+| M84 Spain v Austria | 49% | 28% | 23% | **Spain** (49%) | 1-1, 2-1, 2-0 |
+| M85 Switzerland v Algeria | 54% | 25% | 21% | **Switzerland** (54%) | 1-1, 2-1, 2-0 |
+| M86 Argentina v Cape Verde | 49% | 31% | 21% | **Argentina** (49%) | 1-1, 1-0, 0-0 |
+| M87 Colombia v Ghana | 38% | 36% | 27% | **Colombia** (38%) | 0-0, 1-1, 1-0 |
+| M88 Australia v Egypt | 31% | 34% | 34% | **Draw** (34%) | 1-1, 0-0, 0-1 |
