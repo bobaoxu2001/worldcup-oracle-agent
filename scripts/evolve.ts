@@ -7,8 +7,12 @@
  * before it, and grid-searches the model's two most impactful free knobs to
  * minimise out-of-sample log-loss:
  *
- *   gapScale   — global compression of the favourite's Elo edge (1.0 = none).
- *                Detects systematic over/under-confidence in the strength model.
+ *   gapScale   — global scaling of the favourite's Elo edge (1.0 = none;
+ *                <1 compresses, >1 expands). The grid spans BOTH sides of 1.0
+ *                so it detects systematic over- AND under-confidence in the
+ *                strength model (the original compression-only grid could not
+ *                see the under-confidence that showed up once knockout results
+ *                landed — calibration bucket 60–80% observed 81%).
  *   drawBoost  — the group-stage draw-propensity multiplier (drawPropensity.ts).
  *
  * It prints the best combos + the full log-loss surface so the fitted values in
@@ -23,6 +27,7 @@ import { computeRatingUpdates } from "../lib/prediction-engine/ratingUpdates";
 import { getAvailabilityDelta } from "../lib/prediction-engine/availabilityAdjustments";
 import { getTacticalMatchup } from "../lib/prediction-engine/tacticalMatchups";
 import { GROUP_DRAW_BOOST, DRAW_CEIL, isGroupFixture } from "../lib/prediction-engine/drawPropensity";
+import { GAP_SCALE } from "../lib/prediction-engine/confidenceCalibration";
 import { matchProb, expectedScore } from "../lib/prediction-engine/elo";
 import { HOST_SLUGS, getTeam } from "../lib/seed/world-cup-2026-groups";
 
@@ -67,7 +72,7 @@ function evalParams(scale: number, boost: number): { ll: number; br: number } {
   return { ll: ll / all.length, br: br / all.length };
 }
 
-const scales = [0.78, 0.84, 0.9, 0.96, 1.0];
+const scales = [0.84, 0.92, 1.0, 1.08, 1.16, 1.24];
 const boosts = [0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36];
 const grid = scales.flatMap((s) => boosts.map((b) => ({ s, b, ...evalParams(s, b) })));
 grid.sort((x, y) => x.ll - y.ll);
@@ -78,9 +83,12 @@ console.log("Best 6 (gapScale, drawBoost) by LogLoss↓:");
 for (const r of grid.slice(0, 6)) console.log(`  gapScale=${r.s.toFixed(2)} drawBoost=${r.b.toFixed(2)} → LogLoss ${r.ll.toFixed(4)}  Brier ${r.br.toFixed(4)}`);
 
 const baseline = evalParams(1.0, 0);
-const live = evalParams(1.0, GROUP_DRAW_BOOST);
+// Live engine: GAP_SCALE from confidenceCalibration.ts (evalParams applies the
+// scale uncapped; the engine's ±30/side cap only binds beyond a ~600 Elo gap,
+// so the numbers match for every realistic fixture).
+const live = evalParams(GAP_SCALE, GROUP_DRAW_BOOST);
 console.log(`\nNo draw layer (1.00, 0.00):       LogLoss ${baseline.ll.toFixed(4)}  Brier ${baseline.br.toFixed(4)}`);
-console.log(`Live engine   (1.00, ${GROUP_DRAW_BOOST.toFixed(2)}):    LogLoss ${live.ll.toFixed(4)}  Brier ${live.br.toFixed(4)}`);
+console.log(`Live engine   (${GAP_SCALE.toFixed(2)}, ${GROUP_DRAW_BOOST.toFixed(2)}):    LogLoss ${live.ll.toFixed(4)}  Brier ${live.br.toFixed(4)}`);
 
 console.log("\nLogLoss surface (rows=gapScale, cols=drawBoost):");
 console.log("        " + boosts.map((b) => b.toFixed(2).padStart(7)).join(""));
@@ -89,4 +97,9 @@ for (const s of scales) {
   for (const b of boosts) row += grid.find((x) => x.s === s && x.b === b)!.ll.toFixed(3).padStart(7);
   console.log(row);
 }
-console.log(`\nFitted into the engine: gapScale 1.0 (no compression — strength model is well-calibrated), drawBoost ${GROUP_DRAW_BOOST}.`);
+const best = grid[0];
+console.log(
+  `\nGrid optimum: gapScale ${best.s.toFixed(2)}, drawBoost ${best.b.toFixed(2)}. ` +
+    `Live engine runs gapScale ${GAP_SCALE} (confidenceCalibration.ts), drawBoost ${GROUP_DRAW_BOOST} — ` +
+    `re-fit deliberately (shrunk toward 1.0 / the historical draw rate), never chased to the grid edge.`
+);

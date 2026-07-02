@@ -37,6 +37,7 @@ import {
 } from "./preMatchIntelligence";
 import { getBounceBack } from "./bounceBack";
 import { getMatchStakes, getMatchStakesState, describeStakes } from "./matchStakes";
+import { gapCalibration, GAP_SCALE, GAP_CAL_CAP, type GapCalibration } from "./confidenceCalibration";
 import {
   GROUPS,
   HOST_SLUGS,
@@ -79,10 +80,12 @@ function homeBonus(teamA: string, teamB: string): number {
  */
 function matchupRatings(aSlug: string, bSlug: string): { eloA: number; eloB: number } {
   const tac = getTacticalMatchup(aSlug, bSlug);
-  return {
-    eloA: getEffectiveRating(aSlug) + tac.a + getIntelDelta(aSlug, bSlug) + getBounceBack(aSlug, bSlug),
-    eloB: getEffectiveRating(bSlug) + tac.b + getIntelDelta(bSlug, aSlug) + getBounceBack(bSlug, aSlug),
-  };
+  const rawA = getEffectiveRating(aSlug) + tac.a + getIntelDelta(aSlug, bSlug) + getBounceBack(aSlug, bSlug);
+  const rawB = getEffectiveRating(bSlug) + tac.b + getIntelDelta(bSlug, aSlug) + getBounceBack(bSlug, aSlug);
+  // Global confidence calibration (walk-forward fitted, capped) — applied at
+  // the fixture level so the Monte-Carlo sims agree with predictMatch.
+  const cal = gapCalibration(rawA, rawB);
+  return { eloA: rawA + cal.a, eloB: rawB + cal.b };
 }
 
 function confidenceFrom(topProb: number): {
@@ -108,14 +111,19 @@ function upsetFrom(winA: number, winB: number): UpsetRisk {
 function buildFactors(
   aSlug: string,
   bSlug: string,
-  eloA: number,
-  eloB: number,
+  rawEloA: number,
+  rawEloB: number,
   hb: number,
   p: ReturnType<typeof matchProb>
 ): ModelFactor[] {
   const a = getTeam(aSlug);
   const b = getTeam(bSlug);
-  const gap = Math.round(eloA - eloB);
+  // Mirror the probability path: the displayed gap includes the global
+  // confidence calibration (see confidenceCalibration.ts), explained below.
+  const cal: GapCalibration = gapCalibration(rawEloA, rawEloB);
+  const eloA = Math.round(rawEloA + cal.a);
+  const eloB = Math.round(rawEloB + cal.b);
+  const gap = eloA - eloB;
   const factors: ModelFactor[] = [];
 
   factors.push({
@@ -126,6 +134,16 @@ function buildFactors(
         : `${gap > 0 ? a.name : b.name} rates ${Math.abs(gap)} Elo points higher (${eloA} vs ${eloB}).`,
     weight: Math.abs(gap) >= 120 ? "high" : Math.abs(gap) >= 50 ? "medium" : "low",
   });
+
+  if (cal.active) {
+    const fav = cal.a > 0 ? a.name : b.name;
+    const shift = Math.abs(Math.round(cal.a));
+    factors.push({
+      label: "Confidence calibration (walk-forward fit)",
+      detail: `The 82-match walk-forward backtest showed the stacked model under-rating favourites (outcomes it called 60–80% landed 81% of the time), so the fixture's Elo gap is expanded ×${GAP_SCALE.toFixed(2)} — ${fav} +${shift}, opponent −${shift}, hard-capped at ±${GAP_CAL_CAP} per side. A fitted, capped calibration transform (grid optimum 1.24, deliberately shrunk), re-fitted as rounds land — not a football opinion about either team.`,
+      weight: shift >= 10 ? "medium" : "low",
+    });
+  }
 
   if (hb !== 0) {
     const host = hb > 0 ? a.name : b.name;
@@ -312,8 +330,14 @@ export function predictMatch(
 
   // Optional Elo overrides power the agent's "what-if" scenario re-analysis
   // (e.g. a key player unavailable). Default behaviour is unchanged.
-  const effEloA = options.eloOverrideA ?? eloA;
-  const effEloB = options.eloOverrideB ?? eloB;
+  const rawEloA = options.eloOverrideA ?? eloA;
+  const rawEloB = options.eloOverrideB ?? eloB;
+  // Global confidence calibration: capped expansion of the fixture gap, fitted
+  // walk-forward (see confidenceCalibration.ts). Applied AFTER every Elo layer
+  // and after what-if overrides, matching the Monte-Carlo path exactly.
+  const cal = gapCalibration(rawEloA, rawEloB);
+  const effEloA = rawEloA + cal.a;
+  const effEloB = rawEloB + cal.b;
 
   const p = matchProb(effEloA, effEloB, hb);
   // Group-stage draw-propensity correction (openers draw more than raw Elo

@@ -11,6 +11,8 @@
  *   old        — + completed-result learning (K=60) + confederation form
  *   full       — + value-weighted injuries + tactical matchup
  *   full+draw  — + group-stage draw-propensity correction (opener-weighted)
+ *   +cal       — + global confidence calibration (capped gap expansion,
+ *                confidenceCalibration.ts) — this is the LIVE engine stack
  *
  * Metrics: multiclass Brier (↓), the Ranked Probability Score / RPS (↓),
  * log-loss (↓), top-pick accuracy, and the average predicted draw probability vs
@@ -33,6 +35,7 @@ import { getAvailabilityDelta } from "../lib/prediction-engine/availabilityAdjus
 import { getTacticalMatchup, getStyle } from "../lib/prediction-engine/tacticalMatchups";
 import { drawMultiplierFor, inflateDraw, isGroupFixture } from "../lib/prediction-engine/drawPropensity";
 import { bounceBackDelta } from "../lib/prediction-engine/bounceBack";
+import { gapCalibration } from "../lib/prediction-engine/confidenceCalibration";
 import { matchProb, expectedScore } from "../lib/prediction-engine/elo";
 import { HOST_SLUGS, getTeam } from "../lib/seed/world-cup-2026-groups";
 
@@ -58,7 +61,7 @@ function confedDeltas(results: typeof MANUAL_MATCH_RESULTS): Record<string, numb
 
 interface Agg { brier: number; rps: number; logloss: number; hits: number; drawPred: number; }
 const mk = (): Agg => ({ brier: 0, rps: 0, logloss: 0, hits: 0, drawPred: 0 });
-const VARIANTS = ["unif", "base", "old", "full", "drawFlat", "full+draw"] as const;
+const VARIANTS = ["unif", "base", "old", "full", "drawFlat", "full+draw", "+cal"] as const;
 const V: Record<string, Agg> = Object.fromEntries(VARIANTS.map((k) => [k, mk()]));
 
 /**
@@ -115,11 +118,17 @@ for (const m of all) {
   const drawMultDamped = drawMultiplierFor(isGroup, playedCount, favKill, busResist);
   const pDrawFlat = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMultFlat);
   const pDraw = inflateDraw(pFull.winA, pFull.draw, pFull.winB, drawMultDamped);
+  // Live stack: the same full ratings pushed through the global confidence
+  // calibration (capped gap expansion) BEFORE the draw layer — mirrors engine.ts.
+  const cal = gapCalibration(fullA, fullB);
+  const pCalRaw = matchProb(fullA + cal.a, fullB + cal.b, bonus);
+  const pCal = inflateDraw(pCalRaw.winA, pCalRaw.draw, pCalRaw.winB, drawMultDamped);
   const probs: Record<string, { winA: number; draw: number; winB: number }> = {
     unif: { winA: 1 / 3, draw: 1 / 3, winB: 1 / 3 },
     base: pBase, old: pOld, full: pFull,
     drawFlat: { winA: pDrawFlat.winA, draw: pDrawFlat.draw, winB: pDrawFlat.winB },
     "full+draw": { winA: pDraw.winA, draw: pDraw.draw, winB: pDraw.winB },
+    "+cal": { winA: pCal.winA, draw: pCal.draw, winB: pCal.winB },
   };
 
   const yA = m.scoreA > m.scoreB ? 1 : 0, yD = m.scoreA === m.scoreB ? 1 : 0, yB = m.scoreB > m.scoreA ? 1 : 0;
@@ -134,12 +143,12 @@ for (const m of all) {
     if (top === act) V[k].hits++;
     V[k].drawPred += p.draw;
   }
-  // Reliability points for the live (full+draw) model: each outcome's predicted
+  // Reliability points for the live (+cal) model: each outcome's predicted
   // probability paired with whether that outcome actually occurred.
-  const live = probs["full+draw"];
+  const live = probs["+cal"];
   calib.push({ p: live.winA, hit: yA }, { p: live.draw, hit: yD }, { p: live.winB, hit: yB });
 
-  const pf = probs["full+draw"];
+  const pf = probs["+cal"];
   const favName = pf.winA >= pf.winB ? nm(m.teamA) : nm(m.teamB);
   const favP = Math.max(pf.winA, pf.winB);
   const outc = yD ? "DRAW" : (yA ? nm(m.teamA) : nm(m.teamB)) + " win";
@@ -152,7 +161,7 @@ for (const m of all) {
 const N = all.length;
 const actualDraws = all.filter((m) => m.scoreA === m.scoreB).length;
 console.log(`Walk-forward backtest · ${N} completed matches (each predicted from results strictly before it)\n`);
-console.log("✗ = model's top pick wrong (full+draw variant)\n");
+console.log("✗ = model's top pick wrong (+cal live variant)\n");
 console.log(rows.join("\n"));
 console.log(`\nActual draw rate: ${actualDraws}/${N} = ${(actualDraws / N * 100).toFixed(0)}%`);
 console.log("\nVariant            Brier↓   RPS↓   LogLoss↓  TopPickAcc   AvgDrawPred");
@@ -162,11 +171,11 @@ for (const k of VARIANTS) {
 }
 console.log("(RPS is the ordinal-aware headline metric — see file header.)");
 
-// ── Skill vs the uniform 1/3 baseline (live full+draw model) ─────────────────
+// ── Skill vs the uniform 1/3 baseline (live +cal model) ──────────────────────
 // Skill score = 1 − model/reference; >0 means the model beats a no-information
 // 1/3-1/3-1/3 forecast. The ratio is sample-size invariant, so no /N is needed.
 {
-  const m = V["full+draw"], ref = V["unif"];
+  const m = V["+cal"], ref = V["unif"];
   const bss = 1 - m.brier / ref.brier;
   const rpss = 1 - m.rps / ref.rps;
   const llCut = (1 - m.logloss / ref.logloss) * 100;
@@ -176,7 +185,7 @@ console.log("(RPS is the ordinal-aware headline metric — see file header.)");
   console.log(`  LogLoss:           ${(m.logloss / N).toFixed(3)} vs ${(ref.logloss / N).toFixed(3)} uniform (${llCut.toFixed(0)}% lower)`);
 }
 
-// ── Calibration / reliability of the live (full+draw) model ──────────────────
+// ── Calibration / reliability of the live (+cal) model ───────────────────────
 // Bin the pooled outcome probabilities and compare mean predicted prob to the
 // observed frequency in each bin. Close columns ⇒ well-calibrated probabilities.
 const bins = [
@@ -186,7 +195,7 @@ const bins = [
   { lo: 0.6, hi: 0.8, label: "60–80%" },
   { lo: 0.8, hi: 1.01, label: "80–100%" },
 ];
-console.log("\nCalibration (live full+draw model, all outcomes pooled):");
+console.log("\nCalibration (live +cal model, all outcomes pooled):");
 console.log("Pred bucket    n   MeanPred   Observed   Gap");
 let ece = 0;
 for (const b of bins) {

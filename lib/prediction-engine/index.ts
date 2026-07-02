@@ -124,6 +124,12 @@ export {
   mulberry32,
 } from "./elo";
 export {
+  GAP_SCALE,
+  GAP_CAL_CAP,
+  gapCalibration,
+  type GapCalibration,
+} from "./confidenceCalibration";
+export {
   getCompletedFixture,
   hasBeenPlayed,
   completedFixtureNote,

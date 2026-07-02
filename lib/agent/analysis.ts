@@ -19,6 +19,7 @@ import {
   getChampionOddsFor,
   getEffectiveRating,
   getTacticalMatchup,
+  gapCalibration,
 } from "@/lib/prediction-engine";
 import { expectedGoals } from "@/lib/prediction-engine/elo";
 import { matchProb } from "@/lib/prediction-engine/elo";
@@ -402,7 +403,10 @@ export function buildTeamComparison(a: TeamRef, b: TeamRef) {
   // with the main prediction for style-clash fixtures (e.g. a low block vs a
   // possession side). Team-level proxies (rank/attack/defense) stay unchanged.
   const tac = getTacticalMatchup(a.slug, b.slug);
-  const neutral = matchProb(pa.elo + tac.a, pb.elo + tac.b, 0);
+  // Same global confidence calibration as predictMatch / the MC sims, so the
+  // head-to-head line never disagrees with the main prediction.
+  const cal = gapCalibration(pa.elo + tac.a, pb.elo + tac.b);
+  const neutral = matchProb(pa.elo + tac.a + cal.a, pb.elo + tac.b + cal.b, 0);
   const stronger = pa.elo === pb.elo ? null : pa.elo > pb.elo ? a : b;
 
   const row = (label: string, va: string, vb: string) => `• **${label}:** ${a.name} ${va} · ${b.name} ${vb}`;
