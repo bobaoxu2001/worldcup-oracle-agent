@@ -147,7 +147,92 @@ export default async function SchedulePage() {
         </span>
       </div>
 
-      {/* Group stage — drawn pairings + standings per group */}
+      {/* Knockout bracket — official routing as a round-by-round bracket view.
+          Now the headline section: the tournament is in the knockout rounds, so
+          this sits ABOVE the (completed) group stage. */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
+          {qualification.complete
+            ? "Knockout bracket — Round of 32 underway; later rounds resolve as matches are played"
+            : "Knockout bracket — official 2026 routing (teams TBA until groups finish)"}
+        </h2>
+        <div className="glass overflow-x-auto rounded-2xl p-4">
+          <div className="flex min-w-[1060px] items-stretch gap-4">
+            {bracket.map((col) => (
+              <div key={col.round} className="flex w-[196px] shrink-0 flex-col">
+                <h3 className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neon">
+                  {col.round}
+                </h3>
+                <div className="flex flex-1 flex-col justify-around gap-2">
+                  {col.matches.map((m) => (
+                    <div
+                      key={m.matchNo}
+                      className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 transition hover:border-neon/25"
+                    >
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span className="font-semibold">M{m.matchNo}</span>
+                        {m.status === "Finished" && m.score ? (
+                          <span className="font-semibold text-foreground tabular-nums">
+                            {m.score}
+                            <span className="font-normal text-muted-foreground">
+                              {" "}
+                              · {fmtShortDate(m.date)}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-300/70">
+                            {m.date === "TBA" ? "TBA" : fmtKickoff(m.date)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 truncate text-[13px] font-semibold tabular-nums">
+                        {m.teamA} <span className="font-normal text-muted-foreground">vs</span>{" "}
+                        {m.teamB}
+                      </div>
+                      {m.advanced && (
+                        <div className="mt-0.5 truncate text-[10px] font-medium text-neon/90">
+                          {m.advanced} advance on penalties
+                        </div>
+                      )}
+                      {m.teamASlot && m.teamBSlot && (
+                        <div className="mt-0.5 truncate text-[10px] text-muted-foreground/70 tabular-nums">
+                          {m.teamASlot} v {m.teamBSlot}
+                        </div>
+                      )}
+                      {m.slugA && m.slugB && (
+                        <div className="mt-1 flex justify-end">
+                          <AskOracleLink slugA={m.slugA} slugB={m.slugB} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground/70">
+          {qualification.complete ? (
+            <>
+              Round-of-32 teams are resolved from the final group standings, with the eight best
+              third-placed teams assigned to their slots via FIFA Annex C (slot labels shown
+              beneath, e.g. 1A v 2B). Completed knockout ties show the recorded result (manual
+              layer; shootouts are stored at their extra-time score with the advancing side named)
+              and their winners fill the next round. Undecided slots keep the feeding match
+              (W73 = winner of Match 73). Tap <strong>Ask</strong> on any resolved tie to send it to
+              the Oracle. Kickoff &amp; venue: TBA.
+            </>
+          ) : (
+            <>
+              Pairings show official bracket slots (1A = Group A winners, W73 = winner of Match 73,
+              3rd→M74 = best-third assigned by FIFA Annex C). Kickoff &amp; venue: TBA.
+            </>
+          )}
+        </p>
+      </section>
+
+      {/* Group stage — drawn pairings + standings per group (now complete, below
+          the live knockout bracket) */}
       <section className="mb-8">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
@@ -278,81 +363,6 @@ export default async function SchedulePage() {
         </section>
       )}
 
-      {/* Knockout bracket — official routing as a round-by-round bracket view */}
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-neon">
-          {qualification.complete
-            ? "Knockout bracket — Round of 32 set; later rounds resolve as matches are played"
-            : "Knockout bracket — official 2026 routing (teams TBA until groups finish)"}
-        </h2>
-        <div className="glass overflow-x-auto rounded-2xl p-4">
-          <div className="flex min-w-[1060px] items-stretch gap-4">
-            {bracket.map((col) => (
-              <div key={col.round} className="flex w-[196px] shrink-0 flex-col">
-                <h3 className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neon">
-                  {col.round}
-                </h3>
-                <div className="flex flex-1 flex-col justify-around gap-2">
-                  {col.matches.map((m) => (
-                    <div
-                      key={m.matchNo}
-                      className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 transition hover:border-neon/25"
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                        <span className="font-semibold">M{m.matchNo}</span>
-                        {m.status === "Finished" && m.score ? (
-                          <span className="font-semibold text-foreground tabular-nums">
-                            {m.score}
-                            <span className="font-normal text-muted-foreground">
-                              {" "}
-                              · {fmtShortDate(m.date)}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-amber-300/70">
-                            {m.date === "TBA" ? "TBA" : fmtKickoff(m.date)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 truncate text-[13px] font-semibold tabular-nums">
-                        {m.teamA} <span className="font-normal text-muted-foreground">vs</span>{" "}
-                        {m.teamB}
-                      </div>
-                      {m.advanced && (
-                        <div className="mt-0.5 truncate text-[10px] font-medium text-neon/90">
-                          {m.advanced} advance on penalties
-                        </div>
-                      )}
-                      {m.teamASlot && m.teamBSlot && (
-                        <div className="mt-0.5 truncate text-[10px] text-muted-foreground/70 tabular-nums">
-                          {m.teamASlot} v {m.teamBSlot}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="mt-2 text-[11px] text-muted-foreground/70">
-          {qualification.complete ? (
-            <>
-              Round-of-32 teams are resolved from the final group standings, with the eight best
-              third-placed teams assigned to their slots via FIFA Annex C (slot labels shown
-              beneath, e.g. 1A v 2B). Completed knockout ties show the recorded result (manual
-              layer; shootouts are stored at their extra-time score with the advancing side named)
-              and their winners fill the next round. Undecided slots keep the feeding match
-              (W73 = winner of Match 73). Kickoff &amp; venue: TBA.
-            </>
-          ) : (
-            <>
-              Pairings show official bracket slots (1A = Group A winners, W73 = winner of Match 73,
-              3rd→M74 = best-third assigned by FIFA Annex C). Kickoff &amp; venue: TBA.
-            </>
-          )}
-        </p>
-      </section>
     </div>
   );
 }

@@ -59,7 +59,10 @@ export default async function NewsPage() {
         </p>
       </section>
 
-      <DailyBrief />
+      {/* Show the full knockout press-conference layer (pre- & post-match), not
+          just the latest few — these managers'/players' briefings are the story
+          now that the tournament is in the knockout rounds. */}
+      <DailyBrief limit={9} />
 
       <NewsBrowser
         teams={teams}

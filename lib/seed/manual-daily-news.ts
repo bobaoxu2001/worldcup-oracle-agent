@@ -14,21 +14,30 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-06-27 — the group stage is COMPLETE. Groups G–L finished on
- * 26–27 June: Egypt won Group G on goals scored over Belgium; debutants Cape Verde
- * went through from Group H as Uruguay crashed out; France took Group I with a
- * perfect record; Argentina won Group J and Austria took second; Portugal pipped
- * Colombia to top Group K; and England won Group L with Ghana qualifying second on
- * a disciplined draw. These G–L items are curated on the day of the games and are
- * NOT badged "verified" (not yet cross-checked against an authoritative table); the
- * A–F items remain verified. All 24 round-of-32 qualifiers' group placings are now
- * set; the eight best third-placed teams resolve from the standings.
+ * Last updated: 2026-07-02 — KNOCKOUTS: added the Round-of-32 press-conference
+ * layer the user asked for (pre- AND post-match managers/players). Post-match:
+ * Nagelsmann after Germany's shootout exit to Paraguay ("I am not resigning"),
+ * Tuchel & Kane after England's 2–1 comeback vs DR Congo, Rudi García & Tielemans
+ * after Belgium's 3–2 aet vs Senegal, Pochettino on Balogun's red card as the USA
+ * beat Bosnia 2–0. Pre-match: Ronaldo/Portugal vs Croatia and Scaloni warning
+ * Argentina not to underestimate Cape Verde (both 2–3 July). Quotes are curated
+ * from official team sites + reputable match reports (England FA, Bundesliga,
+ * ESPN, France 24, FIFA, CBS) and cited per item; the direct-quote items with a
+ * primary/official source are badged verified, the pure-preview items are not.
+ * New tag: "Press Conference". ── Prior 2026-06-27 — the group stage completed.
+ * Groups G–L finished on 26–27 June: Egypt won Group G on goals scored over
+ * Belgium; debutants Cape Verde went through from Group H as Uruguay crashed out;
+ * France took Group I with a perfect record; Argentina won Group J and Austria took
+ * second; Portugal pipped Colombia to top Group K; and England won Group L with
+ * Ghana qualifying second on a disciplined draw. Those G–L items were curated on
+ * the day and are NOT badged "verified"; the A–F items remain verified.
  */
 
 export type ManualDailyNewsTag =
   | "Result"
   | "Standings"
   | "Match Preview"
+  | "Press Conference"
   | "Team News"
   | "Injury"
   | "Prediction"
@@ -59,6 +68,107 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 2 July — knockout press-conference layer (pre- & post-match) ────────────
+  {
+    id: "2026-07-02-knockouts-overview",
+    date: "2026-07-02",
+    title: "Round of 32: heavyweights fall as the knockouts catch fire",
+    summary:
+      "Ten of the sixteen last-32 ties are settled and the upsets are piling up: Paraguay knocked out Germany on penalties, Morocco did the same to the Netherlands, and Norway dumped out the Ivory Coast — while England, Belgium and the co-hosts USA all had to come from behind or hold on late. Still to play (2–3 July): Spain–Austria, Portugal–Croatia and Switzerland–Algeria, then Australia–Egypt, Argentina–Cape Verde and Colombia–Ghana. The bracket on the Schedule page now resolves each winner into the Round of 16 as the results land.",
+    tag: "Tournament",
+    relatedTeams: ["paraguay", "morocco", "england", "belgium"],
+    prompt: "Who are the favourites left in the World Cup after the Round of 32?",
+  },
+  {
+    id: "2026-07-02-ronaldo-por-cro-preview",
+    date: "2026-07-02",
+    title: "Pre-match: Ronaldo chases a first knockout goal as Portugal meet Croatia",
+    summary:
+      "Portugal face Croatia in Toronto (BMO Field, 2 July) with a familiar subplot: Cristiano Ronaldo became the first player to score at six different World Cups with his brace against Uzbekistan, yet he has never scored in the World Cup knockout stage. Portugal arrive as Group K runners-up unbeaten (a 5–0 rout of Uzbekistan between draws with DR Congo and Colombia); Croatia recovered from an opening 4–2 loss to England to edge Panama and Ghana. The midfield duel of 21-year-old João Neves against 40-year-old Luka Modrić is the game inside the game.",
+    tag: "Match Preview",
+    relatedTeams: ["portugal", "croatia"],
+    relatedMatch: { group: "R32", teamA: "portugal", teamB: "croatia" },
+    prompt: "Who will win Portugal vs Croatia?",
+    sourceName: "ESPN / FOX Sports (R32 previews)",
+    sourceUrl: "https://www.espn.com/soccer/story/_/id/49221788/portugal-vs-croatia-fifa-world-cup-2026-tv-channel-how-watch-kick-live-stream-injury-predicted-line-ups",
+  },
+  {
+    id: "2026-07-02-scaloni-arg-cpv-presser",
+    date: "2026-07-02",
+    title: "Press conference: Scaloni warns Argentina not to underestimate Cape Verde",
+    summary:
+      "Ahead of Argentina's Round-of-32 tie with Cape Verde (Miami, 3 July), Lionel Scaloni refused to treat the debutants lightly: \"I'm not surprised they qualified. They made things very difficult for every opponent they faced. They are a tough team and they'll make life difficult for us.\" Cape Verde reached the knockouts as the smallest country by population ever to do so, drawing all three groups games (including a 0–0 with Spain). Messi returns to the XI, with Scaloni weighing centre-back, left-back and striker choices.",
+    tag: "Press Conference",
+    relatedTeams: ["argentina", "cape-verde"],
+    relatedMatch: { group: "R32", teamA: "argentina", teamB: "cape-verde" },
+    prompt: "Can Cape Verde upset Argentina in the Round of 32?",
+    sourceName: "ESPN (Scaloni pre-match press conference)",
+    sourceUrl: "https://www.espn.com/soccer/story/_/id/49204902/argentina-not-underestimating-tough-opponent-cape-verde-world-cup-round-32",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
+  // ── 1 July — post-match press conferences (England, Belgium, USA) ───────────
+  {
+    id: "2026-07-01-tuchel-kane-eng-cod",
+    date: "2026-07-01",
+    title: "Press conference: Tuchel praises Kane after England fight back to beat DR Congo",
+    summary:
+      "England recovered from Brian Cipenga's 7th-minute opener to win 2–1, Harry Kane heading level (75') then smashing the winner (86') to set up a Round-of-16 meeting with co-hosts Mexico at the Azteca. \"It's what we expect from him,\" Thomas Tuchel said of his captain. \"Difficult matches, close matches, Harry is here to decide them.\" Tuchel hoped his side would take \"genuine belief\" from coming back after the \"worst possible start\".",
+    tag: "Press Conference",
+    relatedTeams: ["england", "dr-congo"],
+    relatedMatch: { group: "R32", teamA: "england", teamB: "dr-congo" },
+    prompt: "How far can England go now they face Mexico in the last 16?",
+    sourceName: "The FA (englandfootball.com) — Tuchel reaction",
+    sourceUrl: "https://www.englandfootball.com/articles/2026/Jul/01/thomas-tuchel-england-v-DR-congo-reaction-20260107",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
+  {
+    id: "2026-07-01-garcia-tielemans-bel-sen",
+    date: "2026-07-01",
+    title: "Press conference: García hails Tielemans after Belgium's 3–2 comeback over Senegal",
+    summary:
+      "Belgium trailed 2–0 in Seattle before Romelu Lukaku (86') and captain Youri Tielemans (89') forced extra time, where Tielemans converted a penalty at 124:44 — the latest winning goal in World Cup history. \"Senegal deserved to win, but I am happy it was us,\" coach Rudi García said, calling Senegal \"the best African nation\" and praising Tielemans' \"composure and quality\". Tielemans: \"Being part of this comeback is a proud moment… to help the team over the line.\" Belgium meet the USA next.",
+    tag: "Press Conference",
+    relatedTeams: ["belgium", "senegal"],
+    relatedMatch: { group: "R32", teamA: "belgium", teamB: "senegal" },
+    prompt: "Who will win Belgium vs USA in the Round of 16?",
+    sourceName: "ESPN / France 24 / WION (post-match reaction)",
+    sourceUrl: "https://www.espn.com/soccer/story/_/id/49243140/belgium-defeat-senegal-world-cup-round-32-youri-tielemans-ismaila-sarr",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
+  {
+    id: "2026-07-01-pochettino-balogun-usa-bih",
+    date: "2026-07-01",
+    title: "Press conference: Pochettino defends Balogun's red card as USA reach the last 16",
+    summary:
+      "Folarin Balogun scored on 45' then was sent off on 64' (VAR, a stepped-on ankle) but ten-man USA held on to beat Bosnia and Herzegovina 2–0 — Malik Tillman's 81' free kick sealing the co-hosts' first World Cup knockout win since 2002. \"For me, never is it a red card,\" Mauricio Pochettino said. \"It was a normal action in football that happened by accident.\" With no appeal permitted, Balogun is suspended for the Round-of-16 tie against Belgium in Seattle.",
+    tag: "Press Conference",
+    relatedTeams: ["usa", "bosnia-and-herzegovina"],
+    relatedMatch: { group: "R32", teamA: "usa", teamB: "bosnia-and-herzegovina" },
+    prompt: "How much does losing the suspended Balogun hurt the USA vs Belgium?",
+    sourceName: "ESPN / CBS Sports (Pochettino post-match)",
+    sourceUrl: "https://www.espn.com/soccer/story/_/id/49243502/usa-bosnia-herzegovina-2026-fifa-world-cup-knockout-round-32",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
+  // ── 29 June — Germany's shootout exit: Nagelsmann press conference ──────────
+  {
+    id: "2026-06-29-nagelsmann-ger-par",
+    date: "2026-06-29",
+    title: "Press conference: Nagelsmann stays on after Germany crash out to Paraguay",
+    summary:
+      "Germany went out in the Round of 32, losing 4–3 on penalties to Paraguay after a 1–1 draw (Havertz cancelling out Enciso). Julian Nagelsmann rued a slow, blunted attack — \"We were in control, but we lacked that cutting edge\" — and raged at a disallowed goal, calling the free-kick decision \"a complete scandal\" to ZDF. On his future he was defiant: \"I am not resigning. If the DFB want me to stay until 2028, I will. If they don't, then I'll leave this project.\"",
+    tag: "Press Conference",
+    relatedTeams: ["germany", "paraguay"],
+    relatedMatch: { group: "R32", teamA: "germany", teamB: "paraguay" },
+    prompt: "Was Germany's exit to Paraguay the biggest upset of the Round of 32?",
+    sourceName: "Bundesliga.com / FIFA (Germany reaction)",
+    sourceUrl: "https://www.bundesliga.com/en/bundesliga/news/reaction-germany-penalty-defeat-to-paraguay-world-cup-2026-nagelsmann-havertz-neuer-38023",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
   // ── 27 June — matchday 3 results: Groups J, K & L complete the group stage ──
   {
     id: "2026-06-27-matchday3-jkl",

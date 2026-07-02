@@ -9,6 +9,7 @@ const TAG_STYLE: Record<ManualDailyNewsTag, string> = {
   Result: "border-neon/30 text-neon",
   Standings: "border-electric/30 text-electric",
   "Match Preview": "border-sky-400/30 text-sky-300",
+  "Press Conference": "border-teal-400/30 text-teal-300",
   "Team News": "border-white/15 text-foreground/80",
   Injury: "border-red-400/30 text-red-300",
   Prediction: "border-purple-400/30 text-purple-300",
