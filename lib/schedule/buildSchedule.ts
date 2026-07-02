@@ -13,7 +13,10 @@
 
 import { GROUPS, getTeam } from "@/lib/seed/world-cup-2026-groups";
 import { BRACKET_2026, positionLabel, type Round } from "@/lib/prediction-engine/bracket-2026";
-import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
+import {
+  MANUAL_MATCH_RESULTS,
+  type ManualMatchResult,
+} from "@/lib/seed/manual-match-results";
 import type { LiveFixture } from "@/lib/live-sports/types";
 
 export interface ScheduleRow {
@@ -39,6 +42,9 @@ export interface ScheduleRow {
   goalsB?: number;
   /** Where the result came from: verified live cache vs manual seed entry. */
   resultSource?: "live" | "manual";
+  /** Knockout rows only: display label of the side that advanced when the
+   *  recorded score alone doesn't say (a shootout stored at its ET draw). */
+  advanced?: string;
 }
 
 export interface GroupFixtures {
@@ -198,32 +204,111 @@ export function mergeManualIntoGroups(groups: GroupFixtures[]): GroupFixtures[] 
   }));
 }
 
+/** Group letters use a single character; anything else ("R32", "R16", …) is a
+ *  knockout entry in the manual seed. */
+function isKnockoutEntry(m: ManualMatchResult): boolean {
+  return m.group.length > 1;
+}
+
+/** The advancing slug of a completed knockout tie: the structured `advances`
+ *  field when set (required for shootout draws), else the higher score. A draw
+ *  without `advances` yields undefined — the winner is honestly unknown. */
+export function knockoutWinner(m: ManualMatchResult): string | undefined {
+  if (m.advances) return m.advances;
+  if (m.scoreA > m.scoreB) return m.teamA;
+  if (m.scoreB > m.scoreA) return m.teamB;
+  return undefined;
+}
+
 /**
  * The knockout bracket grouped into round columns (R32 → Final) for the UI.
  *
  * Pass `resolvedR32` (match no → resolved team slugs) once the group stage is
  * complete to replace the Round-of-32 positional placeholders (1A, 2B, 3rd→M74)
  * with the actual qualified teams. The original slot labels are preserved in
- * teamASlot / teamBSlot so the UI can still show "2A v 2B" as a subtitle. Later
- * rounds keep their "winner of Mxx" slots until those matches are played.
+ * teamASlot / teamBSlot so the UI can still show "2A v 2B" as a subtitle.
+ *
+ * Once teams are resolved, completed KNOCKOUT results from the manual seed
+ * (group "R32", "R16", …) fold in the same way group results do: the row gets
+ * its score / date / Finished status (labelled "manual"), and the winner —
+ * from the score, or from the structured `advances` field for shootout draws —
+ * propagates into the next round, so "W73 vs W75" becomes the real pairing as
+ * soon as both feeders are decided. Undecided slots keep their honest "Wxx"
+ * placeholders; nothing is invented.
  */
 export function bracketColumns(
-  resolvedR32?: Map<number, { home: string; away: string }>
+  resolvedR32?: Map<number, { home: string; away: string }>,
+  manualResults: ManualMatchResult[] = MANUAL_MATCH_RESULTS
 ): { round: string; matches: ScheduleRow[] }[] {
-  const rows = buildKnockoutFixtures().map((r) => {
-    const res = r.matchNo != null ? resolvedR32?.get(r.matchNo) : undefined;
-    if (!res) return r;
+  const koByPair = new Map(
+    manualResults
+      .filter(isKnockoutEntry)
+      .map((m) => [[m.teamA, m.teamB].sort().join("|"), m])
+  );
+  // match no → winning slug, filled as we walk the bracket in round order
+  // (BRACKET_2026 is ordered R32 → Final, so feeders resolve before consumers).
+  const winners: Record<number, string> = {};
+
+  const rows: ScheduleRow[] = BRACKET_2026.map((bm) => {
+    const base: ScheduleRow = {
+      stage: ROUND_LABEL[bm.round] ?? bm.round,
+      matchNo: bm.no,
+      teamA: positionLabel(bm.home),
+      teamB: positionLabel(bm.away),
+      date: "TBA",
+      venue: "TBA",
+      status: "TBA",
+    };
+
+    // Resolve this match's participants: R32 from the group-stage resolution,
+    // later rounds from the winners recorded while walking earlier rounds.
+    let home: string | undefined;
+    let away: string | undefined;
+    if (bm.round === "R32") {
+      const res = resolvedR32?.get(bm.no);
+      home = res?.home;
+      away = res?.away;
+    } else {
+      home = bm.home.kind === "winnerOf" ? winners[bm.home.match] : undefined;
+      away = bm.away.kind === "winnerOf" ? winners[bm.away.match] : undefined;
+    }
+    if (!home && !away) return base;
+
+    const row: ScheduleRow = {
+      ...base,
+      teamASlot: base.teamA,
+      teamBSlot: base.teamB,
+      teamA: home ? teamLabel(home) : base.teamA,
+      teamB: away ? teamLabel(away) : base.teamB,
+      slugA: home,
+      slugB: away,
+      // Teams are known now, but the official kickoff/venue is still not in
+      // the bundled data — keep it honest rather than inventing a time.
+      status: "Scheduled",
+    };
+    if (!home || !away) return row;
+
+    const m = koByPair.get([home, away].sort().join("|"));
+    if (!m) return row;
+
+    const flipped = m.teamA === away;
+    const goalsA = flipped ? m.scoreB : m.scoreA;
+    const goalsB = flipped ? m.scoreA : m.scoreB;
+    const winner = knockoutWinner(m);
+    if (winner) winners[bm.no] = winner;
     return {
-      ...r,
-      teamASlot: r.teamA,
-      teamBSlot: r.teamB,
-      teamA: teamLabel(res.home),
-      teamB: teamLabel(res.away),
-      // Teams are known now, but the official kickoff/venue is still not in the
-      // bundled data — keep it honest rather than inventing a time.
-      status: "Scheduled" as const,
+      ...row,
+      date: m.date || "TBA",
+      status: "Finished",
+      score: `${goalsA}–${goalsB}`,
+      goalsA,
+      goalsB,
+      resultSource: "manual",
+      // Only surfaced when the score alone can't say who went through.
+      advanced: winner && goalsA === goalsB ? teamLabel(winner) : undefined,
     };
   });
+
   const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
   return order.map((round) => ({
     round,

@@ -25,8 +25,12 @@ import {
   buildKnockoutFixtures,
   mapLiveFixtures,
   mergeLiveIntoGroups,
+  mergeManualIntoGroups,
   bracketColumns,
+  knockoutWinner,
 } from "@/lib/schedule/buildSchedule";
+import { resolveQualification } from "@/lib/schedule/qualification";
+import type { ManualMatchResult } from "@/lib/seed/manual-match-results";
 import type { TournamentStateSnapshot, LiveFixture } from "@/lib/live-sports/types";
 
 let passed = 0;
@@ -176,5 +180,71 @@ const cols = bracketColumns();
 check("bracket has 5 round columns R32→Final", cols.length === 5 && cols[0].round === "Round of 32" && cols[4].round === "Final");
 check("column sizes 16/8/4/2/1", cols.map((c) => c.matches.length).join(",") === "16,8,4,2,1");
 check("knockout kickoff stays TBA (never invented)", cols.every((c) => c.matches.every((m) => m.date === "TBA")));
+
+console.log("knockout winner derivation (structured advances):");
+const kw = (m: Partial<ManualMatchResult>) => knockoutWinner(m as ManualMatchResult);
+check("decisive score → higher-score side advances", kw({ teamA: "x", teamB: "y", scoreA: 2, scoreB: 1 }) === "x");
+check("draw + advances → the shootout winner", kw({ teamA: "x", teamB: "y", scoreA: 1, scoreB: 1, advances: "y" }) === "y");
+check("draw without advances → honestly unknown", kw({ teamA: "x", teamB: "y", scoreA: 0, scoreB: 0 }) === undefined);
+
+console.log("bracket progression (synthetic, injected results):");
+// M73 = 2A v 2B, M75 = 1F v 2C; their winners meet in M89 (R16).
+const synthR32 = new Map([
+  [73, { home: "south-africa", away: "canada" }],
+  [75, { home: "netherlands", away: "morocco" }],
+]);
+const synthResults: ManualMatchResult[] = [
+  // decisive result, entered in FLIPPED order vs the bracket's home/away
+  { group: "R32", teamA: "canada", teamB: "south-africa", scoreA: 1, scoreB: 0, date: "2026-06-28" },
+  // shootout draw — winner only via the structured `advances` field
+  { group: "R32", teamA: "netherlands", teamB: "morocco", scoreA: 1, scoreB: 1, advances: "morocco", date: "2026-06-29" },
+];
+const synthCols = bracketColumns(synthR32, synthResults);
+const synthR32Col = synthCols[0].matches;
+const m73 = synthR32Col.find((m) => m.matchNo === 73)!;
+const m75 = synthR32Col.find((m) => m.matchNo === 75)!;
+check("played tie → Finished + manual-labelled score (flipped entry re-oriented)", m73.status === "Finished" && m73.score === "0–1" && m73.resultSource === "manual");
+check("played tie carries its recorded date", m73.date === "2026-06-28");
+check("decisive tie shows no shootout-advance line", m73.advanced === undefined);
+check("shootout draw → Finished 1–1 with the advancing side surfaced", m75.status === "Finished" && m75.score === "1–1" && !!m75.advanced && m75.advanced.includes("Morocco"));
+const m89 = synthCols[1].matches.find((m) => m.matchNo === 89)!;
+check("R16 slot resolves BOTH feeders' winners (score + shootout)", m89.teamA.includes("Canada") && m89.teamB.includes("Morocco"));
+check("resolved R16 tie keeps its feeding-slot subtitle", m89.teamASlot === "W73" && m89.teamBSlot === "W75");
+check("unfed R16 slots keep honest Wxx placeholders", synthCols[1].matches.filter((m) => m.matchNo !== 89).every((m) => m.teamA.startsWith("W") && m.teamB.startsWith("W")));
+
+console.log("bracket progression (real seed data, contract-based):");
+const realGroups = mergeManualIntoGroups(buildGroupFixtures());
+const realQual = resolveQualification(realGroups);
+if (!realQual.complete) {
+  console.log("  (group stage not complete in the seed — skipping real-data pass)");
+} else {
+  const realCols = bracketColumns(
+    new Map(realQual.r32.map((m) => [m.no, { home: m.home, away: m.away }]))
+  );
+  const realR32 = realCols[0].matches;
+  const finished = realR32.filter((m) => m.status === "Finished");
+  check("every finished R32 tie carries a score + date (never invented blanks)", finished.every((m) => !!m.score && m.date !== "TBA" && m.resultSource === "manual"));
+  check("finished R32 ties with a drawn score name the advancing side", finished.filter((m) => m.goalsA === m.goalsB).every((m) => !!m.advanced));
+  check("unplayed R32 ties stay Scheduled with resolved teams (not Finished)", realR32.filter((m) => m.status !== "Finished").every((m) => m.status === "Scheduled" && !m.score));
+  // Winner-propagation contract: an R16 side is resolved (not "Wxx") exactly
+  // when its feeding tie is finished with a known winner.
+  const r32ByNo = new Map(realR32.map((m) => [m.matchNo!, m]));
+  const feederDecided = (no: number) => {
+    const f = r32ByNo.get(no);
+    return !!f && f.status === "Finished" && (f.goalsA !== f.goalsB || !!f.advanced);
+  };
+  const r16 = realCols[1].matches;
+  const w = (s: string) => Number(s.slice(1));
+  check(
+    "R16 sides resolve exactly when their feeder is decided",
+    r16.every((m) => {
+      const aSlot = m.teamASlot ?? m.teamA; // slot label survives resolution
+      const bSlot = m.teamBSlot ?? m.teamB;
+      const aResolved = !m.teamA.startsWith("W");
+      const bResolved = !m.teamB.startsWith("W");
+      return aResolved === feederDecided(w(aSlot)) && bResolved === feederDecided(w(bSlot));
+    })
+  );
+}
 
 console.log(`\nAll ${passed} tournament-state checks passed.`);

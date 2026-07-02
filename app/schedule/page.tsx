@@ -300,14 +300,29 @@ export default async function SchedulePage() {
                     >
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                         <span className="font-semibold">M{m.matchNo}</span>
-                        <span className="text-amber-300/70">
-                          {m.date === "TBA" ? "TBA" : fmtKickoff(m.date)}
-                        </span>
+                        {m.status === "Finished" && m.score ? (
+                          <span className="font-semibold text-foreground tabular-nums">
+                            {m.score}
+                            <span className="font-normal text-muted-foreground">
+                              {" "}
+                              · {fmtShortDate(m.date)}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-300/70">
+                            {m.date === "TBA" ? "TBA" : fmtKickoff(m.date)}
+                          </span>
+                        )}
                       </div>
                       <div className="mt-0.5 truncate text-[13px] font-semibold tabular-nums">
                         {m.teamA} <span className="font-normal text-muted-foreground">vs</span>{" "}
                         {m.teamB}
                       </div>
+                      {m.advanced && (
+                        <div className="mt-0.5 truncate text-[10px] font-medium text-neon/90">
+                          {m.advanced} advance on penalties
+                        </div>
+                      )}
                       {m.teamASlot && m.teamBSlot && (
                         <div className="mt-0.5 truncate text-[10px] text-muted-foreground/70 tabular-nums">
                           {m.teamASlot} v {m.teamBSlot}
@@ -325,8 +340,10 @@ export default async function SchedulePage() {
             <>
               Round-of-32 teams are resolved from the final group standings, with the eight best
               third-placed teams assigned to their slots via FIFA Annex C (slot labels shown
-              beneath, e.g. 1A v 2B). Later rounds show the feeding match (W73 = winner of Match 73)
-              until played. Kickoff &amp; venue: TBA.
+              beneath, e.g. 1A v 2B). Completed knockout ties show the recorded result (manual
+              layer; shootouts are stored at their extra-time score with the advancing side named)
+              and their winners fill the next round. Undecided slots keep the feeding match
+              (W73 = winner of Match 73). Kickoff &amp; venue: TBA.
             </>
           ) : (
             <>

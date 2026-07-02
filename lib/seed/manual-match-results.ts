@@ -15,7 +15,18 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-07-02 — THREE more Round-of-32 results recorded (all
+ * Last updated: 2026-07-02 (second pass) — knockout-results AUDIT: re-verified
+ * every completed knockout tie against fresh sources; all 10 completed R32
+ * results (through 1 July) were already recorded and correct, and the six
+ * remaining ties (Spain-Austria, Portugal-Croatia, Switzerland-Algeria on
+ * 2 July; Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana on 3 July)
+ * have NOT been played, so they stay unrecorded. What WAS missing is
+ * structured bracket progression: added the `advances` field (set on the two
+ * shootout draws — Paraguay over Germany, Morocco over the Netherlands) so
+ * the bracket fold in buildSchedule.ts can resolve winners into the Round of
+ * 16 instead of leaving played ties as upcoming; also pinned Kane's goal
+ * minutes (75', 86') in the England note from the match reports.
+ * ── Prior 2026-07-02 — THREE more Round-of-32 results recorded (all
  * played 1 July): England 2-1 DR Congo (Cipenga shocked England on 7', Harry
  * Kane's late double turned it around), Belgium 3-2 Senegal a.e.t. (Belgium
  * trailed 0-2, levelled through Lukaku 86' and Tielemans 89', and Tielemans'
@@ -106,6 +117,15 @@ export interface ManualMatchResult {
   scoreB: number;
   date?: string; // YYYY-MM-DD (optional, display only)
   note?: string;
+  /**
+   * KNOCKOUT ties only: slug of the team that advanced. REQUIRED when the
+   * recorded score is a draw (a penalty shootout stored at its regulation/
+   * extra-time score — the standard Elo convention), because the winner is not
+   * derivable from the score. Optional (derived from the score) for decisive
+   * results. Consumed by the bracket-progression fold in buildSchedule.ts;
+   * the Elo fold deliberately ignores it (a shootout stays a 0.5/0.5 draw).
+   */
+  advances?: string;
   // ── Structured verification provenance (all optional, display/metadata only;
   // the prediction engine ignores these). `verified` is set ONLY when the score
   // was cross-checked against an authoritative source (e.g. the official FIFA /
@@ -997,6 +1017,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 1,
     scoreB: 1,
     date: "2026-06-29",
+    advances: "paraguay",
     note: "Group E winners Germany were stunned on penalties: Julio Enciso put Paraguay ahead (42'), Kai Havertz levelled (54'), and after 1–1 through extra time Paraguay held their nerve to win the shootout 4–3 and reach the last 16. One of the biggest upsets of the round — a major scalp for CONMEBOL. (Recorded as a 1–1 draw for the Elo fold; Paraguay advance.)",
     sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
@@ -1010,6 +1031,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 1,
     scoreB: 1,
     date: "2026-06-29",
+    advances: "morocco",
     note: "Another shootout, another fallen European heavyweight: Cody Gakpo's opener (72') was cancelled out by Issa Diop at the death (90+1'), and Morocco beat the Netherlands 3–2 on penalties after 1–1 to march into the round of 16. Morocco carry their 2022 semi-final pedigree into the knockouts. (Recorded as a 1–1 draw for the Elo fold; Morocco advance.)",
     sourceName: "Wikipedia (2026 FIFA World Cup knockout stage)",
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
@@ -1075,7 +1097,7 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     scoreA: 2,
     scoreB: 1,
     date: "2026-07-01",
-    note: "England came from behind to reach the round of 16: Brian Cipenga stunned them on 7' and best-thirds qualifier DR Congo led for most of the game, before Harry Kane headed level in the final 15 minutes and lashed home the winner from just inside the box four minutes from time. England now meet co-hosts Mexico in Mexico City in the last 16; DR Congo exit with real credit.",
+    note: "England came from behind to reach the round of 16: Brian Cipenga stunned them on 7' and best-thirds qualifier DR Congo led for most of the game, before Harry Kane headed level (75') and lashed home the winner from just inside the box four minutes from time (86'). England now meet co-hosts Mexico in Mexico City in the last 16; DR Congo exit with real credit.",
     sourceName: "ESPN match report (cross-checked vs FIFA + englandfootball.com)",
     sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760495/congo-dr-england",
     verified: true,
