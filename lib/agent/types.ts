@@ -92,6 +92,10 @@ export interface NewsItemView {
   sourceUrl: string;
   publishedAt: string; // ISO
   demo: boolean;
+  /** Mirrors a sourced signal already folded into the BASE model (squad
+   *  availability / pre-match intel) — displayed, but excluded from the news
+   *  nudge so it is never double-counted. */
+  modelled?: boolean;
 }
 
 /** Per-team news view inside a news-impact report. */

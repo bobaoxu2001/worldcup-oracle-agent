@@ -67,6 +67,20 @@ export function DemoBadge() {
   );
 }
 
+/** Sourced signal already folded into the BASE model (squad availability /
+ *  pre-match intel) — displayed here for transparency; excluded from the
+ *  Δ-news nudge so it is never double-counted. */
+export function InModelBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full border border-neon/30 bg-neon/10 px-2 py-0.5 text-[10px] font-medium text-neon"
+      title="Already priced into the base model (squad availability / pre-match intel) — excluded from the news nudge to avoid double-counting"
+    >
+      In model
+    </span>
+  );
+}
+
 /**
  * Compact "Verified" provenance chip — shown only when a record was cross-checked
  * against an authoritative source (renders nothing otherwise). Links to the

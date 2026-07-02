@@ -1,5 +1,12 @@
 import { ExternalLink } from "lucide-react";
-import { CategoryBadge, ImpactBadge, DirectionIcon, DemoBadge, relativeTime } from "./news-badges";
+import {
+  CategoryBadge,
+  ImpactBadge,
+  DirectionIcon,
+  DemoBadge,
+  InModelBadge,
+  relativeTime,
+} from "./news-badges";
 import type { NewsItemView } from "@/lib/agent/types";
 
 /** A single news item card — badges, summary, source, date. */
@@ -10,6 +17,7 @@ export function NewsItemCard({ item, compact }: { item: NewsItemView; compact?: 
         <DirectionIcon direction={item.direction} />
         <ImpactBadge impact={item.impactLevel} />
         <CategoryBadge category={item.category} />
+        {item.modelled && <InModelBadge />}
         {item.demo && <DemoBadge />}
         <span className="ml-auto text-[10px] text-muted-foreground">
           {relativeTime(item.publishedAt)}

@@ -43,6 +43,14 @@ export interface TeamNewsItem {
    * verified real news.
    */
   demo: boolean;
+  /**
+   * True when this item mirrors a manually-curated, sourced signal that is
+   * ALREADY folded into the base model (availabilityAdjustments /
+   * preMatchIntelligence). Shown in the news panel so confirmed squad news is
+   * never invisible, but the news-impact analyzer SKIPS it — its effect lives
+   * in the base probabilities, and counting it again would double-price it.
+   */
+  modelled?: boolean;
 }
 
 /** Where the news for a request ultimately came from. */

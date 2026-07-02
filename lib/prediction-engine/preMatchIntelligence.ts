@@ -92,6 +92,28 @@ export const INTEL_CAP = 35;
  * Every entry has a real sourceUrl (see the WebSearch sources in the report).
  */
 export const PRE_MATCH_INTEL: PreMatchIntel[] = [
+  // ── 2 Jul · Spain vs Austria (Round of 32) ──────────────────────────────
+  // NOTE: the Williams/Pino injuries and the Mwene absence are TOURNAMENT-
+  // phase (multi-game) and live in availabilityAdjustments.ts per rule 4 —
+  // here we only carry the fixture-specific presser reads, delta 0, so
+  // nothing is double-counted.
+  {
+    matchId: "spain-vs-austria", team: "spain", opponent: "austria",
+    type: "lineup", status: "confirmed",
+    summary: "Lamine Yamal starts — back from the April hamstring, scored vs Saudi Arabia, but Spain are still managing his minutes (141 across the group stage, subbed at half-time last time out). His availability discount is already updated in the squad layer; no extra delta here.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.85,
+    sourceName: "VAVEL / Sports Illustrated (predicted line-ups)", sourceUrl: "https://www.vavel.com/en/international-football/2026/07/01/1264926-spain-vs-austria-world-cup-preview-can-lamine-yamal-begin-to-shine.html",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+  {
+    matchId: "spain-vs-austria", team: "austria", opponent: "spain",
+    type: "tactical", status: "opinion",
+    summary: "Rangnick's presser: stopping Yamal is the plan — \"watch very closely… not to give him a lot of room or too many opportunities to start his dribbling actions.\" A stated man-plan from a coach who beat expectations all group stage; narrative only (style effects live in the tactical layer).",
+    impactDirection: "positive", deltaElo: 0, confidence: 0.5,
+    sourceName: "bdnews24 / FIFA (Rangnick press conference)", sourceUrl: "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/austria-ralf-rangnick-lost-time",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+
   // ── 17 Jun · Portugal vs DR Congo (Group K) ─────────────────────────────
   {
     matchId: "portugal-vs-dr-congo", team: "portugal", opponent: "dr-congo",

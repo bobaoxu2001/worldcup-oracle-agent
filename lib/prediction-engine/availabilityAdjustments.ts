@@ -35,7 +35,14 @@
  * UI labels this as a manually-curated, sourced signal, never a live feed.
  * Market values are transfermarkt-style €m estimates, documented per entry.
  *
- * Last updated: 2026-06-16.
+ * Last updated: 2026-07-02 — Spain/Austria R32 squad news: Nico Williams OUT
+ * (right-adductor vs Uruguay, ~2 weeks) and Yeremy Pino OUT (shoulder sprain)
+ * — the compounding detail is that Pino is Williams' natural replacement, so
+ * the flank drop-off is priced as squad-option, not like-for-like; Lamine
+ * Yamal's cameo discount REDUCED (0.3 → 0.15 fractionOut) now he is starting
+ * and scoring again, though still minute-managed after the April hamstring;
+ * Austria wing-back Phillipp Mwene ruled out (Rangnick presser). All sourced
+ * from the 1–2 July match reports / pressers cited per entry.
  */
 
 import { getUpdatedRating } from "./ratingUpdates";
@@ -171,11 +178,49 @@ export const AVAILABILITY_ADJUSTMENTS: AvailabilityAdjustment[] = [
     marketValueOut: 200,
     replacementValue: 70,
     role: "attack",
-    fractionOut: 0.3, // hamstring (Apr 22) — fit for cameo minutes, started opener on the bench
+    fractionOut: 0.15, // UPDATED 2 Jul: back starting and scoring (goal vs Saudi Arabia) but still minute-managed after the April hamstring — 141 minutes across the three group games, subbed at half-time
     reason:
-      "Best 1v1 unlocker not at full power (hamstring) — started the opener on the bench, ~cameo minutes; deep front line keeps the net loss modest",
-    source: "ESPN / beIN Sports",
-    date: "2026-06-15",
+      "Best 1v1 unlocker back in the XI but still minute-managed after the April hamstring (141 group-stage minutes, one goal) — reduced from the group-stage cameo discount, not yet zeroed",
+    source: "Reuters / VAVEL (R32 preview)",
+    date: "2026-07-02",
+  },
+  {
+    team: "spain",
+    player: "Nico Williams",
+    marketValueOut: 70,
+    replacementValue: 40,
+    role: "attack",
+    fractionOut: 1, // right-adductor muscle injury vs Uruguay — ruled out ~2 weeks, misses the R32
+    reason:
+      "Starting left winger ruled out (right-adductor injury vs Uruguay, ~2 weeks) — and his usual understudy Pino is hurt too, so the drop-off is a squad option, not a like-for-like",
+    source: "ESPN / World Soccer Talk",
+    date: "2026-07-01",
+  },
+  {
+    team: "spain",
+    player: "Yeremy Pino",
+    marketValueOut: 30,
+    replacementValue: 20,
+    role: "attack",
+    fractionOut: 1, // acromioclavicular (shoulder) sprain — out alongside Williams
+    reason:
+      "Rotation winger out with an acromioclavicular sprain — compounds the Williams absence by removing the natural replacement on that flank",
+    source: "ESPN",
+    date: "2026-07-01",
+  },
+
+  // ── Austria ─────────────────────────────────────────────────────────────
+  {
+    team: "austria",
+    player: "Phillipp Mwene",
+    marketValueOut: 8,
+    replacementValue: 3,
+    role: "defense",
+    fractionOut: 1, // ruled out injured for the Spain R32 tie — Rangnick confirmed at his presser
+    reason:
+      "Wing-back ruled out injured for the Spain tie (Rangnick presser: enough options to cover, but a starter is a starter)",
+    source: "bdnews24 (Rangnick press conference)",
+    date: "2026-07-01",
   },
 
   // ── Uruguay ──────────────────────────────────────────────────────────────

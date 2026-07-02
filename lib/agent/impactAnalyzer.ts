@@ -30,10 +30,14 @@ const DRAW_SHARE = 0.4;
 const DISCLAIMER =
   "Based on currently available news signals; recent updates may affect the outcome. This is a lightweight signal layer on top of the base simulation, not a replacement for the prediction model — and not financial or betting advice.";
 
-/** Net signed swing to a team's OWN win probability from its news (capped). */
+/** Net signed swing to a team's OWN win probability from its news (capped).
+ *  `modelled` items are SKIPPED: they mirror signals already priced into the
+ *  base probabilities (squad availability / pre-match intel), so nudging on
+ *  them here would double-count the same news. */
 function selfDelta(team: ResolvedTeamNews): number {
   let d = 0;
   for (const it of team.items) {
+    if (it.modelled) continue;
     const mag = MAGNITUDE[it.impactLevel];
     if (mag === 0) continue;
     if (it.direction === "negative") d -= mag;
@@ -43,8 +47,9 @@ function selfDelta(team: ResolvedTeamNews): number {
 }
 
 function netDirection(team: ResolvedTeamNews): NewsDirection | "mixed" {
-  const hasNeg = team.items.some((i) => i.direction === "negative" && MAGNITUDE[i.impactLevel] > 0);
-  const hasPos = team.items.some((i) => i.direction === "positive" && MAGNITUDE[i.impactLevel] > 0);
+  const moving = team.items.filter((i) => !i.modelled);
+  const hasNeg = moving.some((i) => i.direction === "negative" && MAGNITUDE[i.impactLevel] > 0);
+  const hasPos = moving.some((i) => i.direction === "positive" && MAGNITUDE[i.impactLevel] > 0);
   if (hasNeg && hasPos) return "mixed";
   if (hasNeg) return "negative";
   if (hasPos) return "positive";
@@ -55,12 +60,20 @@ function teamHeadline(team: ResolvedTeamNews, d: number): string {
   const name = team.team.name;
   if (team.items.length === 0) return `No significant recent news for ${name}.`;
   if (Math.abs(d) < 0.001) {
+    const modelled = team.items.filter((i) => i.modelled);
+    if (modelled.length > 0) {
+      const strongest = [...modelled].sort(
+        (a, b) => MAGNITUDE[b.impactLevel] - MAGNITUDE[a.impactLevel]
+      )[0];
+      return `${name}'s confirmed squad news (e.g. ${strongest.title.split("—")[0].trim()}) is already priced into the base model — see the Squad availability factor; no extra news nudge is applied.`;
+    }
     return `${name}'s latest updates are noted but don't materially shift the model.`;
   }
-  // Pick the strongest item to phrase the read.
-  const strongest = [...team.items].sort(
-    (a, b) => MAGNITUDE[b.impactLevel] - MAGNITUDE[a.impactLevel]
-  )[0];
+  // Pick the strongest NUDGE-driving item to phrase the read (modelled items
+  // didn't produce this delta — their effect is in the base model).
+  const strongest = team.items
+    .filter((i) => !i.modelled)
+    .sort((a, b) => MAGNITUDE[b.impactLevel] - MAGNITUDE[a.impactLevel])[0];
   const aspect =
     strongest.category === "injury"
       ? "squad stability"
