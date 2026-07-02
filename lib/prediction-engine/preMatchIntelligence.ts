@@ -38,7 +38,7 @@
  * The breakdown surfaces every confirmed item's delta; the agent preview lists
  * the rumours/opinions separately as context.
  *
- * Last updated: 2026-06-17 (today's Groups K/L + tomorrow's Groups A/B matchday-2).
+ * Last updated: 2026-07-02 — Round-of-32 intel for tonight: Spain-Austria (Yamal starts, Rangnick man-plan), Portugal-Croatia (clean tables, Modrić workload read), Switzerland-Algeria (Amoura highly doubtful -6 att × 0.75 out-chance, Widmer 50/50, Petković-derby narrative).
  */
 
 import { getTeam } from "@/lib/seed/world-cup-2026-groups";
@@ -92,6 +92,50 @@ export const INTEL_CAP = 35;
  * Every entry has a real sourceUrl (see the WebSearch sources in the report).
  */
 export const PRE_MATCH_INTEL: PreMatchIntel[] = [
+  // ── 2 Jul · Portugal vs Croatia (Round of 32) ───────────────────────────
+  {
+    matchId: "portugal-vs-croatia", team: "portugal", opponent: "croatia",
+    type: "lineup", status: "confirmed",
+    summary: "Clean injury table — Portugal reach the knockouts with no reported concerns, and the rested PSG double-pivot (João Neves, Vitinha) returns after rotation against Colombia. Full-strength XI expected around Ronaldo.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.8,
+    sourceName: "Sports Mole / RotoWire (team news)", sourceUrl: "https://www.sportsmole.co.uk/football/portugal/world-cup-2026/preview/portugal-vs-croatia-prediction-team-news-lineups_600433.html",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+  {
+    matchId: "portugal-vs-croatia", team: "croatia", opponent: "portugal",
+    type: "lineup", status: "opinion",
+    summary: "No injuries reported, but the 40-year-old Modrić's workload is the watch-item — Dalić has leaned on him all group stage and needs him fresh for a possible 120 minutes. A fatigue read, not a confirmed absence; narrative only.",
+    impactDirection: "negative", deltaElo: 0, confidence: 0.5,
+    sourceName: "RotoWire (preview)", sourceUrl: "https://www.rotowire.com/soccer/article/portugal-vs-croatia-preview-predicted-lineups-team-news-tactical-analysis-2026-world-cup-round-of-32-120534",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+
+  // ── 2 Jul · Switzerland vs Algeria (Round of 32) ────────────────────────
+  {
+    matchId: "switzerland-vs-algeria", team: "algeria", opponent: "switzerland",
+    type: "availability", status: "confirmed",
+    summary: "Striker Mohamed Amoura (Wolfsburg) HIGHLY DOUBTFUL — the front line reshuffles around Mahrez, Maza, Chaibi and Gouiri. Expected impact discounted by his residual chance of featuring.",
+    impactDirection: "negative", deltaAttack: -6, availabilityProb: 0.25, confidence: 0.7,
+    sourceName: "RotoWire / Khel Now (team news)", sourceUrl: "https://www.rotowire.com/soccer/article/switzerland-vs-algeria-preview-predicted-lineups-team-news-tactical-analysis-2026-world-cup-round-of-32-120535",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+  {
+    matchId: "switzerland-vs-algeria", team: "switzerland", opponent: "algeria",
+    type: "availability", status: "confirmed",
+    summary: "Silvan Widmer the only doubt (not yet ruled out); Jaquez impressed at full-back and is expected to keep the spot regardless — a depth note more than a hole.",
+    impactDirection: "negative", deltaDefense: -2, availabilityProb: 0.5, confidence: 0.6,
+    sourceName: "Sports Mole / RotoWire (team news)", sourceUrl: "https://www.rotowire.com/soccer/article/switzerland-vs-algeria-preview-predicted-lineups-team-news-tactical-analysis-2026-world-cup-round-of-32-120535",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+  {
+    matchId: "switzerland-vs-algeria", team: "algeria", opponent: "switzerland",
+    type: "coach", status: "opinion",
+    summary: "Petković derby: Algeria's coach spent seven years building this Switzerland side and is chasing Algeria's first-ever World Cup knockout win against it. Inside knowledge of the opponent cuts both ways — narrative only.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.5,
+    sourceName: "FIFA (match preview)", sourceUrl: "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/switzerland-algeria-live-stream-team-news-tickets-and-more",
+    publishedAt: "2026-07-01", expiresAfterMatch: true,
+  },
+
   // ── 2 Jul · Spain vs Austria (Round of 32) ──────────────────────────────
   // NOTE: the Williams/Pino injuries and the Mwene absence are TOURNAMENT-
   // phase (multi-game) and live in availabilityAdjustments.ts per rule 4 —
