@@ -15,7 +15,22 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-07-01 — THREE more Round-of-32 results recorded (France
+ * Last updated: 2026-07-02 — THREE more Round-of-32 results recorded (all
+ * played 1 July): England 2-1 DR Congo (Cipenga shocked England on 7', Harry
+ * Kane's late double turned it around), Belgium 3-2 Senegal a.e.t. (Belgium
+ * trailed 0-2, levelled through Lukaku 86' and Tielemans 89', and Tielemans'
+ * extra-time-stoppage penalty — clocked at 124:44, the latest winning goal in
+ * World Cup history — won it; stored at the extra-time score, i.e. a Belgium
+ * WIN in the Elo fold since no shootout was needed), and USA 2-0 Bosnia and
+ * Herzegovina (Balogun scored on 45' then saw red on 64'; ten-man hosts held
+ * on, Tillman free kick 81' — the USMNT's first knockout win since 2002).
+ * England, Belgium and the USA reach the round of 16; DR Congo, Senegal and
+ * Bosnia are out. 10 of the 16 R32 ties are now recorded; still to play:
+ * Spain-Austria, Portugal-Croatia, Switzerland-Algeria (2 July) and
+ * Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana (3 July). Wikipedia's
+ * R32 page truncated on fetch, so these three were cross-checked against
+ * ESPN + FIFA + CBS/NBC/Al Jazeera match reports instead (cited per entry).
+ * ── Prior 2026-07-01 — THREE more Round-of-32 results recorded (France
  * 3-0 Sweden, Norway 2-1 Ivory Coast, Mexico 2-0 Ecuador). Recording Mexico's
  * game surfaced a bracket mismatch (the resolved R32 field had Mexico facing
  * Senegal, but the real fixture was Mexico v Ecuador) which traced back to a
@@ -1052,5 +1067,44 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     sourceUrl: "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage",
     verified: true,
     verifiedAt: "2026-07-01",
+  },
+  {
+    group: "R32",
+    teamA: "england",
+    teamB: "dr-congo",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-07-01",
+    note: "England came from behind to reach the round of 16: Brian Cipenga stunned them on 7' and best-thirds qualifier DR Congo led for most of the game, before Harry Kane headed level in the final 15 minutes and lashed home the winner from just inside the box four minutes from time. England now meet co-hosts Mexico in Mexico City in the last 16; DR Congo exit with real credit.",
+    sourceName: "ESPN match report (cross-checked vs FIFA + englandfootball.com)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760495/congo-dr-england",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
+  {
+    group: "R32",
+    teamA: "belgium",
+    teamB: "senegal",
+    scoreA: 3,
+    scoreB: 2,
+    date: "2026-07-01",
+    note: "An extra-time epic in Seattle: Habib Diarra and Ismaïla Sarr struck either side of half-time to put Senegal 2–0 up, but half-time sub Romelu Lukaku pulled one back (86') and captain Youri Tielemans headed level (89'). Tielemans then converted a penalty in extra-time stoppage — clocked at 124:44, the latest winning goal in World Cup history — to send Belgium through 3–2 a.e.t. (Recorded at the extra-time score: a Belgium win in the Elo fold, no shootout needed.) Belgium stay in Seattle to face the USA in the round of 16.",
+    sourceName: "ESPN match report (cross-checked vs NBC News + Al Jazeera)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760493/senegal-belgium",
+    verified: true,
+    verifiedAt: "2026-07-02",
+  },
+  {
+    group: "R32",
+    teamA: "usa",
+    teamB: "bosnia-and-herzegovina",
+    scoreA: 2,
+    scoreB: 0,
+    date: "2026-07-01",
+    note: "Co-hosts USA won a World Cup knockout game for the first time since 2002 (and only the second time ever): Folarin Balogun scored on 45' but was sent off on 64' after video review, and the ten-man hosts held on — Malik Tillman's 81' free kick sealing 2–0 over Bosnia and Herzegovina at Levi's Stadium. All three co-hosts are through to the round of 16, where the USA meet Belgium in Seattle — without the suspended Balogun.",
+    sourceName: "CBS News match report (cross-checked vs ESPN + NPR + NBC Sports)",
+    sourceUrl: "https://www.cbsnews.com/news/world-cup-us-bosnia-herzegovina-round-of-32/",
+    verified: true,
+    verifiedAt: "2026-07-02",
   },
 ];
