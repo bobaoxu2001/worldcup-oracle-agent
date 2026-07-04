@@ -36,6 +36,7 @@ We wanted an agent that visibly **reasons in steps**, grounds its numbers in a r
 - **Explains** the result in plain English, plus a fan insight and an optional TikTok-style script.
 - **Remembers** every session in MongoDB and answers **follow-ups** ("What if Germany's injured defender returns?").
 - **Agent Memory Center** (`/memory`) makes the memory layer visible: backend status, recent sessions, stored news signals, last refresh.
+- **Verified track record** (`/accuracy`) grades the agent honestly against the real tournament: a walk-forward backtest of the live engine over **every completed 2026 match** (each predicted from *only* the results before it), with top-pick accuracy, RPS-vs-baseline skill, a calibration table, and every single call on the record — cross-checked by an independent ridge Dixon-Coles model.
 - **Global Voice Mode:** fans can ask predictions by voice and hear responses in **English, Chinese, Spanish, Portuguese, or Japanese** — native browser speech APIs, no extra key, with deterministic localized summaries (numbers never change) and optional Gemini-translated prose.
 
 ---
@@ -85,7 +86,22 @@ selectLLMProvider(structuredResult, query, language, complexity) → "deepseek" 
 
 > **Hard rules:** the structured JSON is the LLM's **only** source of truth — it copies probabilities/rankings verbatim and is forbidden from inventing probabilities, news, injuries, suspensions, or sources. We deliberately do **not** claim "Gemini generates all answers."
 
+**Gemini function-calling — the LLM drives the pipeline.** Beyond narrating, we ship a real **Gemini tool-use loop** (`lib/llm/geminiAgent.ts`): Gemini is given four declared tools — `resolve_team`, `predict_match`, `get_team_news`, `get_tournament_state` — and over a bounded multi-round loop it *decides* which to call. We execute each tool **deterministically** (the tools return the engine's own probabilities and the live elimination state), feed the JSON back, and Gemini synthesizes the final answer. **The engine still owns every number**; a system instruction forbids inventing probabilities, news, or eliminations. It's fail-soft (no key → the deterministic pipeline runs unchanged), inspectable at **`POST /api/agent/gemini-tools`** (which returns the full tool-call trace), and **unit-tested offline** with a scripted fake model — `npm run test:gemini-agent` (14 checks, no network / key / cost). This is the honest version of "the LLM drives the pipeline": Gemini orchestrates the tools; deterministic code produces the facts.
+
 **Transparency:** every answer's **Data Transparency** card and the "Why?" badge show the **actual provider and its role** — `DeepSeek · routine narrative/localization`, **`Gemini escalation · complex multi-step reasoning`** (visible on path-to-final, group-qualification, and other multi-step answers), or `None · deterministic rules engine` — and the provider is persisted to MongoDB with the result. LLMs explain and classify; they never decide facts. Routing is covered by a unit test suite (`npm run test:routing`).
+
+---
+
+## 📊 Verified out-of-sample track record — `/accuracy`
+
+Anyone can claim a model is accurate. We **grade ours in public**, against the real tournament, on the **[`/accuracy`](https://worldcup-oracle-agent.vercel.app/accuracy)** page:
+
+- **Walk-forward, no peeking.** Every completed 2026 match is predicted using **only the results dated before it** — never its own outcome. This is a true out-of-sample test, not a curve fit.
+- **Through 2 July (82 completed matches):** the live engine calls the right result **65% of the time (53/82)**, scores **+42% skill on the Ranked Probability Score** (the football-forecasting standard) vs a no-information coin-flip, and is **well-calibrated — ECE 2.5%** (when it says 70%, it happens ~70% of the time).
+- **Two independent models agree.** The live stack is an Elo → Dixon-Coles → Monte Carlo engine in TypeScript. A **completely separate ridge Dixon-Coles** bivariate-Poisson model (Python, refit nightly, leave-one-out scored) lands on the same verdict: **+20% RPS skill, 77% accuracy on decisive results.** Two differently-built pipelines agreeing out-of-sample is the credibility check no single model can fake.
+- **Every layer earns its place.** The page breaks down what each engine layer (result-learning, tactics, bounce-back, draw-propensity, confidence-calibration) adds to the RPS — this is *why* the agent is a pipeline, not one number.
+- **Every call on the record**, filterable to the misses. We show the losses, we don't hide them.
+- **Reproducible:** `npm run backtest` prints the same numbers in the terminal (it's a thin CLI over the exact module the page uses), `npm run dc:backtest` reruns the independent Dixon-Coles fit, and `npm run test:track` guards the accounting (24 checks). Exposed as JSON at `GET /api/accuracy`.
 
 ---
 
@@ -144,9 +160,10 @@ Each stage is a real, inspectable TypeScript function and the reasoning timeline
 | **Open-source license** | **MIT** (`LICENSE` in repo root) |
 | **MongoDB track integration** | **MongoDB Atlas** is the live production **memory layer** via the official `mongodb` driver — `predictions` (all intent types) + `team_news` collections, follow-up context, status surfaced at `/memory` and `GET /api/memory/status` |
 | **MCP usage** | MCP-assisted **development/deployment** (Vercel MCP inspection; browser/preview MCP for screenshots & verification). Not a production runtime dependency. |
-| **Gemini / Google usage** | **Google Gemini** (`gemini-2.5-flash`, `lib/llm/gemini.ts`) is **live in production** as the **premium escalation provider** in the cost-aware router — it handles complex multi-step reasoning, ambiguous intent, and DeepSeek fallback. DeepSeek remains the low-cost default. |
-| **Agent behavior beyond chat** | Plans, classifies intent (10+ types), routes to deterministic rules/simulation engines, persists to memory, explains results, answers follow-ups. |
-| **Multi-step workflow** | Visible reasoning timeline: plan → resolve → news → impact → engine → Monte Carlo → narrate → persist. |
+| **Gemini / Google usage** | **Google Gemini** (`gemini-2.5-flash`, `lib/llm/gemini.ts`) is **live in production** as the **premium escalation provider** in the cost-aware router (complex multi-step reasoning, ambiguous intent, DeepSeek fallback), **and** as the driver of a real **function-calling agent loop** (`lib/llm/geminiAgent.ts`, `POST /api/agent/gemini-tools`) where Gemini chooses which deterministic tools to call. DeepSeek remains the low-cost default. |
+| **Agent behavior beyond chat** | Plans, classifies intent (10+ types), routes to deterministic rules/simulation engines, persists to memory, explains results, answers follow-ups — **and** (with a Gemini key) drives a multi-round tool-use loop over declared tools. |
+| **Multi-step workflow** | Visible reasoning timeline: plan → resolve → news → impact → engine → Monte Carlo → narrate → persist. Gemini function-calling adds a model-driven variant of the same steps. |
+| **Verified accuracy** | Walk-forward backtest of the live engine on every completed 2026 result (`/accuracy`, `GET /api/accuracy`): **65% top-pick, +42% RPS skill, ECE 2.5%**, cross-checked by an independent Dixon-Coles LOO fit. Reproduced by `npm run backtest`; guarded by `npm run test:track`. |
 | **Demo video** | _paste your 3-min link_ |
 
 ---
@@ -175,7 +192,7 @@ Each stage is a real, inspectable TypeScript function and the reasoning timeline
 
 ## 🔭 What's next
 
-- Native **Gemini function-calling** so the LLM drives the pipeline (planner → tools).
+- ✅ Native **Gemini function-calling** so the LLM drives the pipeline (planner → tools) — **shipped** (`lib/llm/geminiAgent.ts`, `POST /api/agent/gemini-tools`); next we'll render its tool-call trace live in the agent panel next to the deterministic timeline.
 - **Richer live news** — cross-provider dedupe, real player entity resolution, recency weighting.
 - **MongoDB Atlas Vector Search** over news + historical matches for "find similar situations."
 - **Multi-turn memory recall** — the agent cites its own past predictions in follow-ups.
@@ -208,9 +225,10 @@ Each stage is a real, inspectable TypeScript function and the reasoning timeline
    - Point at **"Saved to agent memory · MongoDB / In-memory."**
 3. **Click the follow-up** *"What if Germany's injured defender returns?"* — the agent re-analyses and Germany's odds recover. "It remembered the matchup and the news."
 4. **Global Voice Mode (optional, ~10s):** switch the language to **Español**, ask the same question by voice, and play the spoken answer — the result reads back in Spanish.
-5. **Open `/memory` (Agent Memory Center).** Show the memory backend, recent sessions, stored `team_news` signals, last news update, and "Why MongoDB matters."
-6. **Open `/news` (Daily Team News).** Switch teams, show impact/category/source badges, hit **Refresh news now**.
-7. Close: "Statistical rigor + daily news intelligence + agent memory + global voice — that's WorldCup Oracle Agent."
+5. **Open `/accuracy` (Track Record).** "This isn't a demo that only looks smart — here's the model graded against the real tournament, walk-forward. 65% of results called right, +42% skill over a coin-flip, well-calibrated — and an independent Dixon-Coles model agrees. Every call is on the record, misses included."
+6. **Open `/memory` (Agent Memory Center).** Show the memory backend, recent sessions, stored `team_news` signals, last news update, and "Why MongoDB matters."
+7. **Open `/news` (Daily Team News).** Switch teams, show impact/category/source badges, hit **Refresh news now**.
+8. Close: "Statistical rigor + a verified track record + daily news intelligence + agent memory + global voice — that's WorldCup Oracle Agent."
 
 ---
 

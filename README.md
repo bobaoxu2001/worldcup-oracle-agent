@@ -7,6 +7,7 @@
 ![DeepSeek](https://img.shields.io/badge/DeepSeek-hybrid%20LLM%20layer-4D6BFE)
 ![News-aware](https://img.shields.io/badge/News-aware-39FF88)
 ![Monte Carlo](https://img.shields.io/badge/Monte%20Carlo-10%2C000%20runs-2D9BFF)
+![Track record](https://img.shields.io/badge/Verified%20track%20record-65%25%20top--pick-39FF88)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 **🏆 Google Cloud Rapid Agent Hackathon — MongoDB Track**
@@ -27,6 +28,8 @@
 WorldCup Oracle Agent is **not** a static prediction dashboard. You ask a football question in plain English — *"Who will win Argentina vs Germany based on the latest team news?"* — and watch an agent **plan** the analysis, **resolve** the teams, **pull recent injury & squad news**, **run 10,000 Monte Carlo simulations**, **explain how the latest updates move the line**, **remember** the result, and **answer your follow-ups** (*"Does Germany's injury news change the prediction?"*).
 
 It feels like **a World Cup prediction model + a daily football news intelligence agent** in one.
+
+> **📊 It's not just a demo — it has a verified track record.** As the real 2026 World Cup plays out, every completed match is graded honestly on the **[`/accuracy`](https://worldcup-oracle-agent.vercel.app/accuracy)** page. Across the **82 completed matches** through 2 July (walk-forward — each fixture predicted using **only the results before it**, never its own outcome), the live engine calls the right result **65% of the time (53/82)**, scores **+42% skill on the Ranked Probability Score** vs a coin-flip, and is **well-calibrated (ECE 2.5%)**. A **completely independent ridge Dixon-Coles model** (Python, refit nightly, leave-one-out scored) agrees it has real out-of-sample skill — two differently-built models landing on the same number is the credibility check. `npm run backtest` reproduces it; `npm run test:track` guards the accounting.
 
 ## 📸 Screenshots
 
@@ -103,6 +106,8 @@ User Query
 ```
 
 The **numbers are 100% deterministic** (a ported, calibrated statistical model). The **DeepSeek** hybrid LLM layer (with a Gemini fallback) only **understands intent, writes the analyst narrative, and localizes to Chinese** — it never invents probabilities, news, injuries, or rules, and the app works identically without it (graceful deterministic fallback). That combination — statistical rigor *plus* an agentic workflow with memory — is the whole point.
+
+**Gemini can also drive the pipeline directly (function calling).** Beyond narrating, there's a real **Gemini function-calling tool loop** (`lib/llm/geminiAgent.ts`): Gemini is handed four declared tools — `resolve_team`, `predict_match`, `get_team_news`, `get_tournament_state` — and, over a bounded multi-round loop, *chooses* which to call, we execute them **deterministically**, feed the JSON back, and it synthesizes the answer. **Every number still comes from the engine** (the tools return the engine's own probabilities and the live elimination state); Gemini only orchestrates and writes prose, under a system instruction that forbids inventing probabilities, news, or eliminations. It's fail-soft (no key → the deterministic pipeline runs unchanged), inspectable at **`POST /api/agent/gemini-tools`** (returns the full tool-call trace), and unit-tested offline with a scripted fake model — `npm run test:gemini-agent` (14 checks, no network/key/cost).
 
 ---
 
@@ -495,11 +500,18 @@ fork / self-host (the `Memory: MongoDB Atlas` badge):
 ### Scripts
 
 ```bash
-npm run dev        # dev server
-npm run build      # production build
-npm run start      # serve production build
-npm run lint       # eslint
-npm run typecheck  # tsc --noEmit
+npm run dev            # dev server
+npm run build          # production build
+npm run start          # serve production build
+npm run lint           # eslint
+npm run typecheck      # tsc --noEmit
+
+# Verify the model — reproduce the numbers on /accuracy
+npm run backtest       # walk-forward backtest of the LIVE engine vs every completed result
+npm run test:track     # guard the track-record accounting (24 checks)
+npm run dc:backtest    # independent ridge Dixon-Coles fit + leave-one-out cross-check
+npm run test:gemini-agent  # offline test of the Gemini function-calling tool loop (14 checks)
+npm run validate:bracket   # all 495 Annex C best-third combinations resolve
 ```
 
 ---
@@ -516,7 +528,7 @@ Paste any of these into the agent:
 
 More to try: `Predict France vs Portugal and include news impact` · `What changed in Brazil's squad this week?` · `Give me a TikTok-style match preview for England vs Germany`
 
-Also visit **`/news`** (Daily Team News) to browse recent injuries / squad / tactics updates per team and trigger a manual refresh.
+Also visit **`/accuracy`** (Track Record) to see the live engine graded against every completed 2026 result — top-pick accuracy, calibration, the independent Dixon-Coles cross-check, and every call on the record — and **`/news`** (Daily Team News) to browse recent injuries / squad / tactics updates per team and trigger a manual refresh.
 
 ---
 
@@ -526,7 +538,8 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 
 ## Future roadmap
 
-- **Native Gemini function-calling** so the LLM drives the pipeline (planner → tools) instead of only narrating.
+- ✅ **Native Gemini function-calling** — *delivered.* Gemini drives the pipeline via a real tool loop (`lib/llm/geminiAgent.ts`, `POST /api/agent/gemini-tools`); the deterministic engine still owns every number.
+- **Surface the tool-call trace live in the agent panel** when the function-calling loop runs, alongside the existing deterministic reasoning timeline.
 - **Richer news ingestion** — dedupe across providers, entity resolution to real player names, recency weighting.
 - **Multi-turn memory recall** — the agent cites its own past predictions and news in follow-ups.
 - **Bracket builder** — simulate a user's custom knockout path.
@@ -539,6 +552,8 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 - [x] **Agentic product** — explicit, inspectable pipeline (planner → resolver → news → impact → engine → simulator → explainer → memory) with a visible reasoning timeline.
 - [x] **MongoDB Track — live on Atlas** — prediction sessions persist to `predictions`, news to `team_news` (both indexed); `/memory` shows the **MongoDB Atlas** backend + recent saved sessions, and each result's Data Transparency card reads `Memory: MongoDB Atlas`.
 - [x] **Cost-aware LLM routing** — DeepSeek default + **Gemini** (`lib/llm/gemini.ts`, live in prod) premium escalation for complex/ambiguous queries + fallback; deterministic when no key. Routing tested via `npm run test:routing`.
+- [x] **Gemini function-calling agent loop** — Gemini drives a bounded tool-use loop over deterministic tools (`lib/llm/geminiAgent.ts`, `POST /api/agent/gemini-tools`); numbers stay engine-owned. Offline-tested via `npm run test:gemini-agent`.
+- [x] **Verified out-of-sample track record** — walk-forward backtest of the live engine on every completed 2026 result (**65% top-pick, +42% RPS skill, ECE 2.5%**), cross-checked by an independent ridge Dixon-Coles LOO fit; live at `/accuracy`, reproduced by `npm run backtest`, guarded by `npm run test:track`.
 - [x] **Runs with zero config** — predictions, simulations, news and memory all work with an empty `.env`.
 - [x] **Fail-soft** — missing/invalid MongoDB, Gemini or news keys never break the demo.
 - [x] **Open source** — [MIT `LICENSE`](LICENSE).
