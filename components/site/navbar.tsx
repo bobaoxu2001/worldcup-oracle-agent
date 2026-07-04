@@ -32,6 +32,12 @@ export function Navbar() {
             Schedule
           </Link>
           <Link
+            href="/accuracy"
+            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
+          >
+            <span className="hidden sm:inline">Track </span>Record
+          </Link>
+          <Link
             href="/news"
             className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
           >
