@@ -28,6 +28,8 @@
     "test:freshness": "tsx scripts/test-freshness.ts",
     "test:honesty": "tsx scripts/test-agent-honesty.ts",
     "test:provenance": "tsx scripts/test-provenance.ts",
+    "test:track": "tsx scripts/test-track-record.ts",
+    "test:gemini-agent": "tsx scripts/test-gemini-agent.ts",
     "backtest": "tsx scripts/backtest.ts",
     "evolve": "tsx scripts/evolve.ts",
     "dc:export": "tsx scripts/export-results-csv.ts betting-backtest/data",

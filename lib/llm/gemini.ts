@@ -19,9 +19,22 @@ const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const ENDPOINT = (key: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
 
-export function geminiConfigured(): boolean {
-  return Boolean(process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.length > 10);
+/**
+ * The Gemini API key, read from EITHER env var name. Different Google surfaces
+ * document it differently (AI Studio → GEMINI_API_KEY, some Cloud docs →
+ * GOOGLE_API_KEY), so we accept both rather than silently failing on the "wrong"
+ * one. Returns null when neither is set to a plausible key.
+ */
+export function geminiApiKey(): string | null {
+  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+  return key.length > 10 ? key : null;
 }
+
+export function geminiConfigured(): boolean {
+  return geminiApiKey() !== null;
+}
+
+export { MODEL as GEMINI_MODEL, ENDPOINT as geminiEndpoint };
 
 /**
  * Ask Gemini to rewrite/extend a piece of text. Returns null on any failure
@@ -32,7 +45,7 @@ export async function geminiGenerate(
   prompt: string,
   opts: { maxTokens?: number; timeoutMs?: number } = {}
 ): Promise<string | null> {
-  const key = process.env.GOOGLE_API_KEY;
+  const key = geminiApiKey();
   if (!key) return null;
 
   const controller = new AbortController();

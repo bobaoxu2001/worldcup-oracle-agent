@@ -3,6 +3,7 @@ import { countPredictions, mongoConnected } from "@/lib/db/mongodb";
 import { getNewsStats, newsMode } from "@/lib/news/newsIngestor";
 import { llmConfigured } from "@/lib/llm/provider";
 import { geminiConfigured } from "@/lib/llm/gemini";
+import { geminiAgentEnabled } from "@/lib/llm/geminiAgent";
 import { getTournamentState, liveProviderConfigured } from "@/lib/live-sports/tournamentState";
 
 export const runtime = "nodejs";
@@ -42,6 +43,10 @@ export async function GET() {
         deepseek: llmConfigured(), // low-cost default
         gemini: geminiConfigured(), // premium escalation + fallback
         defaultProvider: llmConfigured() ? "deepseek" : geminiConfigured() ? "gemini" : "none",
+        // Gemini function-calling agent loop (lib/llm/geminiAgent.ts): when a
+        // Gemini key is present, Gemini can drive the pipeline by choosing which
+        // deterministic tools to call. Off (deterministic pipeline) otherwise.
+        geminiFunctionCalling: geminiAgentEnabled(),
       },
       // Live tournament state (deterministic elimination source of truth).
       tournamentState: {
