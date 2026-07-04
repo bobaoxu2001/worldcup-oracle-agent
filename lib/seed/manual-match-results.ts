@@ -15,7 +15,15 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-07-02 (second pass) — knockout-results AUDIT: re-verified
+ * Last updated: 2026-07-04 — recorded FOUR more Round-of-32 results, each
+ * verified against the football-data.org official World Cup results feed:
+ * Spain 3-0 Austria and Portugal 2-1 Croatia (2 July), Switzerland 2-0 Algeria
+ * and Argentina 3-2 Cape Verde a.e.t. (3 July). The free feed does not expose
+ * goalscorers, so those notes state only the verified result (no invented
+ * scorers). Two ties are deliberately HELD: Australia-Egypt (feed reports
+ * winner:null with an inconsistent 4-4 shootout — advancing side unresolved)
+ * and Colombia-Ghana (still IN_PLAY at update time). Neither is guessed.
+ * ── Prior 2026-07-02 (second pass) — knockout-results AUDIT: re-verified
  * every completed knockout tie against fresh sources; all 10 completed R32
  * results (through 1 July) were already recorded and correct, and the six
  * remaining ties (Spain-Austria, Portugal-Croatia, Switzerland-Algeria on
@@ -1129,4 +1137,68 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-02",
   },
+  // ── 2 July Round-of-32 ties (verified against the football-data.org official
+  //    results feed on 4 July; that free feed does not expose goalscorers, so
+  //    these notes deliberately state only the verified result — no invented
+  //    scorers/minutes/venues). ──
+  {
+    group: "R32",
+    teamA: "spain",
+    teamB: "austria",
+    scoreA: 3,
+    scoreB: 0,
+    date: "2026-07-02",
+    note: "Spain were comfortable against Austria, leading 1–0 at the break and pulling away to a 3–0 win in regulation to reach the round of 16. (Score verified via the football-data.org official World Cup results feed; goalscorer detail not yet cross-checked against a match report, so it is intentionally omitted here.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  {
+    group: "R32",
+    teamA: "portugal",
+    teamB: "croatia",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-07-02",
+    note: "A goalless first half gave way to a 2–1 Portugal win over Croatia in regulation, sending Portugal into the round of 16. (Score verified via the football-data.org official World Cup results feed; goalscorer detail not yet cross-checked, so it is intentionally omitted here.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  // ── 3 July Round-of-32 ties (verified via football-data.org on 4 July). ──
+  {
+    group: "R32",
+    teamA: "switzerland",
+    teamB: "algeria",
+    scoreA: 2,
+    scoreB: 0,
+    date: "2026-07-03",
+    note: "Switzerland led Algeria 1–0 at half-time and closed out a 2–0 win in regulation to advance to the round of 16. (Score verified via the football-data.org official World Cup results feed; goalscorer detail not yet cross-checked, so it is intentionally omitted here.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  {
+    group: "R32",
+    teamA: "argentina",
+    teamB: "cape-verde",
+    scoreA: 3,
+    scoreB: 2,
+    date: "2026-07-03",
+    note: "Argentina were pushed to extra time by a spirited Cape Verde before winning 3–2 a.e.t. to reach the round of 16. (Recorded at the extra-time score: a decisive Argentina win in the Elo fold, no shootout. Score verified via the football-data.org official World Cup results feed; goalscorer detail not yet cross-checked, so it is intentionally omitted here.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  // NOTE: two 3–4 July R32 ties are deliberately NOT recorded yet —
+  //   • Australia v Egypt (3 Jul) finished FINISHED in the feed but with
+  //     winner:null and an inconsistent 4–4 shootout line (regulation 1–1,
+  //     extra time 0–0), so the advancing side is not yet resolvable from the
+  //     source. A knockout draw REQUIRES a verified `advances`, so it is held.
+  //   • Colombia v Ghana (4 Jul) was still IN_PLAY (0–0) at the time of this
+  //     update. Neither is guessed — they will be added once the source settles.
 ];

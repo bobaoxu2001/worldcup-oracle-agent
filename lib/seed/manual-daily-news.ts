@@ -14,7 +14,14 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-07-02 — KNOCKOUTS: added the Round-of-32 press-conference
+ * Last updated: 2026-07-04 — added the 2–3 July Round-of-32 RESULTS (Spain 3–0
+ * Austria, Portugal 2–1 Croatia, Switzerland 2–0 Algeria, Argentina 3–2 Cape
+ * Verde a.e.t.), each verified against the football-data.org official World Cup
+ * feed. That free feed does not expose goalscorers, so the result summaries state
+ * only the verified score (no invented scorers/quotes); the model called all four
+ * favourites correctly. Australia–Egypt (unresolved shootout in the feed) and
+ * Colombia–Ghana (still in play) are intentionally NOT reported yet.
+ * ── Prior 2026-07-02 — KNOCKOUTS: added the Round-of-32 press-conference
  * layer the user asked for (pre- AND post-match managers/players). Post-match:
  * Nagelsmann after Germany's shootout exit to Paraguay ("I am not resigning"),
  * Tuchel & Kane after England's 2–1 comeback vs DR Congo, Rudi García & Tielemans
@@ -68,6 +75,83 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 3 July — Round-of-32 results (scores verified vs the football-data.org
+  //    official World Cup feed; that free feed does not expose goalscorers, so
+  //    these summaries state only the verified result, no invented scorers). ──
+  {
+    id: "2026-07-03-r32-favourites-hold",
+    date: "2026-07-03",
+    title: "Round of 32: the favourites all hold as the last-16 picture fills in",
+    summary:
+      "The four ties played on 2–3 July all went the way the model favoured. Spain brushed Austria aside 3–0 and Portugal edged Croatia 2–1 on 2 July; Switzerland saw off Algeria 2–0 and holders Argentina needed extra time to overcome debutants Cape Verde 3–2 on 3 July. Two ties are still to be confirmed at the time of writing — Australia v Egypt (level after extra time and into a penalty shootout) and Colombia v Ghana — and will be added once the result is settled. The Oracle called each of the four completed favourites correctly.",
+    tag: "Tournament",
+    relatedTeams: ["spain", "portugal", "switzerland", "argentina"],
+    prompt: "Who are the favourites left in the World Cup now the Round of 32 is almost done?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  {
+    id: "2026-07-03-sui-alg-result",
+    date: "2026-07-03",
+    title: "Switzerland 2–0 Algeria — Swiss into the last 16",
+    summary:
+      "Switzerland led at half-time and closed out a 2–0 win over Algeria in regulation to reach the Round of 16. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["switzerland", "algeria"],
+    relatedMatch: { group: "R32", teamA: "switzerland", teamB: "algeria" },
+    prompt: "How far can Switzerland go in the knockouts?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  {
+    id: "2026-07-03-arg-cpv-result",
+    date: "2026-07-03",
+    title: "Argentina 3–2 Cape Verde (a.e.t.) — holders survive a scare",
+    summary:
+      "Scaloni's warning proved well founded: debutants Cape Verde pushed the defending champions to extra time before Argentina prevailed 3–2 a.e.t. to reach the Round of 16. It caps a remarkable tournament for the smallest nation by population ever to reach the knockouts. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["argentina", "cape-verde"],
+    relatedMatch: { group: "R32", teamA: "argentina", teamB: "cape-verde" },
+    prompt: "How far can Argentina go as defending champions?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  {
+    id: "2026-07-02-esp-aut-result",
+    date: "2026-07-02",
+    title: "Spain 3–0 Austria — La Roja cruise into the last 16",
+    summary:
+      "Spain were comfortable throughout, leading 1–0 at the break and pulling clear to a 3–0 win over Austria in regulation to reach the Round of 16. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["spain", "austria"],
+    relatedMatch: { group: "R32", teamA: "spain", teamB: "austria" },
+    prompt: "How far can Spain go in the tournament?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  {
+    id: "2026-07-02-por-cro-result",
+    date: "2026-07-02",
+    title: "Portugal 2–1 Croatia — Ronaldo's side edge through",
+    summary:
+      "A goalless first half gave way to a 2–1 Portugal win over Croatia in regulation, sending Portugal into the Round of 16 and ending the tournament for Luka Modrić's Croatia. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["portugal", "croatia"],
+    relatedMatch: { group: "R32", teamA: "portugal", teamB: "croatia" },
+    prompt: "How far can Portugal go in the knockouts?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
   // ── 2 July — knockout press-conference layer (pre- & post-match) ────────────
   {
     id: "2026-07-02-knockouts-overview",
