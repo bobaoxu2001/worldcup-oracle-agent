@@ -23,6 +23,7 @@ import { RecentPredictions } from "./recent-predictions";
 import { NewsImpact } from "./news-impact";
 import { TeamNewsDigest } from "./team-news-digest";
 import { DataTransparency } from "./data-transparency";
+import { GeminiToolTrace } from "./gemini-tool-trace";
 import { IntentBadge } from "./intent-badge";
 import { FactorsCard } from "./factors-card";
 import { GroupTableCard } from "./group-table-card";
@@ -81,10 +82,13 @@ interface Turn {
 export function AgentChat({
   initialRecent,
   initialQuery,
+  geminiTools = false,
 }: {
   initialRecent: { items: StoredPrediction[]; source: PersistMode };
   /** Deep-linked question (/?q=…) — auto-submitted once on mount. */
   initialQuery?: string;
+  /** Server-checked flag: the Gemini function-calling tool loop is available. */
+  geminiTools?: boolean;
 }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -343,6 +347,8 @@ export function AgentChat({
             {turn.status === "done" && turn.response && (
               <AgentAnswer
                 response={turn.response}
+                query={turn.query}
+                geminiTools={geminiTools}
                 onFollowUp={(q) => submit(q, true)}
                 isLatest={turn.id === turns[turns.length - 1].id}
                 busy={busy}
@@ -477,11 +483,16 @@ function ThinkingPanel({ progress }: { progress: number }) {
 
 function AgentAnswer({
   response,
+  query,
+  geminiTools,
   onFollowUp,
   isLatest,
   busy,
 }: {
   response: AgentResponse;
+  /** The user's original question — replayed through the Gemini tool loop on demand. */
+  query: string;
+  geminiTools: boolean;
   onFollowUp: (q: string) => void;
   isLatest: boolean;
   busy: boolean;
@@ -512,6 +523,11 @@ function AgentAnswer({
       {response.tournamentState && <TournamentStateBadge state={response.tournamentState} />}
 
       {(prediction || champions) && <DataTransparency response={response} />}
+
+      {/* Live Gemini function-calling: replay this question through the tool
+          loop and show which tools Gemini chose. Only rendered when a Gemini
+          key is configured (server-checked); on-demand, so zero added latency. */}
+      {geminiTools && (prediction || champions) && <GeminiToolTrace query={query} />}
 
       {/* concise uncertainty disclaimer on every probability-bearing answer */}
       {(prediction || champions || response.structured?.probabilities) && (

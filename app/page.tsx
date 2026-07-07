@@ -2,6 +2,7 @@ import { AgentChat } from "@/components/agent/agent-chat";
 import { DailyBriefCompact } from "@/components/news/daily-brief";
 import { getRecentPredictions } from "@/lib/db/mongodb";
 import { geminiConfigured } from "@/lib/llm/gemini";
+import { geminiAgentEnabled } from "@/lib/llm/geminiAgent";
 import { llmConfigured } from "@/lib/llm/provider";
 import { mongoConfigured } from "@/lib/db/mongodb";
 import { newsProviderConfigured } from "@/lib/news/newsIngestor";
@@ -54,7 +55,11 @@ export default async function Home({
 
       <DailyBriefCompact />
 
-      <AgentChat initialRecent={{ items, source }} initialQuery={initialQuery} />
+      <AgentChat
+        initialRecent={{ items, source }}
+        initialQuery={initialQuery}
+        geminiTools={geminiAgentEnabled()}
+      />
     </div>
   );
 }
