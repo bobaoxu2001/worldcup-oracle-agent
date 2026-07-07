@@ -17,12 +17,12 @@ genuine forward forecasts — the R32 has not been played._
 | M77 France v Sweden | 75% | 17% | 9% | **France** (75%) | 2-0, 3-0, 2-1 |
 | M78 Ivory Coast v Norway | 32% | 29% | 39% | **Norway** (39%) | 1-1, 1-2, 2-1 |
 | M79 Mexico v Ecuador | 68% | 24% | 8% | **Mexico** (68%) | 1-0, 2-0, 0-0 |
-| M80 England v DR Congo | 51% | 29% | 21% | **England** (51%) | 1-1, 2-1, 2-0 |
+| M80 England v DR Congo | 50% | 29% | 22% | **England** (50%) | 1-1, 2-1, 2-0 |
 | M81 United States v Bosnia & Herzegovina | 69% | 18% | 13% | **United States** (69%) | 2-1, 3-1, 1-1 |
 | M82 Belgium v Senegal | 48% | 24% | 28% | **Belgium** (48%) | 1-1, 2-1, 2-2 |
-| M83 Portugal v Croatia | 52% | 27% | 21% | **Portugal** (52%) | 1-1, 2-1, 2-0 |
+| M83 Portugal v Croatia | 54% | 26% | 20% | **Portugal** (54%) | 1-1, 2-1, 2-0 |
 | M84 Spain v Austria | 69% | 21% | 10% | **Spain** (69%) | 2-0, 1-0, 1-1 |
 | M85 Switzerland v Algeria | 66% | 22% | 12% | **Switzerland** (66%) | 2-0, 1-1, 2-1 |
 | M86 Argentina v Cape Verde | 54% | 27% | 19% | **Argentina** (54%) | 1-1, 2-0, 2-1 |
-| M87 Colombia v Ghana | 37% | 40% | 24% | **Draw** (40%) | 0-0, 1-0, 1-1 |
+| M87 Colombia v Ghana | 41% | 40% | 19% | **Colombia** (41%) | 0-0, 1-0, 1-1 |
 | M88 Australia v Egypt | 30% | 37% | 33% | **Draw** (37%) | 0-0, 1-1, 0-1 |

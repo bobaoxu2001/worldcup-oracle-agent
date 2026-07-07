@@ -14,13 +14,13 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-07-04 — added the 2–3 July Round-of-32 RESULTS (Spain 3–0
+ * Last updated: 2026-07-04 — added the 2–4 July Round-of-32 RESULTS (Spain 3–0
  * Austria, Portugal 2–1 Croatia, Switzerland 2–0 Algeria, Argentina 3–2 Cape
- * Verde a.e.t.), each verified against the football-data.org official World Cup
- * feed. That free feed does not expose goalscorers, so the result summaries state
- * only the verified score (no invented scorers/quotes); the model called all four
- * favourites correctly. Australia–Egypt (unresolved shootout in the feed) and
- * Colombia–Ghana (still in play) are intentionally NOT reported yet.
+ * Verde a.e.t., Colombia 1–0 Ghana), each verified against the football-data.org
+ * official World Cup feed. That free feed does not expose goalscorers, so the
+ * result summaries state only the verified score (no invented scorers/quotes);
+ * the model called all the completed favourites correctly. Only Australia–Egypt
+ * (unresolved shootout in the feed) is intentionally NOT reported yet.
  * ── Prior 2026-07-02 — KNOCKOUTS: added the Round-of-32 press-conference
  * layer the user asked for (pre- AND post-match managers/players). Post-match:
  * Nagelsmann after Germany's shootout exit to Paraguay ("I am not resigning"),
@@ -75,6 +75,24 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 4 July — Round-of-32 results (scores verified vs the football-data.org
+  //    official World Cup feed; that free feed does not expose goalscorers, so
+  //    these summaries state only the verified result, no invented scorers). ──
+  {
+    id: "2026-07-04-col-gha-result",
+    date: "2026-07-04",
+    title: "Colombia 1–0 Ghana — Colombia into the last 16",
+    summary:
+      "Colombia edged Ghana 1–0 in regulation to reach the Round of 16, leaving just one Round-of-32 tie outstanding. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["colombia", "ghana"],
+    relatedMatch: { group: "R32", teamA: "colombia", teamB: "ghana" },
+    prompt: "How far can Colombia go in the knockouts?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
   // ── 3 July — Round-of-32 results (scores verified vs the football-data.org
   //    official World Cup feed; that free feed does not expose goalscorers, so
   //    these summaries state only the verified result, no invented scorers). ──
@@ -83,7 +101,7 @@ export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
     date: "2026-07-03",
     title: "Round of 32: the favourites all hold as the last-16 picture fills in",
     summary:
-      "The four ties played on 2–3 July all went the way the model favoured. Spain brushed Austria aside 3–0 and Portugal edged Croatia 2–1 on 2 July; Switzerland saw off Algeria 2–0 and holders Argentina needed extra time to overcome debutants Cape Verde 3–2 on 3 July. Two ties are still to be confirmed at the time of writing — Australia v Egypt (level after extra time and into a penalty shootout) and Colombia v Ghana — and will be added once the result is settled. The Oracle called each of the four completed favourites correctly.",
+      "The four ties played on 2–3 July all went the way the model favoured. Spain brushed Austria aside 3–0 and Portugal edged Croatia 2–1 on 2 July; Switzerland saw off Algeria 2–0 and holders Argentina needed extra time to overcome debutants Cape Verde 3–2 on 3 July. Colombia have since beaten Ghana 1–0, leaving only Australia v Egypt — level after extra time and into a penalty shootout — still to be confirmed. The Oracle called each of the completed favourites correctly.",
     tag: "Tournament",
     relatedTeams: ["spain", "portugal", "switzerland", "argentina"],
     prompt: "Who are the favourites left in the World Cup now the Round of 32 is almost done?",

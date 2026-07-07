@@ -15,14 +15,14 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-07-04 — recorded FOUR more Round-of-32 results, each
+ * Last updated: 2026-07-04 — recorded FIVE more Round-of-32 results, each
  * verified against the football-data.org official World Cup results feed:
  * Spain 3-0 Austria and Portugal 2-1 Croatia (2 July), Switzerland 2-0 Algeria
- * and Argentina 3-2 Cape Verde a.e.t. (3 July). The free feed does not expose
- * goalscorers, so those notes state only the verified result (no invented
- * scorers). Two ties are deliberately HELD: Australia-Egypt (feed reports
- * winner:null with an inconsistent 4-4 shootout — advancing side unresolved)
- * and Colombia-Ghana (still IN_PLAY at update time). Neither is guessed.
+ * and Argentina 3-2 Cape Verde a.e.t. (3 July), Colombia 1-0 Ghana (4 July).
+ * The free feed does not expose goalscorers, so those notes state only the
+ * verified result (no invented scorers). ONE tie is still deliberately HELD:
+ * Australia-Egypt (feed reports winner:null with an inconsistent 4-4 shootout —
+ * advancing side unresolved). It is never guessed.
  * ── Prior 2026-07-02 (second pass) — knockout-results AUDIT: re-verified
  * every completed knockout tie against fresh sources; all 10 completed R32
  * results (through 1 July) were already recorded and correct, and the six
@@ -1194,11 +1194,23 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-04",
   },
-  // NOTE: two 3–4 July R32 ties are deliberately NOT recorded yet —
-  //   • Australia v Egypt (3 Jul) finished FINISHED in the feed but with
+  {
+    group: "R32",
+    teamA: "colombia",
+    teamB: "ghana",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-07-04",
+    note: "Colombia beat Ghana 1–0 in regulation to reach the round of 16, completing all but one of the Round-of-32 ties. (Score verified via the football-data.org official World Cup results feed on 4 July; goalscorer detail not yet cross-checked, so it is intentionally omitted here.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-04",
+  },
+  // NOTE: one R32 tie is deliberately NOT recorded yet —
+  //   • Australia v Egypt (3 Jul) reads FINISHED in the feed but with
   //     winner:null and an inconsistent 4–4 shootout line (regulation 1–1,
   //     extra time 0–0), so the advancing side is not yet resolvable from the
-  //     source. A knockout draw REQUIRES a verified `advances`, so it is held.
-  //   • Colombia v Ghana (4 Jul) was still IN_PLAY (0–0) at the time of this
-  //     update. Neither is guessed — they will be added once the source settles.
+  //     source. A knockout draw REQUIRES a verified `advances`, so it is held
+  //     — never guessed — until the source settles the shootout.
 ];
