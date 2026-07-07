@@ -14,13 +14,15 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-07-04 — added the 2–4 July Round-of-32 RESULTS (Spain 3–0
- * Austria, Portugal 2–1 Croatia, Switzerland 2–0 Algeria, Argentina 3–2 Cape
- * Verde a.e.t., Colombia 1–0 Ghana), each verified against the football-data.org
- * official World Cup feed. That free feed does not expose goalscorers, so the
- * result summaries state only the verified score (no invented scorers/quotes);
- * the model called all the completed favourites correctly. Only Australia–Egypt
- * (unresolved shootout in the feed) is intentionally NOT reported yet.
+ * Last updated: 2026-07-07 — added the 4–6 July ROUND-OF-16 results (Morocco
+ * 3–0 Canada, France 1–0 Paraguay, Norway 2–1 Brazil — the shock of the round —
+ * England 3–2 Mexico, Spain 1–0 Portugal), all verified against the
+ * football-data.org official World Cup feed; the model called four of the five
+ * correctly. The free feed does not expose goalscorers, so summaries state only
+ * the verified score (no invented scorers/quotes). ── Prior 2026-07-04 — added
+ * the 2–4 July Round-of-32 RESULTS (Spain 3–0 Austria, Portugal 2–1 Croatia,
+ * Switzerland 2–0 Algeria, Argentina 3–2 Cape Verde a.e.t., Colombia 1–0 Ghana),
+ * each verified against the football-data.org feed.
  * ── Prior 2026-07-02 — KNOCKOUTS: added the Round-of-32 press-conference
  * layer the user asked for (pre- AND post-match managers/players). Post-match:
  * Nagelsmann after Germany's shootout exit to Paraguay ("I am not resigning"),
@@ -75,6 +77,82 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 4–6 July — Round-of-16 results (scores verified vs the football-data.org
+  //    official World Cup feed on 7 July; the free feed does not expose
+  //    goalscorers, so these summaries state only the verified result). ──
+  {
+    id: "2026-07-06-r16-last-eight",
+    date: "2026-07-06",
+    title: "Round of 16: Norway stun Brazil as the last eight take shape",
+    summary:
+      "The Round of 16 delivered a shock: Norway beat five-time champions Brazil 2–1 to reach the quarter-finals, backing up their earlier elimination of the Ivory Coast. Elsewhere the favourites held — Morocco routed co-hosts Canada 3–0, France edged Paraguay 1–0, England won a 3–2 thriller with co-hosts Mexico, and Spain took the Iberian derby 1–0 to knock out Portugal. Egypt had earlier completed the Round of 32, beating Australia 4–2 on penalties. The Oracle called four of the five completed last-16 ties correctly — the one it missed was Brazil's exit.",
+    tag: "Tournament",
+    relatedTeams: ["norway", "spain", "england", "morocco"],
+    prompt: "Who are the favourites left after the Round of 16?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    id: "2026-07-06-por-esp-result",
+    date: "2026-07-06",
+    title: "Spain 1–0 Portugal — La Roja win the Iberian derby",
+    summary:
+      "Spain edged neighbours Portugal 1–0 in regulation to reach the quarter-finals and end Portugal's campaign. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["spain", "portugal"],
+    relatedMatch: { group: "R16", teamA: "portugal", teamB: "spain" },
+    prompt: "How far can Spain go in the tournament?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    id: "2026-07-06-mex-eng-result",
+    date: "2026-07-06",
+    title: "England 3–2 Mexico — Three Lions win a five-goal thriller",
+    summary:
+      "England beat co-hosts Mexico 3–2 — leading 2–1 at the break — in regulation to reach the quarter-finals. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["england", "mexico"],
+    relatedMatch: { group: "R16", teamA: "mexico", teamB: "england" },
+    prompt: "How far can England go in the tournament?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    id: "2026-07-05-bra-nor-result",
+    date: "2026-07-05",
+    title: "Norway 2–1 Brazil — the shock of the tournament",
+    summary:
+      "Norway came from a goalless first half to beat five-time champions Brazil 2–1 in regulation and reach the quarter-finals — the biggest upset of the knockouts so far, and a result the model did not see coming. (Score verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["norway", "brazil"],
+    relatedMatch: { group: "R16", teamA: "brazil", teamB: "norway" },
+    prompt: "How did Norway knock out Brazil?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    id: "2026-07-04-can-mar-fra-result",
+    date: "2026-07-04",
+    title: "Morocco 3–0 Canada · France 1–0 Paraguay — favourites through",
+    summary:
+      "The Round of 16 opened with two comfortable-enough wins for the favourites: Morocco beat co-hosts Canada 3–0 (goalless at the break before pulling clear), and France edged Paraguay 1–0. Both reach the quarter-finals. (Scores verified against the football-data.org official World Cup feed; goalscorer detail not yet cross-checked, so it is intentionally omitted.)",
+    tag: "Result",
+    relatedTeams: ["morocco", "france", "canada", "paraguay"],
+    prompt: "Who will win between France and Morocco?",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
   // ── 4 July — Round-of-32 results (scores verified vs the football-data.org
   //    official World Cup feed; that free feed does not expose goalscorers, so
   //    these summaries state only the verified result, no invented scorers). ──

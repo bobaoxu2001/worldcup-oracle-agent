@@ -15,14 +15,18 @@
  *     never presented as live data.
  *
  * Team fields are canonical slugs from lib/seed/world-cup-2026-groups.ts.
- * Last updated: 2026-07-04 — recorded FIVE more Round-of-32 results, each
- * verified against the football-data.org official World Cup results feed:
- * Spain 3-0 Austria and Portugal 2-1 Croatia (2 July), Switzerland 2-0 Algeria
- * and Argentina 3-2 Cape Verde a.e.t. (3 July), Colombia 1-0 Ghana (4 July).
- * The free feed does not expose goalscorers, so those notes state only the
- * verified result (no invented scorers). ONE tie is still deliberately HELD:
- * Australia-Egypt (feed reports winner:null with an inconsistent 4-4 shootout —
- * advancing side unresolved). It is never guessed.
+ * Last updated: 2026-07-07 — Round of 32 COMPLETE + first five Round-of-16
+ * results, all verified against the football-data.org official World Cup feed.
+ * The previously-held Australia-Egypt tie settled (Egypt through 4-2 on
+ * penalties after 1-1; recorded at 1-1 with advances=egypt). Round of 16:
+ * Morocco 3-0 Canada, France 1-0 Paraguay, Norway 2-1 Brazil (the shock of the
+ * round), England 3-2 Mexico, Spain 1-0 Portugal. The free feed does not expose
+ * goalscorers, so notes state only the verified result (no invented scorers).
+ * Three R16 ties are NOT yet recorded (USA-Belgium in play; Argentina-Egypt and
+ * Switzerland-Colombia not kicked off at update time) — never guessed.
+ * ── Prior 2026-07-04 — recorded FIVE Round-of-32 results (Spain 3-0 Austria,
+ * Portugal 2-1 Croatia, Switzerland 2-0 Algeria, Argentina 3-2 Cape Verde
+ * a.e.t., Colombia 1-0 Ghana), all verified against football-data.org.
  * ── Prior 2026-07-02 (second pass) — knockout-results AUDIT: re-verified
  * every completed knockout tie against fresh sources; all 10 completed R32
  * results (through 1 July) were already recorded and correct, and the six
@@ -1207,10 +1211,94 @@ export const MANUAL_MATCH_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-04",
   },
-  // NOTE: one R32 tie is deliberately NOT recorded yet —
-  //   • Australia v Egypt (3 Jul) reads FINISHED in the feed but with
-  //     winner:null and an inconsistent 4–4 shootout line (regulation 1–1,
-  //     extra time 0–0), so the advancing side is not yet resolvable from the
-  //     source. A knockout draw REQUIRES a verified `advances`, so it is held
-  //     — never guessed — until the source settles the shootout.
+  {
+    // The previously-held tie, now SETTLED in the feed: reg/extra-time 1–1,
+    // Egypt won the shootout 4–2 (feed: winner AWAY_TEAM, penalties 4–2). This
+    // completes the Round of 32. Recorded at the 1–1 regulation score with
+    // Egypt advancing on penalties — the standard Elo convention (a draw in the
+    // model fold; the winner comes from `advances`, not the score).
+    group: "R32",
+    teamA: "australia",
+    teamB: "egypt",
+    scoreA: 1,
+    scoreB: 1,
+    date: "2026-07-03",
+    advances: "egypt",
+    note: "Egypt beat Australia on penalties (4–2) after a 1–1 draw — Egypt led 1–0 at the break and the tie finished level after extra time — to reach the round of 16 and complete the Round of 32. (Recorded at the 1–1 regulation/extra-time score with Egypt advancing on penalties: a draw in the Elo fold. Score verified via the football-data.org official World Cup feed once the shootout settled; goalscorer detail not cross-checked, so intentionally omitted.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  // ── Round of 16 (4–6 July) — scores verified vs the football-data.org
+  //    official World Cup feed on 7 July; the free feed does not expose
+  //    goalscorers, so these notes state only the verified result. ──
+  {
+    group: "R16",
+    teamA: "canada",
+    teamB: "morocco",
+    scoreA: 0,
+    scoreB: 3,
+    date: "2026-07-04",
+    note: "Morocco, goalless at half-time, pulled clear to a 3–0 win over co-hosts Canada in regulation to reach the quarter-finals. (Score verified via the football-data.org official World Cup feed; goalscorer detail not cross-checked, so intentionally omitted.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    group: "R16",
+    teamA: "paraguay",
+    teamB: "france",
+    scoreA: 0,
+    scoreB: 1,
+    date: "2026-07-04",
+    note: "France edged Paraguay 1–0 in regulation to reach the quarter-finals. (Score verified via the football-data.org official World Cup feed; goalscorer detail not cross-checked, so intentionally omitted.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    group: "R16",
+    teamA: "brazil",
+    teamB: "norway",
+    scoreA: 1,
+    scoreB: 2,
+    date: "2026-07-05",
+    note: "The upset of the round: Norway came from a goalless first half to beat five-time champions Brazil 2–1 in regulation and reach the quarter-finals, backing up their Round-of-32 win over the Ivory Coast. (Score verified via the football-data.org official World Cup feed; goalscorer detail not cross-checked, so intentionally omitted.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    group: "R16",
+    teamA: "mexico",
+    teamB: "england",
+    scoreA: 2,
+    scoreB: 3,
+    date: "2026-07-06",
+    note: "England won a five-goal thriller 3–2 against co-hosts Mexico — leading 2–1 at the break — in regulation to reach the quarter-finals. (Score verified via the football-data.org official World Cup feed; goalscorer detail not cross-checked, so intentionally omitted.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  {
+    group: "R16",
+    teamA: "portugal",
+    teamB: "spain",
+    scoreA: 0,
+    scoreB: 1,
+    date: "2026-07-06",
+    note: "Spain won the Iberian derby 1–0 in regulation to reach the quarter-finals and end Portugal's campaign. (Score verified via the football-data.org official World Cup feed; goalscorer detail not cross-checked, so intentionally omitted.)",
+    sourceName: "football-data.org (FIFA World Cup official results feed)",
+    sourceUrl: "https://api.football-data.org/v4/competitions/WC/matches",
+    verified: true,
+    verifiedAt: "2026-07-07",
+  },
+  // NOTE: three round-of-16 ties are NOT yet recorded — USA v Belgium was still
+  // IN_PLAY, and Argentina v Egypt and Switzerland v Colombia had not kicked off
+  // at update time (7 July). They will be added once the feed settles them.
 ];
