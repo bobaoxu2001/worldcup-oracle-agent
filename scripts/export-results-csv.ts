@@ -3,10 +3,10 @@
  * `matches.csv` schema — the "pull tonight's scores" step of the nightly
  * Dixon-Coles refit pipeline.
  *
- * Source of truth: the manual results layer (lib/seed/manual-match-results.ts),
- * which is exactly what the rest of the app and the standings read. As knockout
- * results are recorded there, this exporter picks them up automatically — so a
- * nightly run always refits on the latest scores with zero extra steps.
+ * Source of truth: the combined recorded-results layer, which joins the long
+ * historical manual seed with the small append-only latest-knockout layer.
+ * New settled knockout results therefore flow into the nightly refit without
+ * waiting for a rewrite of the historical seed file.
  *
  * Output columns match betting-backtest/schema.py MATCHES_COLUMNS so the Python
  * model and the existing evaluator/decision engine share one canonical dataset.
@@ -22,7 +22,7 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "../lib/seed/recorded-match-results";
 import { getTeam, HOST_SLUGS } from "../lib/seed/world-cup-2026-groups";
 
 const COLUMNS = [
@@ -48,7 +48,7 @@ function main() {
   mkdirSync(outDir, { recursive: true });
 
   // Stable chronological order (date, then group) so match ids are reproducible.
-  const sorted = [...MANUAL_MATCH_RESULTS].sort((a, b) => {
+  const sorted = [...ALL_MATCH_RESULTS].sort((a, b) => {
     const da = a.date ?? "";
     const db = b.date ?? "";
     return da < db ? -1 : da > db ? 1 : a.group < b.group ? -1 : a.group > b.group ? 1 : 0;
