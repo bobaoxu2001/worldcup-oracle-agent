@@ -20,7 +20,7 @@
  * scripts/test-track-record.ts (invariant checks). Deterministic, no I/O.
  */
 
-import { MANUAL_MATCH_RESULTS } from "../seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "../seed/recorded-match-results";
 import { getRating, HOME_ADVANTAGE } from "./ratings";
 import { computeRatingUpdates } from "./ratingUpdates";
 import { getAvailabilityDelta } from "./availabilityAdjustments";
@@ -110,7 +110,7 @@ const hb = (a: string, b: string) =>
 const conf = (s: string) => getTeam(s).confederation;
 
 /** Confederation-form deltas computed from a subset of results (walk-forward). */
-function confedDeltas(results: typeof MANUAL_MATCH_RESULTS): Record<string, number> {
+function confedDeltas(results: typeof ALL_MATCH_RESULTS): Record<string, number> {
   const sum: Record<string, number> = {}, cnt: Record<string, number> = {};
   for (const r of results) {
     const eA = expectedScore(getRating(r.teamA), getRating(r.teamB), hb(r.teamA, r.teamB));
@@ -143,7 +143,7 @@ const CAL_BINS = [
 ];
 
 export function computeTrackRecord(): TrackRecord {
-  const all = [...MANUAL_MATCH_RESULTS].sort((x, y) => (x.date || "").localeCompare(y.date || ""));
+  const all = [...ALL_MATCH_RESULTS].sort((x, y) => (x.date || "").localeCompare(y.date || ""));
 
   interface Agg { brier: number; rps: number; logloss: number; hits: number; drawPred: number; }
   const agg: Record<VariantKey, Agg> = Object.fromEntries(
