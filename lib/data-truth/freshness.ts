@@ -2,33 +2,23 @@
  * Data-truth & freshness — the single place that answers "how current is what we
  * actually know?" for a LIVE tournament.
  *
- * WHY THIS EXISTS:
- *   Freshness signals were scattered across the codebase — the schedule page
- *   computed a "results through" date inline, the news layer tracks its own last
- *   update, and the live-fixtures cache carries a `fetchedAt`. Nothing aggregated
- *   them, and the conversational agent never told the user how recent the results
- *   and standings behind a prediction were. This module centralises that so every
- *   surface (agent answers, UI, API) reports recency honestly and consistently.
- *
- * SOURCES OF TRUTH (reused, not duplicated):
- *   • recorded results — lib/seed/manual-match-results.ts (the verified-manual layer)
- *   • live fixtures cache — getCachedFixtures() (lib/live-sports/tournamentState.ts)
- *   • team news — newsMode() / getLastNewsUpdate() (lib/news/*)
+ * Sources of truth:
+ *   • recorded results — combined historical + latest-knockout layer
+ *   • live fixtures cache — getCachedFixtures()
+ *   • team news — newsMode() / getLastNewsUpdate()
  *
  * Everything here is honest about absence: missing/empty data yields a "none"
  * label and an empty footnote, never a fabricated freshness claim.
  */
 
-import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "@/lib/seed/recorded-match-results";
 import { getCachedFixtures } from "@/lib/live-sports/tournamentState";
 import { newsMode, getLastNewsUpdate } from "@/lib/news/newsIngestor";
 import type { NewsSource } from "@/lib/news/types";
 import { provenanceStatus } from "./provenance";
 
 // Re-export the PURE provenance helpers so server callers can keep importing them
-// from this module, while client components import them from ./provenance (which
-// has no DB/Node deps). Keeping the definitions in ./provenance prevents this
-// module's mongodb-backed imports from leaking into the client bundle.
+// from this module, while client components import them from ./provenance.
 export {
   provenanceStatus,
   type VerificationProvenance,
@@ -51,26 +41,25 @@ export interface FreshnessClass {
 /** Latest recorded completed-result date (YYYY-MM-DD), or null if none on file. */
 export function getLatestVerifiedResultDate(): string | null {
   let max: string | null = null;
-  for (const r of MANUAL_MATCH_RESULTS) {
+  for (const r of ALL_MATCH_RESULTS) {
     if (r.date && (max === null || r.date > max)) max = r.date;
   }
   return max;
 }
 
-/** How many completed results have been recorded into the verified-manual layer. */
+/** How many completed results have been recorded. */
 export function getRecordedResultCount(): number {
-  return MANUAL_MATCH_RESULTS.length;
+  return ALL_MATCH_RESULTS.length;
 }
 
 /** How many recorded results were cross-checked against an authoritative source. */
 export function getVerifiedResultCount(): number {
-  return MANUAL_MATCH_RESULTS.filter((r) => provenanceStatus(r).verified).length;
+  return ALL_MATCH_RESULTS.filter((r) => provenanceStatus(r).verified).length;
 }
 
 /**
- * Classify how fresh a date is relative to `now`. Pure and deterministic so it is
- * trivially testable. Thresholds: same/next day → "live"; ≤3 days → "recent";
- * older → "stale"; missing/unparseable → "none".
+ * Classify how fresh a date is relative to `now`. Thresholds: same/next day →
+ * "live"; ≤3 days → "recent"; older → "stale"; missing/unparseable → "none".
  */
 export function classifyFreshness(asOf: string | null, now: Date = new Date()): FreshnessClass {
   if (!asOf) return { label: "none", ageDays: null, note: "No recorded results yet." };
@@ -102,16 +91,13 @@ export interface DataFreshnessSummary {
     ageHours: number | null;
   };
   news: {
-    mode: NewsSource; // "api" | "demo"
+    mode: NewsSource;
     provider: string | null;
-    lastUpdate: string | null; // ISO
+    lastUpdate: string | null;
   };
 }
 
-/**
- * Aggregate the freshness of every data layer into one honest summary. Safe to
- * call anywhere (read-only; tolerates a missing live cache / news store).
- */
+/** Aggregate the freshness of every data layer into one honest summary. */
 export async function getDataFreshnessSummary(now: Date = new Date()): Promise<DataFreshnessSummary> {
   const latestDate = getLatestVerifiedResultDate();
 
@@ -119,7 +105,7 @@ export async function getDataFreshnessSummary(now: Date = new Date()): Promise<D
   try {
     fetchedAt = (await getCachedFixtures()).fetchedAt;
   } catch {
-    fetchedAt = null; // no cache / no DB → honestly null, never invented
+    fetchedAt = null;
   }
   const cacheT = fetchedAt ? Date.parse(fetchedAt) : NaN;
   const ageHours = Number.isNaN(cacheT)
@@ -165,11 +151,8 @@ function fmtZH(iso: string): string {
 }
 
 /**
- * A short, deterministic data-freshness footnote for an UPCOMING-fixture answer
- * (English / 简体中文). Tells the user how current the results behind the model's
- * read are, and warns when they are stale. Returns "" when nothing is recorded
- * yet, so callers can append unconditionally. Designed to be added AFTER any LLM
- * polish so it cannot be paraphrased away.
+ * A short, deterministic data-freshness footnote for an upcoming-fixture answer
+ * (English / 简体中文). Returns "" when nothing is recorded.
  */
 export function freshnessFootnote(lang: string, now: Date = new Date()): string {
   const latest = getLatestVerifiedResultDate();
