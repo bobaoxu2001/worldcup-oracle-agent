@@ -10,7 +10,7 @@ import {
   ratingUpdatesMeta,
 } from "../lib/prediction-engine/ratingUpdates";
 import { getRating } from "../lib/prediction-engine/ratings";
-import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "../lib/seed/recorded-match-results";
 import { GROUPS } from "../lib/seed/world-cup-2026-groups";
 
 let failures = 0;
@@ -56,10 +56,8 @@ const draw = computeRatingUpdates([
 check("draw → higher-Elo side loses points", draw.deltas["south-korea"] < 0 && draw.deltas["czech-republic"] > 0);
 
 // 4. Result-learning only ever moves teams that have actually PLAYED. Stated as
-//    an invariant (not "find an unplayed team") so it stays valid even once every
-//    group has opened and no untouched team is left — and still catches the bug
-//    it guards against (a team with no results getting a nonzero delta).
-const played = new Set(MANUAL_MATCH_RESULTS.flatMap((m) => [m.teamA, m.teamB]));
+//    an invariant so it stays valid even once every group has opened.
+const played = new Set(ALL_MATCH_RESULTS.flatMap((m) => [m.teamA, m.teamB]));
 const allTeams = GROUPS.flatMap((g) => g.teams);
 const ghosts = allTeams.filter((s) => !played.has(s) && getResultDelta(s) !== 0);
 check("no unplayed team has a result delta (staleness guard)", ghosts.length === 0, ghosts.join(", ") || "none");
@@ -77,19 +75,17 @@ if (unplayed) {
 // --- Applied (seed) checks ------------------------------------------------
 
 const meta = ratingUpdatesMeta();
-console.log(`\nSeed results applied: ${meta.resultsUsed} (last: ${meta.lastResultDate})`);
+console.log(`\nRecorded results applied: ${meta.resultsUsed} (last: ${meta.lastResultDate})`);
 for (const slug of ["mexico", "south-africa", "south-korea", "czech-republic"]) {
   console.log(
     `  ${slug}: base ${getRating(slug)} → updated ${getUpdatedRating(slug)} (Δ ${getResultDelta(slug) >= 0 ? "+" : ""}${getResultDelta(slug)})`
   );
 }
-check("seed has completed results", meta.resultsUsed === MANUAL_MATCH_RESULTS.length);
+check("all recorded results are applied", meta.resultsUsed === ALL_MATCH_RESULTS.length);
 
-// Directional checks derived DYNAMICALLY from each team's actual record (not
-// hardcoded names), so they stay valid as more matchdays land: a team with only
-// wins must have gained rating; a team with only losses must have lost rating.
+// Directional checks derived DYNAMICALLY from each team's actual record.
 const record: Record<string, { w: number; l: number; d: number }> = {};
-for (const m of MANUAL_MATCH_RESULTS) {
+for (const m of ALL_MATCH_RESULTS) {
   const aWin = m.scoreA > m.scoreB, bWin = m.scoreB > m.scoreA;
   for (const [t, win, loss] of [[m.teamA, aWin, bWin], [m.teamB, bWin, aWin]] as const) {
     (record[t] ??= { w: 0, l: 0, d: 0 });
