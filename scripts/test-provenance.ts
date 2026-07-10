@@ -1,10 +1,7 @@
 /**
  * Tests for structured verification provenance
- * (lib/data-truth/freshness.ts + the seed records that carry it).
+ * (lib/data-truth/freshness.ts + the recorded results that carry it).
  * Run: npm run test:provenance
- *
- * Covers the four states the feature must handle honestly:
- *   verified · unverified · no-source (claimed but unsourced) · stale.
  */
 
 import {
@@ -14,7 +11,7 @@ import {
   getDataFreshnessSummary,
   classifyFreshness,
 } from "../lib/data-truth/freshness";
-import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "../lib/seed/recorded-match-results";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -45,12 +42,12 @@ async function main() {
     check(`empty provenance (${JSON.stringify(empty)}) → unverified, no source`, !s.verified && s.sourceName === null && s.label === "Unverified");
   }
 
-  // 5. Seed-derived counts are consistent and honest.
-  const seedVerified = MANUAL_MATCH_RESULTS.filter((r) => provenanceStatus(r).verified).length;
-  check("getVerifiedResultCount matches the seed", getVerifiedResultCount() === seedVerified, `${getVerifiedResultCount()}`);
-  check("at least one result is verified (feature is exercised)", getVerifiedResultCount() > 0);
+  // 5. Recorded-result counts are consistent and honest.
+  const verified = ALL_MATCH_RESULTS.filter((r) => provenanceStatus(r).verified).length;
+  check("getVerifiedResultCount matches recorded results", getVerifiedResultCount() === verified, `${getVerifiedResultCount()}`);
+  check("at least one result is verified", getVerifiedResultCount() > 0);
   check("verified count never exceeds recorded count", getVerifiedResultCount() <= getRecordedResultCount());
-  check("every verified result carries a source URL", MANUAL_MATCH_RESULTS.every((r) => !provenanceStatus(r).verified || !!provenanceStatus(r).sourceUrl));
+  check("every verified result carries a source URL", ALL_MATCH_RESULTS.every((r) => !provenanceStatus(r).verified || !!provenanceStatus(r).sourceUrl));
 
   // 6. Summary surfaces the verified count.
   const summary = await getDataFreshnessSummary(new Date("2026-06-20T12:00:00Z"));
