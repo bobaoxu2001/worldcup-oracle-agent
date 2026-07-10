@@ -1,21 +1,18 @@
 /**
  * Completed-fixture lookup — "has this exact pairing already been played?"
  *
- * The tournament is live, so a user can ask "Who wins Mexico vs South Korea?"
- * about a group game that has ALREADY happened. The prediction engine still
- * produces a (post-result-adjusted) read, but presenting it as if the match were
- * upcoming would be dishonest. This helper lets the agent detect a played
- * fixture and surface the REAL score, keeping the model's read clearly labelled
- * as a retrospective pre-match estimate.
+ * The tournament is live, so a user can ask about a fixture that has ALREADY
+ * happened. The prediction engine still produces a post-result-adjusted read,
+ * but presenting it as if the match were upcoming would be dishonest. This
+ * helper surfaces the real recorded score and labels the model read as a
+ * retrospective estimate.
  *
- * Source of truth: the recorded manual-results layer (lib/seed/
- * manual-match-results.ts) — the same layer the backtest, rating updates and
- * standings already read. Lookups are order-independent (the stored A/B order is
- * normalised to the requested order), and the result is GROUP-stage only, which
- * is all the manual layer records.
+ * Source of truth: the combined recorded-results layer (historical manual seed
+ * plus the append-only latest-knockout layer). Lookups are order-independent and
+ * work for both group and knockout fixtures.
  */
 
-import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "@/lib/seed/recorded-match-results";
 
 export interface CompletedFixture {
   /** Requested order — scoreA belongs to slugA, scoreB to slugB. */
@@ -40,7 +37,7 @@ export function getCompletedFixture(
   slugA: string,
   slugB: string
 ): CompletedFixture | null {
-  const m = MANUAL_MATCH_RESULTS.find(
+  const m = ALL_MATCH_RESULTS.find(
     (r) =>
       (r.teamA === slugA && r.teamB === slugB) ||
       (r.teamA === slugB && r.teamB === slugA)
