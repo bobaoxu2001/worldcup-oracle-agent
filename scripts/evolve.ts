@@ -10,9 +10,7 @@
  *   gapScale   — global scaling of the favourite's Elo edge (1.0 = none;
  *                <1 compresses, >1 expands). The grid spans BOTH sides of 1.0
  *                so it detects systematic over- AND under-confidence in the
- *                strength model (the original compression-only grid could not
- *                see the under-confidence that showed up once knockout results
- *                landed — calibration bucket 60–80% observed 81%).
+ *                strength model.
  *   drawBoost  — the group-stage draw-propensity multiplier (drawPropensity.ts).
  *
  * It prints the best combos + the full log-loss surface so the fitted values in
@@ -21,7 +19,7 @@
  * exactly as the live engine does, so this fits the WHOLE stack, not a toy.
  */
 
-import { MANUAL_MATCH_RESULTS } from "../lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "../lib/seed/recorded-match-results";
 import { getRating, HOME_ADVANTAGE } from "../lib/prediction-engine/ratings";
 import { computeRatingUpdates } from "../lib/prediction-engine/ratingUpdates";
 import { getAvailabilityDelta } from "../lib/prediction-engine/availabilityAdjustments";
@@ -36,7 +34,7 @@ const hb = (a: string, b: string) =>
   HOST_SLUGS.has(b) && !HOST_SLUGS.has(a) ? -HOME_ADVANTAGE : 0;
 const conf = (s: string) => getTeam(s).confederation;
 
-function confedDeltas(rs: typeof MANUAL_MATCH_RESULTS): Record<string, number> {
+function confedDeltas(rs: typeof ALL_MATCH_RESULTS): Record<string, number> {
   const sum: Record<string, number> = {}, cnt: Record<string, number> = {};
   for (const r of rs) {
     const eA = expectedScore(getRating(r.teamA), getRating(r.teamB), hb(r.teamA, r.teamB));
@@ -49,7 +47,7 @@ function confedDeltas(rs: typeof MANUAL_MATCH_RESULTS): Record<string, number> {
   return o;
 }
 const openerW = (pc: number) => (pc <= 0 ? 1 : pc === 1 ? 0.6 : 0.4);
-const all = [...MANUAL_MATCH_RESULTS].sort((x, y) => (x.date || "").localeCompare(y.date || ""));
+const all = [...ALL_MATCH_RESULTS].sort((x, y) => (x.date || "").localeCompare(y.date || ""));
 
 function evalParams(scale: number, boost: number): { ll: number; br: number } {
   let ll = 0, br = 0;
@@ -83,9 +81,6 @@ console.log("Best 6 (gapScale, drawBoost) by LogLoss↓:");
 for (const r of grid.slice(0, 6)) console.log(`  gapScale=${r.s.toFixed(2)} drawBoost=${r.b.toFixed(2)} → LogLoss ${r.ll.toFixed(4)}  Brier ${r.br.toFixed(4)}`);
 
 const baseline = evalParams(1.0, 0);
-// Live engine: GAP_SCALE from confidenceCalibration.ts (evalParams applies the
-// scale uncapped; the engine's ±30/side cap only binds beyond a ~600 Elo gap,
-// so the numbers match for every realistic fixture).
 const live = evalParams(GAP_SCALE, GROUP_DRAW_BOOST);
 console.log(`\nNo draw layer (1.00, 0.00):       LogLoss ${baseline.ll.toFixed(4)}  Brier ${baseline.br.toFixed(4)}`);
 console.log(`Live engine   (${GAP_SCALE.toFixed(2)}, ${GROUP_DRAW_BOOST.toFixed(2)}):    LogLoss ${live.ll.toFixed(4)}  Brier ${live.br.toFixed(4)}`);
