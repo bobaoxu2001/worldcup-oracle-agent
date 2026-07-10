@@ -3,37 +3,25 @@
  * performing its ratings THIS tournament?" layer.
  *
  * Motivation: the per-team result layer (ratingUpdates.ts) already moves each
- * team that has played. But a *systematic* confederation effect (e.g. AFC sides
- * arriving sharper, CONMEBOL sides flat) is extra information — especially for
- * teams from that confederation that HAVEN'T played yet. This module measures
- * that effect from the completed results and turns it into a small, capped,
- * heavily-shrunk Elo nudge applied to every team in the confederation.
+ * team that has played. But a systematic confederation effect is extra
+ * information. This module measures that effect from completed results and turns
+ * it into a small, capped, heavily-shrunk Elo nudge.
  *
- * How it is computed (fully data-driven — nothing is hard-coded per region):
+ * How it is computed:
  *   1. For each completed result, compute each side's performance residual
- *        residual = actual − expected            (actual: 1/0.5/0, expected
- *      against the BASE May-2026 rating + host bonus, the pre-tournament line).
+ *        residual = actual − expected
  *   2. Average the residual per confederation across all its matches.
- *   3. delta = clamp( SENSITIVITY × avgResidual × shrink(n), ±CAP )
- *        shrink(n) = n / (n + SHRINK_PRIOR)       (small samples → pulled to 0)
+ *   3. delta = clamp(SENSITIVITY × avgResidual × shrink(n), ±CAP)
+ *        shrink(n) = n / (n + SHRINK_PRIOR)
  *
- * This is deliberately a SPECULATIVE prior, not a calibrated finding: a dozen
- * matches is a noisy basis for a regional conclusion, so the shrink + cap keep
- * it modest, and the UI labels it as a tournament-form signal. Tune or disable
- * via the constants below.
- *
- * NOTE on overlap: a team that has already played is moved by BOTH its own
- * result delta and this confederation delta. That is intentional (one game is a
- * weak individual signal; the regional aggregate adds information), but it is a
- * judgement call — documented here so it is never a hidden assumption.
- *
- * Last updated: 2026-06-15.
+ * This remains a speculative, deliberately modest prior. The combined results
+ * layer keeps it synchronized with the latest settled knockout games.
  */
 
 import { expectedScore } from "./elo";
 import { getRating, HOME_ADVANTAGE } from "./ratings";
 import { HOST_SLUGS, getTeam } from "@/lib/seed/world-cup-2026-groups";
-import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "@/lib/seed/recorded-match-results";
 
 /** Elo points per unit of average residual (before shrink/cap). */
 export const FORM_SENSITIVITY = 50;
@@ -78,7 +66,7 @@ export function computeConfederationForm(): Record<string, ConfederationFormRow>
     count[conf] = (count[conf] ?? 0) + 1;
   };
 
-  for (const r of MANUAL_MATCH_RESULTS) {
+  for (const r of ALL_MATCH_RESULTS) {
     const expA = expectedScore(
       getRating(r.teamA),
       getRating(r.teamB),
@@ -86,7 +74,7 @@ export function computeConfederationForm(): Record<string, ConfederationFormRow>
     );
     const actualA = r.scoreA > r.scoreB ? 1 : r.scoreA < r.scoreB ? 0 : 0.5;
     add(confOf(r.teamA), actualA - expA);
-    add(confOf(r.teamB), 1 - actualA - (1 - expA)); // = (actualB − expB)
+    add(confOf(r.teamB), 1 - actualA - (1 - expA));
   }
 
   const rows: Record<string, ConfederationFormRow> = {};
