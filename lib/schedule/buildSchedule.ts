@@ -1,22 +1,17 @@
 /**
- * Deterministic World Cup 2026 schedule built from EXISTING data only:
- *   • group fixtures — the 6 round-robin pairings per group, from the real draw
- *     (lib/seed/world-cup-2026-groups.ts). Pairings are real; official dates /
- *     venues are NOT in the seed, so they are shown as "TBA" (never invented).
- *   • knockout fixtures — the official 2026 bracket (lib/prediction-engine/
- *     bracket-2026.ts): match number, round, and positional slots (1A, 2B, …).
- *     Teams resolve only after the groups finish, so they show as slots + "TBA".
- *
- * Live fixtures (real dates/results) come separately from the football-data.org
- * cache via getCachedFixtures() — this module never invents official details.
+ * Deterministic World Cup 2026 schedule built from recorded tournament data.
+ * Group pairings come from the draw; knockout structure comes from the official
+ * bracket seed. Verified live-cache rows take precedence over recorded entries.
  */
 
 import { GROUPS, getTeam } from "@/lib/seed/world-cup-2026-groups";
-import { BRACKET_2026, positionLabel, type Round } from "@/lib/prediction-engine/bracket-2026";
 import {
-  MANUAL_MATCH_RESULTS,
-  type ManualMatchResult,
-} from "@/lib/seed/manual-match-results";
+  BRACKET_2026,
+  positionLabel,
+  type Round,
+} from "@/lib/prediction-engine/bracket-2026";
+import { ALL_MATCH_RESULTS } from "@/lib/seed/recorded-match-results";
+import type { ManualMatchResult } from "@/lib/seed/manual-match-results";
 import type { LiveFixture } from "@/lib/live-sports/types";
 
 export interface ScheduleRow {
@@ -25,25 +20,18 @@ export interface ScheduleRow {
   matchNo?: number;
   teamA: string;
   teamB: string;
-  /** Canonical slugs (group fixtures only) — used to match cached live fixtures. */
   slugA?: string;
   slugB?: string;
-  date: string; // ISO date or "TBA"
-  venue: string; // city/venue or "TBA"
+  date: string;
+  venue: string;
   status: "Scheduled" | "Finished" | "Live" | "TBA" | "Unknown";
-  /** Positional slot labels (knockout rows) — kept when the teams are resolved,
-   *  e.g. teamA "🇲🇽 Mexico" with teamASlot "2A". */
   teamASlot?: string;
   teamBSlot?: string;
-  /** Final score when a matched live fixture is finished, e.g. "1–2". */
   score?: string;
-  /** Structured goals (slugA's / slugB's) when a result is known — feeds standings. */
   goalsA?: number;
   goalsB?: number;
-  /** Where the result came from: verified live cache vs manual seed entry. */
   resultSource?: "live" | "manual";
-  /** Knockout rows only: display label of the side that advanced when the
-   *  recorded score alone doesn't say (a shootout stored at its ET draw). */
+  /** Knockout shootout winner when the displayed score is level. */
   advanced?: string;
 }
 
@@ -52,7 +40,6 @@ export interface GroupFixtures {
   rows: ScheduleRow[];
 }
 
-// Standard 4-team round-robin order (each team plays the other three).
 const RR_PAIRS: [number, number][] = [
   [0, 1],
   [2, 3],
@@ -124,12 +111,7 @@ function teamLabel(slug: string | null): string {
   }
 }
 
-/**
- * Merge cached live fixtures (football-data.org) into the drawn group pairings:
- * when a cached fixture has the SAME two teams (either order), its verified
- * kickoff date / status / score replace the "TBA" placeholders. Pairings
- * without a cached fixture stay TBA — dates are never invented.
- */
+/** Merge verified cached fixtures into group rows. */
 export function mergeLiveIntoGroups(
   groups: GroupFixtures[],
   fixtures: LiveFixture[]
@@ -140,24 +122,34 @@ export function mergeLiveIntoGroups(
     if (!f.homeSlug || !f.awaySlug) continue;
     byPair.set([f.homeSlug, f.awaySlug].sort().join("|"), f);
   }
+
   return groups.map((g) => ({
     group: g.group,
     rows: g.rows.map((r) => {
       if (!r.slugA || !r.slugB) return r;
       const f = byPair.get([r.slugA, r.slugB].sort().join("|"));
       if (!f) return r;
+
       const status = liveStatus(f.status);
-      const hasGoals = typeof f.goalsHome === "number" && typeof f.goalsAway === "number";
-      // Orient goals to the row's slugA/slugB (the cached fixture may be flipped).
+      const hasGoals =
+        typeof f.goalsHome === "number" && typeof f.goalsAway === "number";
       const flipped = f.homeSlug === r.slugB;
-      const goalsA = hasGoals ? (flipped ? f.goalsAway! : f.goalsHome!) : undefined;
-      const goalsB = hasGoals ? (flipped ? f.goalsHome! : f.goalsAway!) : undefined;
-      const score = hasGoals ? `${goalsA}–${goalsB}` : undefined;
+      const goalsA = hasGoals
+        ? flipped
+          ? f.goalsAway!
+          : f.goalsHome!
+        : undefined;
+      const goalsB = hasGoals
+        ? flipped
+          ? f.goalsHome!
+          : f.goalsAway!
+        : undefined;
+
       return {
         ...r,
         date: f.date || "TBA",
         status,
-        score,
+        score: hasGoals ? `${goalsA}–${goalsB}` : undefined,
         goalsA,
         goalsB,
         resultSource: hasGoals ? ("live" as const) : undefined,
@@ -167,32 +159,30 @@ export function mergeLiveIntoGroups(
 }
 
 /**
- * Merge MANUALLY ENTERED results (lib/seed/manual-match-results.ts) into the
- * group pairings. Transparency rules:
- *   • a pairing that already has a verified live result keeps it — a manual
- *     entry NEVER overrides the football-data.org cache;
- *   • manual results are tagged resultSource "manual" so every consumer
- *     (schedule rows, standings) can label them honestly.
+ * Merge recorded GROUP results into the group rows. Knockout results are
+ * deliberately filtered out so a later cross-stage rematch can never overwrite
+ * a group-stage score. Verified live rows always retain precedence.
  */
 export function mergeManualIntoGroups(groups: GroupFixtures[]): GroupFixtures[] {
-  if (!MANUAL_MATCH_RESULTS.length) return groups;
+  const groupResults = ALL_MATCH_RESULTS.filter((m) => m.group.length === 1);
+  if (!groupResults.length) return groups;
+
   const byPair = new Map(
-    MANUAL_MATCH_RESULTS.map((m) => [[m.teamA, m.teamB].sort().join("|"), m])
+    groupResults.map((m) => [[m.teamA, m.teamB].sort().join("|"), m])
   );
+
   return groups.map((g) => ({
     group: g.group,
     rows: g.rows.map((r) => {
-      if (!r.slugA || !r.slugB) return r;
-      if (r.resultSource === "live") return r; // verified live result wins
+      if (!r.slugA || !r.slugB || r.resultSource === "live") return r;
       const m = byPair.get([r.slugA, r.slugB].sort().join("|"));
       if (!m) return r;
+
       const flipped = m.teamA === r.slugB;
       const goalsA = flipped ? m.scoreB : m.scoreA;
       const goalsB = flipped ? m.scoreA : m.scoreB;
       return {
         ...r,
-        // Keep a verified kickoff date from the live cache if we have one;
-        // the manual date only fills a TBA.
         date: r.date !== "TBA" ? r.date : m.date || r.date,
         status: "Finished" as const,
         score: `${goalsA}–${goalsB}`,
@@ -204,15 +194,11 @@ export function mergeManualIntoGroups(groups: GroupFixtures[]): GroupFixtures[] 
   }));
 }
 
-/** Group letters use a single character; anything else ("R32", "R16", …) is a
- *  knockout entry in the manual seed. */
 function isKnockoutEntry(m: ManualMatchResult): boolean {
   return m.group.length > 1;
 }
 
-/** The advancing slug of a completed knockout tie: the structured `advances`
- *  field when set (required for shootout draws), else the higher score. A draw
- *  without `advances` yields undefined — the winner is honestly unknown. */
+/** Resolve the side that advanced; shootout draws use the explicit field. */
 export function knockoutWinner(m: ManualMatchResult): string | undefined {
   if (m.advances) return m.advances;
   if (m.scoreA > m.scoreB) return m.teamA;
@@ -221,32 +207,18 @@ export function knockoutWinner(m: ManualMatchResult): string | undefined {
 }
 
 /**
- * The knockout bracket grouped into round columns (R32 → Final) for the UI.
- *
- * Pass `resolvedR32` (match no → resolved team slugs) once the group stage is
- * complete to replace the Round-of-32 positional placeholders (1A, 2B, 3rd→M74)
- * with the actual qualified teams. The original slot labels are preserved in
- * teamASlot / teamBSlot so the UI can still show "2A v 2B" as a subtitle.
- *
- * Once teams are resolved, completed KNOCKOUT results from the manual seed
- * (group "R32", "R16", …) fold in the same way group results do: the row gets
- * its score / date / Finished status (labelled "manual"), and the winner —
- * from the score, or from the structured `advances` field for shootout draws —
- * propagates into the next round, so "W73 vs W75" becomes the real pairing as
- * soon as both feeders are decided. Undecided slots keep their honest "Wxx"
- * placeholders; nothing is invented.
+ * Build the knockout bracket and fold recorded winners forward round by round.
+ * `resolvedR32` supplies the actual qualified teams after the group stage.
  */
 export function bracketColumns(
   resolvedR32?: Map<number, { home: string; away: string }>,
-  manualResults: ManualMatchResult[] = MANUAL_MATCH_RESULTS
+  recordedResults: ManualMatchResult[] = ALL_MATCH_RESULTS
 ): { round: string; matches: ScheduleRow[] }[] {
   const koByPair = new Map(
-    manualResults
+    recordedResults
       .filter(isKnockoutEntry)
       .map((m) => [[m.teamA, m.teamB].sort().join("|"), m])
   );
-  // match no → winning slug, filled as we walk the bracket in round order
-  // (BRACKET_2026 is ordered R32 → Final, so feeders resolve before consumers).
   const winners: Record<number, string> = {};
 
   const rows: ScheduleRow[] = BRACKET_2026.map((bm) => {
@@ -260,18 +232,17 @@ export function bracketColumns(
       status: "TBA",
     };
 
-    // Resolve this match's participants: R32 from the group-stage resolution,
-    // later rounds from the winners recorded while walking earlier rounds.
     let home: string | undefined;
     let away: string | undefined;
     if (bm.round === "R32") {
-      const res = resolvedR32?.get(bm.no);
-      home = res?.home;
-      away = res?.away;
+      const resolved = resolvedR32?.get(bm.no);
+      home = resolved?.home;
+      away = resolved?.away;
     } else {
       home = bm.home.kind === "winnerOf" ? winners[bm.home.match] : undefined;
       away = bm.away.kind === "winnerOf" ? winners[bm.away.match] : undefined;
     }
+
     if (!home && !away) return base;
 
     const row: ScheduleRow = {
@@ -282,34 +253,38 @@ export function bracketColumns(
       teamB: away ? teamLabel(away) : base.teamB,
       slugA: home,
       slugB: away,
-      // Teams are known now, but the official kickoff/venue is still not in
-      // the bundled data — keep it honest rather than inventing a time.
       status: "Scheduled",
     };
     if (!home || !away) return row;
 
-    const m = koByPair.get([home, away].sort().join("|"));
-    if (!m) return row;
+    const result = koByPair.get([home, away].sort().join("|"));
+    if (!result) return row;
 
-    const flipped = m.teamA === away;
-    const goalsA = flipped ? m.scoreB : m.scoreA;
-    const goalsB = flipped ? m.scoreA : m.scoreB;
-    const winner = knockoutWinner(m);
+    const flipped = result.teamA === away;
+    const goalsA = flipped ? result.scoreB : result.scoreA;
+    const goalsB = flipped ? result.scoreA : result.scoreB;
+    const winner = knockoutWinner(result);
     if (winner) winners[bm.no] = winner;
+
     return {
       ...row,
-      date: m.date || "TBA",
+      date: result.date || "TBA",
       status: "Finished",
       score: `${goalsA}–${goalsB}`,
       goalsA,
       goalsB,
       resultSource: "manual",
-      // Only surfaced when the score alone can't say who went through.
       advanced: winner && goalsA === goalsB ? teamLabel(winner) : undefined,
     };
   });
 
-  const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
+  const order = [
+    "Round of 32",
+    "Round of 16",
+    "Quarter-final",
+    "Semi-final",
+    "Final",
+  ];
   return order.map((round) => ({
     round,
     matches: rows.filter((r) => r.stage === round),
@@ -320,7 +295,7 @@ export interface LiveScheduleRow extends ScheduleRow {
   goals: string;
 }
 
-/** Map cached football-data.org fixtures → display rows (real dates/results). */
+/** Map cached fixtures to display rows. */
 export function mapLiveFixtures(fixtures: LiveFixture[]): LiveScheduleRow[] {
   const rows: LiveScheduleRow[] = fixtures.map((f) => ({
     stage: f.round || "Fixture",
@@ -329,7 +304,7 @@ export function mapLiveFixtures(fixtures: LiveFixture[]): LiveScheduleRow[] {
     slugA: f.homeSlug ?? undefined,
     slugB: f.awaySlug ?? undefined,
     date: f.date || "TBA",
-    venue: "TBA", // football-data.org match list does not include venue here
+    venue: "TBA",
     status: liveStatus(f.status),
     goals:
       typeof f.goalsHome === "number" && typeof f.goalsAway === "number"
