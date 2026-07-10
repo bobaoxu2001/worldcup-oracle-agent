@@ -13,10 +13,10 @@
  * Results are applied in date order, each on top of the deltas accumulated so
  * far. No goal-difference multiplier — the rest of the model doesn't use one.
  *
- * Source of truth is the manual results seed (the same editable layer the
- * schedule standings use). Verified cached fixtures are NOT read here because
- * this module must stay synchronous for the closed-form engine; if a cached
- * live result ever duplicates a manual pairing, remove the manual entry.
+ * Source of truth is the combined recorded-results layer: the long historical
+ * manual seed plus the small append-only latest-knockout layer. Verified cached
+ * fixtures are NOT read here because this module must stay synchronous for the
+ * closed-form engine.
  *
  * Base ratings are never mutated — getUpdatedRating() = base + accumulated
  * delta, and the per-team deltas are exposed for transparent UI labelling.
@@ -25,7 +25,7 @@
 import { K_FACTOR_WC, expectedScore } from "./elo";
 import { getRating, HOME_ADVANTAGE } from "./ratings";
 import { HOST_SLUGS } from "@/lib/seed/world-cup-2026-groups";
-import { MANUAL_MATCH_RESULTS } from "@/lib/seed/manual-match-results";
+import { ALL_MATCH_RESULTS } from "@/lib/seed/recorded-match-results";
 
 export interface CompletedResult {
   teamA: string; // slug
@@ -72,7 +72,7 @@ export function computeRatingUpdates(results: CompletedResult[]): RatingUpdates 
 
 let _applied: RatingUpdates | null = null;
 function applied(): RatingUpdates {
-  if (!_applied) _applied = computeRatingUpdates(MANUAL_MATCH_RESULTS);
+  if (!_applied) _applied = computeRatingUpdates(ALL_MATCH_RESULTS);
   return _applied;
 }
 
