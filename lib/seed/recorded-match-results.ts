@@ -72,6 +72,48 @@ export const LATEST_KNOCKOUT_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-10",
   },
+  {
+    group: "QF",
+    teamA: "spain",
+    teamB: "belgium",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-07-10",
+    note:
+      "Spain beat Belgium 2–1 in regulation — Fabián Ruiz's opener was cancelled out by Charles De Ketelaere before Mikel Merino headed a late winner (88') — to reach a semi-final against France. A decisive Spain win in the Elo fold.",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + CNN)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760511/belgium-spain",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
+  {
+    group: "QF",
+    teamA: "norway",
+    teamB: "england",
+    scoreA: 1,
+    scoreB: 2,
+    date: "2026-07-11",
+    note:
+      "England beat Norway 2–1 after extra time: Andreas Schjelderup put Norway ahead, Jude Bellingham levelled before the break, and after a 1–1 regulation Bellingham struck again early in extra time to complete his brace. Recorded at the extra-time score — a decisive England win in the Elo fold, no shootout. England advance to face Argentina.",
+    sourceName: "ESPN match report (cross-checked vs NPR + englandfootball.com)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760512/england-norway",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
+  {
+    group: "QF",
+    teamA: "argentina",
+    teamB: "switzerland",
+    scoreA: 3,
+    scoreB: 1,
+    date: "2026-07-11",
+    note:
+      "Holders Argentina beat ten-man Switzerland 3–1 after extra time: Alexis Mac Allister headed in a Messi cross (10'), Dan Ndoye levelled (67'), and after Breel Embolo's 72' second yellow, Julián Álvarez (112') and Lautaro Martínez (120+1') struck in extra time. Recorded at the extra-time score — a decisive Argentina win in the Elo fold. Argentina reach the semi-finals.",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + Al Jazeera)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760513/switzerland-argentina",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
 ];
 
 function resultKey(m: ManualMatchResult): string {

@@ -7,7 +7,7 @@
 ![DeepSeek](https://img.shields.io/badge/DeepSeek-hybrid%20LLM%20layer-4D6BFE)
 ![News-aware](https://img.shields.io/badge/News-aware-39FF88)
 ![Monte Carlo](https://img.shields.io/badge/Monte%20Carlo-10%2C000%20runs-2D9BFF)
-![Track record](https://img.shields.io/badge/Verified%20track%20record-67%25%20top--pick-39FF88)
+![Track record](https://img.shields.io/badge/Verified%20track%20record-68%25%20top--pick-39FF88)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 **🏆 Google Cloud Rapid Agent Hackathon — MongoDB Track**
@@ -29,7 +29,7 @@ WorldCup Oracle Agent is **not** a static prediction dashboard. You ask a footba
 
 It feels like **a World Cup prediction model + a daily football news intelligence agent** in one.
 
-> **📊 It's not just a demo — it has a verified track record.** As the real 2026 World Cup plays out, every completed match is graded honestly on the **[`/accuracy`](https://worldcup-oracle-agent.vercel.app/accuracy)** page. Across the **93 completed matches** through 6 July (walk-forward — each fixture predicted using **only the results before it**, never its own outcome), the live engine calls the right result **67% of the time (62/93)**, scores **+43% skill on the Ranked Probability Score** vs a coin-flip, and is **well-calibrated (ECE 3.8%)**. A **completely independent ridge Dixon-Coles model** (Python, refit nightly, leave-one-out scored) agrees it has real out-of-sample skill — two differently-built models landing on the same number is the credibility check. `npm run backtest` reproduces it; `npm run test:track` guards the accounting.
+> **📊 It's not just a demo — it has a verified track record.** As the real 2026 World Cup plays out, every completed match is graded honestly on the **[`/accuracy`](https://worldcup-oracle-agent.vercel.app/accuracy)** page. Across the **100 completed matches** through 11 July (walk-forward — each fixture predicted using **only the results before it**, never its own outcome), the live engine calls the right result **68% of the time (68/100)**, scores **+44% skill on the Ranked Probability Score** vs a coin-flip, and is **well-calibrated (ECE 4.8%)**. A **completely independent ridge Dixon-Coles model** (Python, refit nightly, leave-one-out scored) agrees it has real out-of-sample skill — two differently-built models landing on the same number is the credibility check. `npm run backtest` reproduces it; `npm run test:track` guards the accounting.
 
 ## 📸 Screenshots
 
@@ -553,7 +553,7 @@ WorldCup Oracle Agent transforms a traditional World Cup prediction model into a
 - [x] **MongoDB Track — live on Atlas** — prediction sessions persist to `predictions`, news to `team_news` (both indexed); `/memory` shows the **MongoDB Atlas** backend + recent saved sessions, and each result's Data Transparency card reads `Memory: MongoDB Atlas`.
 - [x] **Cost-aware LLM routing** — DeepSeek default + **Gemini** (`lib/llm/gemini.ts`, live in prod) premium escalation for complex/ambiguous queries + fallback; deterministic when no key. Routing tested via `npm run test:routing`.
 - [x] **Gemini function-calling agent loop** — Gemini drives a bounded tool-use loop over deterministic tools (`lib/llm/geminiAgent.ts`, `POST /api/agent/gemini-tools`); numbers stay engine-owned. Offline-tested via `npm run test:gemini-agent`.
-- [x] **Verified out-of-sample track record** — walk-forward backtest of the live engine on every completed 2026 result (**67% top-pick, +43% RPS skill, ECE 3.8%**), cross-checked by an independent ridge Dixon-Coles LOO fit; live at `/accuracy`, reproduced by `npm run backtest`, guarded by `npm run test:track`.
+- [x] **Verified out-of-sample track record** — walk-forward backtest of the live engine on every completed 2026 result (**68% top-pick, +44% RPS skill, ECE 4.8%**), cross-checked by an independent ridge Dixon-Coles LOO fit; live at `/accuracy`, reproduced by `npm run backtest`, guarded by `npm run test:track`.
 - [x] **Runs with zero config** — predictions, simulations, news and memory all work with an empty `.env`.
 - [x] **Fail-soft** — missing/invalid MongoDB, Gemini or news keys never break the demo.
 - [x] **Open source** — [MIT `LICENSE`](LICENSE).

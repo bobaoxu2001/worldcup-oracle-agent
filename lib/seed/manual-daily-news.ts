@@ -14,7 +14,14 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-07-07 — added the 4–6 July ROUND-OF-16 results (Morocco
+ * Last updated: 2026-07-13 — QUARTER-FINALS COMPLETE: added the four ties
+ * (France 2–0 Morocco, Spain 2–1 Belgium, England 2–1 Norway a.e.t., Argentina
+ * 3–1 Switzerland a.e.t.) and the semi-final line-up (France v Spain, Argentina
+ * v England). The football-data.org API was unreachable from this environment,
+ * so these were cross-checked against ESPN + the FIFA match centre (plus Al
+ * Jazeera/NPR/CNN) rather than the feed and badged verified on that basis; being
+ * full match reports, the summaries name scorers. ── Prior 2026-07-07 — added
+ * the 4–6 July ROUND-OF-16 results (Morocco
  * 3–0 Canada, France 1–0 Paraguay, Norway 2–1 Brazil — the shock of the round —
  * England 3–2 Mexico, Spain 1–0 Portugal), all verified against the
  * football-data.org official World Cup feed; the model called four of the five
@@ -77,6 +84,86 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 9–11 July — QUARTER-FINALS. The football-data.org API was unreachable
+  //    from this environment on 13 July, so these were cross-checked against
+  //    ESPN match reports + the FIFA match centre (plus Al Jazeera/NPR/CNN)
+  //    rather than the feed — cited per item and badged verified on that basis.
+  //    Because these are full match reports (not the goalscorer-free feed), the
+  //    summaries can name scorers. ──
+  {
+    id: "2026-07-11-qf-complete-sf-set",
+    date: "2026-07-11",
+    title: "Quarter-finals complete: the semi-finals are set",
+    summary:
+      "The final four is decided, and all four higher-rated sides came through. France beat Morocco 2–0, Spain edged Belgium 2–1 on Mikel Merino's late header, England needed extra time to see off Norway 2–1 (Jude Bellingham with both goals), and holders Argentina outlasted ten-man Switzerland 3–1 after extra time. It caps a knockout run in which Belgium had earlier ended co-hosts USA's tournament 4–1 and Switzerland saw off Colombia on penalties. The semi-finals: France v Spain (14 July) and Argentina v England (15 July).",
+    tag: "Tournament",
+    relatedTeams: ["france", "spain", "argentina", "england"],
+    prompt: "Who wins the France v Spain semi-final?",
+    sourceName: "ESPN + FIFA match centre (cross-checked)",
+    sourceUrl: "https://www.espn.com/soccer/scoreboard",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
+  {
+    id: "2026-07-11-arg-sui-result",
+    date: "2026-07-11",
+    title: "Argentina 3–1 Switzerland (a.e.t.) — holders outlast ten men",
+    summary:
+      "Alexis Mac Allister headed the holders in front on 10' from a Messi cross, Dan Ndoye levelled on 67', and after Breel Embolo's second yellow reduced Switzerland to ten men, Julián Álvarez (112') and Lautaro Martínez (120+1') settled it in extra time. Argentina reach the semi-finals, where England await.",
+    tag: "Result",
+    relatedTeams: ["argentina", "switzerland"],
+    relatedMatch: { group: "QF", teamA: "argentina", teamB: "switzerland" },
+    prompt: "Can Argentina defend their title?",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + Al Jazeera)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760513/switzerland-argentina",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
+  {
+    id: "2026-07-11-nor-eng-result",
+    date: "2026-07-11",
+    title: "England 2–1 Norway (a.e.t.) — Bellingham double sends England through",
+    summary:
+      "Andreas Schjelderup put Norway ahead in Miami before Jude Bellingham levelled before the break; with the tie 1–1 after 90, Bellingham struck again early in extra time to complete his brace and send England into the semi-finals against Argentina. Norway, quarter-final debutants, go out with credit after upsetting Brazil in the last 16.",
+    tag: "Result",
+    relatedTeams: ["england", "norway"],
+    relatedMatch: { group: "QF", teamA: "norway", teamB: "england" },
+    prompt: "How does England match up with Argentina in the semis?",
+    sourceName: "ESPN match report (cross-checked vs NPR + englandfootball.com)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760512/england-norway",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
+  {
+    id: "2026-07-10-esp-bel-result",
+    date: "2026-07-10",
+    title: "Spain 2–1 Belgium — Merino's late header breaks Belgian hearts",
+    summary:
+      "Fabián Ruiz opened the scoring on 30' in Los Angeles, Charles De Ketelaere levelled for Belgium on 41', and Mikel Merino headed a late winner on 88' to send Spain into a semi-final against France. Belgium's run — which had ended the USA's tournament in the last 16 — falls at the quarter-final.",
+    tag: "Result",
+    relatedTeams: ["spain", "belgium"],
+    relatedMatch: { group: "QF", teamA: "spain", teamB: "belgium" },
+    prompt: "Who wins the France v Spain semi-final?",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + CNN)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760511/belgium-spain",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
+  {
+    id: "2026-07-09-fra-mar-result",
+    date: "2026-07-09",
+    title: "France 2–0 Morocco — Mbappé and Dembélé reach a third straight semi",
+    summary:
+      "Kylian Mbappé missed a first-half penalty but made amends on 60', and Ousmane Dembélé added his fifth goal of the tournament on 66', as France beat Morocco 2–0 in Boston to reach a third consecutive World Cup semi-final. France will play Spain.",
+    tag: "Result",
+    relatedTeams: ["france", "morocco"],
+    relatedMatch: { group: "QF", teamA: "france", teamB: "morocco" },
+    prompt: "How far can France go this tournament?",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + Al Jazeera)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760510/morocco-france",
+    verified: true,
+    verifiedAt: "2026-07-13",
+  },
   // ── 4–6 July — Round-of-16 results (scores verified vs the football-data.org
   //    official World Cup feed on 7 July; the free feed does not expose
   //    goalscorers, so these summaries state only the verified result). ──
