@@ -114,6 +114,20 @@ export const LATEST_KNOCKOUT_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-13",
   },
+  {
+    group: "SF",
+    teamA: "france",
+    teamB: "spain",
+    scoreA: 0,
+    scoreB: 2,
+    date: "2026-07-14",
+    note:
+      "Spain beat France 2–0 in regulation to reach the World Cup final — Mikel Oyarzabal converted a first-half penalty (22') and Pedro Porro doubled the lead (58'). A decisive Spain win in the Elo fold; Spain await the winner of Argentina v England (15 Jul). The other semi-final was unplayed at the time of writing, so it is not recorded here.",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + Al Jazeera + NBC)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760514/spain-france",
+    verified: true,
+    verifiedAt: "2026-07-15",
+  },
 ];
 
 function resultKey(m: ManualMatchResult): string {
