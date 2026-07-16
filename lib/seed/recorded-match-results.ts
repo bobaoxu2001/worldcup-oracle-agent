@@ -128,6 +128,20 @@ export const LATEST_KNOCKOUT_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-15",
   },
+  {
+    group: "SF",
+    teamA: "argentina",
+    teamB: "england",
+    scoreA: 2,
+    scoreB: 1,
+    date: "2026-07-15",
+    note:
+      "Holders Argentina came from behind to beat England 2–1 in regulation and set up a final against Spain. Anthony Gordon put England ahead (55') before Argentina struck twice late — Enzo Fernández equalised (85') and Lautaro Martínez won it deep in stoppage time (90'+2'), with Lionel Messi the creator for the comeback. A decisive Argentina win in the Elo fold; no shootout.",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + NPR + NBC)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760515/argentina-england",
+    verified: true,
+    verifiedAt: "2026-07-16",
+  },
 ];
 
 function resultKey(m: ManualMatchResult): string {
