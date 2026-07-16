@@ -14,7 +14,13 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-07-13 — QUARTER-FINALS COMPLETE: added the four ties
+ * Last updated: 2026-07-16 — SEMI-FINALS COMPLETE: added both semis (Spain
+ * 2–0 France on 14 July; Argentina 2–1 England on 15 July, a late Messi-inspired
+ * comeback) and the "final is set" item — Spain v Argentina on 19 July, with
+ * France v England for third place on 18 July. Cross-checked against ESPN match
+ * reports + the FIFA match centre (plus Al Jazeera/NPR/NBC) and badged verified
+ * on that basis; being full match reports, the summaries name scorers. ── Prior
+ * 2026-07-13 — QUARTER-FINALS COMPLETE: added the four ties
  * (France 2–0 Morocco, Spain 2–1 Belgium, England 2–1 Norway a.e.t., Argentina
  * 3–1 Switzerland a.e.t.) and the semi-final line-up (France v Spain, Argentina
  * v England). The football-data.org API was unreachable from this environment,
@@ -84,6 +90,54 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 14–15 July — SEMI-FINALS. Both semis cross-checked against ESPN match
+  //    reports + the FIFA match centre (plus Al Jazeera/NPR/NBC) rather than the
+  //    football-data.org feed — cited per item and badged verified on that basis.
+  //    Being full match reports, the summaries can name scorers. ──
+  {
+    id: "2026-07-15-final-set",
+    date: "2026-07-15",
+    title: "The final is set: Spain v Argentina",
+    summary:
+      "The 2026 World Cup will end with a heavyweight final between Spain and Argentina. Spain, unbeaten through the tournament, beat France 2–0 in the first semi-final; holders Argentina came from behind to edge England 2–1 in the second. The two meet in the final on Sunday 19 July, with France and England contesting the third-place play-off on 18 July.",
+    tag: "Tournament",
+    relatedTeams: ["spain", "argentina"],
+    prompt: "Who wins the final, Spain or Argentina?",
+    sourceName: "ESPN + FIFA match centre (cross-checked)",
+    sourceUrl: "https://www.espn.com/soccer/scoreboard",
+    verified: true,
+    verifiedAt: "2026-07-16",
+  },
+  {
+    id: "2026-07-15-arg-eng-result",
+    date: "2026-07-15",
+    title: "Argentina 2–1 England — late comeback sends the holders to the final",
+    summary:
+      "Holders Argentina reached the final with another stoppage-time rally. Anthony Gordon put England ahead on 55', but Enzo Fernández equalised on 85' and Lautaro Martínez won it deep in stoppage time (90'+2'), with Lionel Messi the creator for both goals. Argentina will play Spain in Sunday's final; England drop into the third-place play-off against France.",
+    tag: "Result",
+    relatedTeams: ["argentina", "england"],
+    relatedMatch: { group: "SF", teamA: "argentina", teamB: "england" },
+    prompt: "Can Argentina defend their title against Spain in the final?",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + NPR + NBC)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760515/argentina-england",
+    verified: true,
+    verifiedAt: "2026-07-16",
+  },
+  {
+    id: "2026-07-14-fra-esp-result",
+    date: "2026-07-14",
+    title: "Spain 2–0 France — La Roja reach the final",
+    summary:
+      "Spain booked their place in the World Cup final with a controlled 2–0 win over France. Mikel Oyarzabal converted a first-half penalty on 22' and Pedro Porro doubled the lead on 58'. Spain, unbeaten through the tournament, await the winner of Argentina v England (15 July).",
+    tag: "Result",
+    relatedTeams: ["spain", "france"],
+    relatedMatch: { group: "SF", teamA: "france", teamB: "spain" },
+    prompt: "How far can Spain go — can they win the World Cup?",
+    sourceName: "ESPN match report (cross-checked vs FIFA match centre + Al Jazeera + NBC)",
+    sourceUrl: "https://www.espn.com/soccer/match/_/gameId/760514/spain-france",
+    verified: true,
+    verifiedAt: "2026-07-15",
+  },
   // ── 9–11 July — QUARTER-FINALS. The football-data.org API was unreachable
   //    from this environment on 13 July, so these were cross-checked against
   //    ESPN match reports + the FIFA match centre (plus Al Jazeera/NPR/CNN)
