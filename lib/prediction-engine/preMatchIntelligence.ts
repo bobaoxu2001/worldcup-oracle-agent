@@ -38,7 +38,13 @@
  * The breakdown surfaces every confirmed item's delta; the agent preview lists
  * the rumours/opinions separately as context.
  *
- * Last updated: 2026-07-02 — Round-of-32 intel for tonight: Spain-Austria (Yamal starts, Rangnick man-plan), Portugal-Croatia (clean tables, Modrić workload read), Switzerland-Algeria (Amoura highly doubtful -6 att × 0.75 out-chance, Widmer 50/50, Petković-derby narrative).
+ * Last updated: 2026-07-17 — FINAL WEEK: Spain-Argentina final intel (both
+ * squads clean — Williams/Pino recoveries priced in the availability layer,
+ * delta 0 here; Romero fit for Argentina; Scaloni's tipped De Paul/Montiel
+ * changes carried as a lineup RUMOUR) + France-England third-place motivation
+ * reads (Tuchel's "nobody wants to play this match", Deschamps chasing a third
+ * straight top-3) as opinion items — uncertainty only, no probability moved.
+ * ── Prior 2026-07-02 — Round-of-32 intel for tonight: Spain-Austria (Yamal starts, Rangnick man-plan), Portugal-Croatia (clean tables, Modrić workload read), Switzerland-Algeria (Amoura highly doubtful -6 att × 0.75 out-chance, Widmer 50/50, Petković-derby narrative).
  */
 
 import { getTeam } from "@/lib/seed/world-cup-2026-groups";
@@ -335,6 +341,54 @@ export const PRE_MATCH_INTEL: PreMatchIntel[] = [
     impactDirection: "positive", deltaElo: 0, confidence: 0.4,
     sourceName: "Sports Mole", sourceUrl: "https://www.sportsmole.co.uk/football/south-korea/world-cup-2026/predicted-lineups/who-supports-son-up-top-in-world-cup-clash-predicted-south-korea-xi-vs-mexico_599403.html",
     publishedAt: "2026-06-16", expiresAfterMatch: true,
+  },
+
+  // ── 18 Jul · France vs England (third-place playoff, Miami) ─────────────
+  {
+    matchId: "france-vs-england", team: "france", opponent: "england",
+    type: "motivation", status: "opinion",
+    summary: "Bronze-final motivation is the whole story: Deschamps says France \"will do everything we can\" for a third straight top-3 finish, but semi-final losers routinely rotate heavily here. A rotation/motivation read, not a confirmed team change — narrative + uncertainty only.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.5,
+    sourceName: "Al Jazeera (third-place preview)", sourceUrl: "https://www.aljazeera.com/sports/2026/7/16/world-cup-why-is-there-a-third-place-playoff-between-france-and-england",
+    publishedAt: "2026-07-16", expiresAfterMatch: true,
+  },
+  {
+    matchId: "france-vs-england", team: "england", opponent: "france",
+    type: "motivation", status: "opinion",
+    summary: "Tuchel was blunt after the semi: \"Nobody of [our] players, nobody of the French players wants to play for this match.\" England still chase their best finish since 1966, but expect changes on both sides — a rumour-grade rotation read that widens uncertainty, moves no probability.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.5,
+    sourceName: "Al Jazeera (third-place preview)", sourceUrl: "https://www.aljazeera.com/sports/2026/7/16/world-cup-why-is-there-a-third-place-playoff-between-france-and-england",
+    publishedAt: "2026-07-16", expiresAfterMatch: true,
+  },
+
+  // ── 19 Jul · Spain vs Argentina (FINAL, East Rutherford) ────────────────
+  // NOTE: the Williams/Pino RECOVERIES are tournament-phase availability moves
+  // and were applied in availabilityAdjustments.ts (fractionOut 1 → 0.25) per
+  // rule 4 — the entries below are the fixture-boxed presser/lineup reads with
+  // delta 0, so the recoveries are never double-counted.
+  {
+    matchId: "spain-vs-argentina", team: "spain", opponent: "argentina",
+    type: "availability", status: "confirmed",
+    summary: "No new injury concerns for the final — Nico Williams is back in the fray (fit, though short of full match sharpness) and Yeremy Pino has returned to full training after the shoulder scare proved less serious than feared. Both recoveries are already priced in the base model via the availability layer; delta 0 here.",
+    impactDirection: "positive", deltaElo: 0, confidence: 0.85,
+    sourceName: "Forbes (Spain final preview)", sourceUrl: "https://www.forbes.com/sites/samleveridge/2026/07/16/spain-world-cup-final-preview-journey-team-news-predicted-lineup/",
+    publishedAt: "2026-07-16", expiresAfterMatch: true,
+  },
+  {
+    matchId: "spain-vs-argentina", team: "argentina", opponent: "spain",
+    type: "availability", status: "confirmed",
+    summary: "Clean bill of health for the holders: Cristian Romero recovered from the cramps that followed the Switzerland quarter-final, played the full semi, and is in the squad for the final. No suspensions flagged on the list (single yellows are historically wiped after the quarter-finals). Confirmation only; delta 0.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.85,
+    sourceName: "Sports Mole (Argentina injury/suspension list)", sourceUrl: "https://www.sportsmole.co.uk/football/argentina/world-cup-2026/injuries-and-suspensions/romero-paredes-latest-argentina-injury-suspension-list-for-world-cup-final_601316.html",
+    publishedAt: "2026-07-16", expiresAfterMatch: true,
+  },
+  {
+    matchId: "spain-vs-argentina", team: "argentina", opponent: "spain",
+    type: "lineup", status: "rumor",
+    summary: "Scaloni tipped for two changes from the England semi: Rodrigo De Paul restored to the midfield alongside Mac Allister and Enzo Fernández (Paredes holding), and 2022 shootout hero Gonzalo Montiel pushing Molina at right-back — with Lautaro Martínez again the super-sub behind the Messi–Álvarez pairing. Predicted XI, not confirmed — narrative + uncertainty only.",
+    impactDirection: "neutral", deltaElo: 0, confidence: 0.55,
+    sourceName: "Sports Mole (predicted Argentina XI)", sourceUrl: "https://www.sportsmole.co.uk/football/argentina/world-cup-2026/predicted-lineups/alvarez-or-martinez-de-paul-or-simeone-predicted-argentina-xi-vs-spain_601305.html",
+    publishedAt: "2026-07-16", expiresAfterMatch: true,
   },
 ];
 

@@ -14,7 +14,14 @@
  * `prompt` (optional) renders an "Ask the Oracle" chip that opens the
  * Agent page with that question pre-submitted.
  *
- * Last updated: 2026-07-16 — SEMI-FINALS COMPLETE: added both semis (Spain
+ * Last updated: 2026-07-17 — FINAL-WEEK PREVIEWS: added the Spain v Argentina
+ * final team-news preview (both squads clean — Williams/Pino back for Spain,
+ * Romero fit for Argentina, Scaloni's tipped changes) and the France v England
+ * bronze-final preview (Deschamps/Tuchel motivation reads, the Mbappé–Messi
+ * Golden Boot race). Curated from the 16 Jul Forbes/Sports Mole/Al Jazeera/FOX
+ * previews cited per item; only the cross-checked squad-news item is badged
+ * verified — a preview of an unplayed match is never a "result".
+ * ── Prior 2026-07-16 — SEMI-FINALS COMPLETE: added both semis (Spain
  * 2–0 France on 14 July; Argentina 2–1 England on 15 July, a late Messi-inspired
  * comeback) and the "final is set" item — Spain v Argentina on 19 July, with
  * France v England for third place on 18 July. Cross-checked against ESPN match
@@ -90,6 +97,38 @@ export interface ManualDailyNewsItem {
 }
 
 export const MANUAL_DAILY_NEWS: ManualDailyNewsItem[] = [
+  // ── 17 July — FINAL-WEEK PREVIEWS. Team-news items curated from the 16 Jul
+  //    Forbes/Sports Mole/Al Jazeera previews cited per item; previews of
+  //    unplayed matches are inherently not results, so only the squad-news
+  //    items carry a verified badge (cross-checked across two outlets). ──
+  {
+    id: "2026-07-17-final-preview",
+    date: "2026-07-17",
+    title: "Final preview: Spain v Argentina — both squads at full strength",
+    summary:
+      "Sunday's final at East Rutherford (19 July) arrives with both camps clean. Spain report no new injury concerns — Nico Williams is back available after his adductor layoff (though short of full match sharpness) and Yeremy Pino has returned to full training after his shoulder injury proved less serious than feared. Argentina have a clean bill too: Cristian Romero recovered from post-quarter-final cramps and played the full semi. Scaloni is tipped to restore Rodrigo De Paul in midfield and start Gonzalo Montiel at right-back, with Lautaro Martínez the super-sub behind Messi–Álvarez. Both recoveries are already priced into the model's availability layer.",
+    tag: "Team News",
+    relatedTeams: ["spain", "argentina"],
+    relatedMatch: { group: "Final", teamA: "spain", teamB: "argentina" },
+    prompt: "Who wins the final, Spain or Argentina?",
+    sourceName: "Forbes (Spain preview) + Sports Mole (Argentina injury/suspension list)",
+    sourceUrl: "https://www.forbes.com/sites/samleveridge/2026/07/16/spain-world-cup-final-preview-journey-team-news-predicted-lineup/",
+    verified: true,
+    verifiedAt: "2026-07-17",
+  },
+  {
+    id: "2026-07-17-third-place-preview",
+    date: "2026-07-17",
+    title: "Bronze final: France v England in Miami — who actually wants it?",
+    summary:
+      "Saturday's third-place play-off (18 July, Miami) pits the two beaten semi-finalists against each other. Deschamps says France \"will do everything we can\" for a third straight top-3 finish; Tuchel was blunter — \"nobody of [our] players, nobody of the French players wants to play for this match\" — as England chase their best World Cup finish since 1966. Mbappé (8 goals, level with Messi) could settle the Golden Boot here, with Kane and Bellingham on 6 apiece. Expect rotation on both sides — the model treats those reads as uncertainty, not as probability moves.",
+    tag: "Match Preview",
+    relatedTeams: ["france", "england"],
+    relatedMatch: { group: "TP", teamA: "france", teamB: "england" },
+    prompt: "Who wins the third-place match, France or England?",
+    sourceName: "Al Jazeera + FOX Sports (third-place previews)",
+    sourceUrl: "https://www.aljazeera.com/sports/2026/7/16/world-cup-why-is-there-a-third-place-playoff-between-france-and-england",
+  },
   // ── 14–15 July — SEMI-FINALS. Both semis cross-checked against ESPN match
   //    reports + the FIFA match centre (plus Al Jazeera/NPR/NBC) rather than the
   //    football-data.org feed — cited per item and badged verified on that basis.

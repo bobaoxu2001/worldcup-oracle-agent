@@ -35,7 +35,13 @@
  * UI labels this as a manually-curated, sourced signal, never a live feed.
  * Market values are transfermarkt-style €m estimates, documented per entry.
  *
- * Last updated: 2026-07-02 — Spain/Austria R32 squad news: Nico Williams OUT
+ * Last updated: 2026-07-17 — FINAL-WEEK recovery pass: Nico Williams and
+ * Yeremy Pino are BOTH back for the final (Williams fit but short of full
+ * match sharpness after the adductor layoff; Pino back in full training, the
+ * feared collarbone break never materialised) — per the recovery convention
+ * their fractionOut is REDUCED (1 → 0.25), not deleted, mirroring the Yamal
+ * treatment. Sourced from the 16 Jul Forbes/Yahoo Spain final preview.
+ * ── Prior 2026-07-02 — Spain/Austria R32 squad news: Nico Williams OUT
  * (right-adductor vs Uruguay, ~2 weeks) and Yeremy Pino OUT (shoulder sprain)
  * — the compounding detail is that Pino is Williams' natural replacement, so
  * the flank drop-off is priced as squad-option, not like-for-like; Lamine
@@ -190,11 +196,11 @@ export const AVAILABILITY_ADJUSTMENTS: AvailabilityAdjustment[] = [
     marketValueOut: 70,
     replacementValue: 40,
     role: "attack",
-    fractionOut: 1, // right-adductor muscle injury vs Uruguay — ruled out ~2 weeks, misses the R32
+    fractionOut: 0.25, // UPDATED 17 Jul: back in the fray ahead of the final — fit and available but described as some way short of full match sharpness after the ~2-week adductor layoff, so a residual discount stays (recovery convention: reduce, don't delete)
     reason:
-      "Starting left winger ruled out (right-adductor injury vs Uruguay, ~2 weeks) — and his usual understudy Pino is hurt too, so the drop-off is a squad option, not a like-for-like",
-    source: "ESPN / World Soccer Talk",
-    date: "2026-07-01",
+      "Starting left winger back available for the final after the right-adductor injury (vs Uruguay, 30 Jun) but short of full match sharpness — residual discount, no longer a full absence",
+    source: "Forbes / Yahoo Sports (Spain final preview, 16 Jul)",
+    date: "2026-07-16",
   },
   {
     team: "spain",
@@ -202,11 +208,11 @@ export const AVAILABILITY_ADJUSTMENTS: AvailabilityAdjustment[] = [
     marketValueOut: 30,
     replacementValue: 20,
     role: "attack",
-    fractionOut: 1, // acromioclavicular (shoulder) sprain — out alongside Williams
+    fractionOut: 0.25, // UPDATED 17 Jul: back in full training before the final — the feared collarbone break never materialised and the shoulder injury proved less serious; rotation option restored, small residual discount for zero recent minutes
     reason:
-      "Rotation winger out with an acromioclavicular sprain — compounds the Williams absence by removing the natural replacement on that flank",
-    source: "ESPN",
-    date: "2026-07-01",
+      "Rotation winger back in full training ahead of the final (shoulder injury less serious than first feared) — flank depth behind Williams restored, small residual discount for match rust",
+    source: "Forbes / Yahoo Sports (Spain final preview, 16 Jul)",
+    date: "2026-07-16",
   },
 
   // ── Austria ─────────────────────────────────────────────────────────────
