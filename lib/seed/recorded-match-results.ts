@@ -142,6 +142,36 @@ export const LATEST_KNOCKOUT_RESULTS: ManualMatchResult[] = [
     verified: true,
     verifiedAt: "2026-07-16",
   },
+  {
+    group: "3P",
+    teamA: "france",
+    teamB: "england",
+    scoreA: 4,
+    scoreB: 6,
+    date: "2026-07-18",
+    note:
+      "England beat France 6–4 in regulation in the bronze final to finish third. England led 4–0 at half-time, France mounted a second-half comeback, and late goals from Bukayo Saka and Jude Bellingham secured a decisive England win in the Elo fold.",
+    sourceName: "FIFA (France 4-6 England bronze-final report and highlights)",
+    sourceUrl:
+      "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/france-england-report-highlights-bronze-final",
+    verified: true,
+    verifiedAt: "2026-07-20",
+  },
+  {
+    group: "F",
+    teamA: "spain",
+    teamB: "argentina",
+    scoreA: 1,
+    scoreB: 0,
+    date: "2026-07-19",
+    note:
+      "Spain beat ten-man Argentina 1–0 after extra time to win their second World Cup. Ferran Torres scored in the 106th minute after Enzo Fernández was dismissed in second-half stoppage time. Recorded at the extra-time score — a decisive Spain win in the Elo fold, no shootout.",
+    sourceName: "Reuters (Spain 1-0 Argentina World Cup final report)",
+    sourceUrl:
+      "https://www.reuters.com/sports/soccer/torres-grabs-extra-time-winner-spain-beat-toothless-argentina-win-their-second-2026-07-19/",
+    verified: true,
+    verifiedAt: "2026-07-20",
+  },
 ];
 
 function resultKey(m: ManualMatchResult): string {
